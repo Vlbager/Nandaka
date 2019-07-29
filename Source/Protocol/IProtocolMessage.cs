@@ -6,6 +6,7 @@ namespace Nandaka.Protocol
 {
     public interface IProtocolMessage
     {
-        //todo: implement this
+        IEnumerable<IRegister> Registers { get; }
+        MessageType MessageType { get; }
     }
 }
