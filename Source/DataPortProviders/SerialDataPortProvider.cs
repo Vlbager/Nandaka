@@ -36,13 +36,12 @@ namespace Nandaka.Protocol
         }
 
         /// <summary>
-        /// Закрвает последовательной порт и освобождает неуправляемые ресурсы.
-        /// Если последовательный порт отключен физически от USB-порта, то 
-        /// вызываем безопасное отключение устройства во избежание исключения.
+        /// Closes serial port and releases unmanaged resources.
+        /// If Serial Port is disconnected physically, then called safe
+        /// disconnect to avoid exception.
         /// </summary>
         public void Dispose()
         {
-
             try
             {
                 _serialPort.DiscardInBuffer();
