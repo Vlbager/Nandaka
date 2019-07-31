@@ -6,6 +6,13 @@ namespace Nandaka.Protocol
 {
     public sealed class MilliGanjubusComposer : MilliGanjubusProtocolInfo, IComposer<byte[]>
     {
+        readonly MilliGanjubusProtocolInfo _protocolInfo;
+
+        public MilliGanjubusComposer()
+        {
+
+        }
+
         public byte[] Compose(IProtocolMessage message)
         {
             
