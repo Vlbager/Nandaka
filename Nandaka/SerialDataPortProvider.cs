@@ -7,7 +7,7 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Nandaka.Protocol
+namespace Nandaka
 {
     public class SerivalDataPortProvider : IDataPortProvider<byte[]>
     {

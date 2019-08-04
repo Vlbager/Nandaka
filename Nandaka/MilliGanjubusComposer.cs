@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Nandaka.Protocol
+namespace Nandaka
 {
     public sealed class MilliGanjubusComposer : MilliGanjubusProtocolInfo, IComposer<byte[]>
     {

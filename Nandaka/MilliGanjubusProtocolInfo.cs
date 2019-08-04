@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Nandaka.Protocol
+namespace Nandaka
 {
     public class MilliGanjubusProtocolInfo : GanjubusBaseProtocolInfo
     {
@@ -11,7 +11,7 @@ namespace Nandaka.Protocol
         // 15 байт максимальный блок данных для CRC8 + само CRC
         public readonly int MaxPacketLength = 15 + 1;
         // Минус Gbyte.
-        public readonly int MaxDataLength = MaxPacketLength - MinPacketLength - 1;
+        public readonly int MaxDataLength = 10;
         public readonly int StartByteOffset = 0;
         public readonly int AddressOffset = 1;
         public readonly int SizeOffset = 2;
