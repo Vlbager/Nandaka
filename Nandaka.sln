@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29123.88
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nandaka", "Nandaka\Nandaka.csproj", "{06C57526-51E7-4848-9094-99C3E4CA1950}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp\TestApp.csproj", "{46A6F915-97C4-4111-839E-E2920B1ABFC2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{46A6F915-97C4-4111-839E-E2920B1ABFC2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
