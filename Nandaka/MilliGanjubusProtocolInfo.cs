@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Nandaka
 {
-    public class MilliGanjubusProtocolInfo
+    public class MilliGanjubusProtocolInfo : IProtocolInfo
     {
         // MinPacketLength = Header + Address + Length + CRC8-head + CRC-8 tail.
         public const int MinPacketLength = 5;
@@ -32,5 +32,10 @@ namespace Nandaka
         public const byte FReadRange = 0x5;
         public const int MinimumRangeRegisterCount = 3;
         public const byte StartByte = 0xBB;
+
+        public int GetMaxDataLength()
+        {
+            return MaxDataLength;
+        }
     }
 }
