@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Nandaka
 {
-    public class Checksum
+    public class CheckSum
     {
         public static byte CRC8(byte[] pcBlock)
         {
