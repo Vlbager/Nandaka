@@ -20,7 +20,7 @@ namespace Nandaka
         protected const int HeaderCheckSumSize = sizeof(byte);
         protected const int PacketCheckSumSize = sizeof(byte);
 
-        protected const byte GAcknowledge = 0xA;
+        protected const byte GReply = 0xA;
         protected const byte GRequest = 0x0;
         protected const byte GError = 0xE;
 

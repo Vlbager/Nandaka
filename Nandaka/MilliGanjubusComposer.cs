@@ -47,13 +47,9 @@ namespace Nandaka
             // todo: Add GByte!!!
             // Main problem: it is Slave or Master Session?
             // Add to DataType this information?
-            throw new NotImplementedException();
 
             foreach (var register in message.Registers)
             {
-                // todo: Add check that register is RegisterGroup.
-                // To avoid unnecessary casts, add to list the address and data separately.
-                dataList.Add(new byte[] { (byte)register.Address });
                 dataList.Add(register.GetBytes());
             }
 

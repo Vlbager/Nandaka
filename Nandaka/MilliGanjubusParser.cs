@@ -28,50 +28,35 @@ namespace Nandaka
 
         public void Parse(byte[] data)
         {
+            // Local function for assert byte value.
+            void checkByteValue(bool condition)
+            {
+                if (condition)
+                {
+                    _parserCounter++;
+                }
+                else
+                {
+                    OnParserError();
+                }
+            }
+
             foreach (var value in data)
             {
                 AddByteToBuffer(value);
                 switch ((ParsingStage)_parserCounter)
                 {
                     case ParsingStage.WaitingStartByte:
-                        if (value == StartByte)
-                        {
-                            _parserCounter++;
-                        }
-                        else
-                        {
-                            OnParserError();
-                        }
+                        checkByteValue(value == StartByte);
                         break;
                     case ParsingStage.WaitingAddress:
-                        if (value == AwaitingReplyAddress || value == DirectCastAddress)
-                        {
-                            _parserCounter++;
-                        }
-                        else
-                        {
-                            OnParserError();
-                        }
+                        checkByteValue(value == AwaitingReplyAddress || value == DirectCastAddress);
                         break;
                     case ParsingStage.WaitingSize:
-                        if (value <= MaxPacketLength)
-                        {
-                            _parserCounter++;
-                        }
-                        else
-                        {
-                            OnParserError();
-                        }
+                        checkByteValue(value <= MaxPacketLength);
                         break;
                     case ParsingStage.WaitingHeaderCrc:
-                        if (value == CheckSum.CRC8(_buffer.ToArray()))
-                        {
-                            _parserCounter++;
-                        }
-                        else
-                        {
-                            OnParserError();
-                        }
+                        checkByteValue(value == CheckSum.CRC8(_buffer.ToArray()));
                         break;
                     default:
                         if (_parserCounter < _buffer[SizeOffset] - 1)
@@ -120,6 +105,7 @@ namespace Nandaka
                 _isStartByteFinded = false;
                 _buffer.Clear();
 
+                // Reparse buffered bytes.
                 Parse(bufferArray);
             }
             // What else is needed here? Report at log?
@@ -127,8 +113,37 @@ namespace Nandaka
 
         private ITransferData GetTransferData(byte[] checkedMessage)
         {
-            // todo: What kind of result I should return if in Ack GError?
+            var ackNibble = checkedMessage[DataOffset] >> 4;
+            switch (ackNibble)
+            {
+                case GRequest:
+                    // aaand what difference with GAcknowledge???
+                    // RequestTransferData and ReplyTransferData classes?
+                    // Or request-reply extra field in ITransferData interface?
+                    throw new NotImplementedException();
+                case GReply:
+                    throw new NotImplementedException();
+                case GError:
+                    // todo: create and return Error class, that implement ITransferData.
+                    throw new NotImplementedException();
+            }
 
+            var fNibble = checkedMessage[DataOffset] & 0xF;
+            switch (fNibble)
+            {
+                case FWriteSingle:
+                case FWriteSeries:
+                    // todo: create SingleRegister class
+                    throw new NotImplementedException();
+                case FWriteRange:
+                    // todo: create RangeRegister class.
+                    throw new NotImplementedException();
+                case FReadSingle:
+                case FReadSeries:
+                    throw new NotImplementedException();
+                case FReadRange:
+                    throw new NotImplementedException();
+            }
             throw new NotImplementedException();
         }
 
