@@ -7,7 +7,8 @@ namespace Nandaka
 {
     public class MilliGanjubusComposer : MilliGanjubusProtocolInfo, IComposer<byte[]>
     {
-        // todo: how to make protocolInfo fields changeable? 
+        // todo: how to make protocolInfo fields changeable for MilliGanjubus or GeneralGanjubus 
+        // or DontKnowGanjubus? (Composer and parser can be the same for all of them)
         // Interface with getter-methods?
 
         public byte[] Compose(ITransferData message)
@@ -20,7 +21,8 @@ namespace Nandaka
                 throw new ArgumentOutOfRangeException();
             }
             packet[StartByteOffset] = StartByte;
-            // todo: Add device address to ITransferData interface or to IProtocol.SendMessage() paremeters?
+            // todo: Add device address to ITransferData interface or 
+            // to IProtocol.SendMessage() + IComposer.Compose() paremeters?
             packet[AddressOffset] = 0;
             packet[SizeOffset] = (byte)packet.Length;
             packet[HeaderCheckSumOffset] =
@@ -33,9 +35,42 @@ namespace Nandaka
 
         private byte[] GetDataBytes(ITransferData message)
         {
-            // Here I have to decide whether it's a series or a group. 
+            // Here I have to decide whether it's a series or a group.
             // Session does the same to calculate packet length.
+
+            // One of the solutions: Registers (or RegisterGroups) in ITransferData 
+            // should be sorted optimally at formation stage (Session guarantess it).
+
+            // Length of result array is unknown, so list is used.
+            var dataList = new List<byte[]>();
+
+            // todo: Add GByte!!!
+            // Main problem: it is Slave or Master Session?
+            // Add to DataType this information?
             throw new NotImplementedException();
+
+            foreach (var register in message.Registers)
+            {
+                // todo: Add check that register is RegisterGroup.
+                // To avoid unnecessary casts, add to list the address and data separately.
+                dataList.Add(new byte[] { (byte)register.Address });
+                dataList.Add(register.GetBytes());
+            }
+
+            // Calculate resultArray size.
+            var resultArrayLength = 0;
+            dataList.ForEach(byteArray => resultArrayLength += byteArray.Length);
+
+            // Form result array from dataList.
+            var resultArray = new byte[resultArrayLength];
+            var currentIndex = 0;
+            foreach (var byteArray in dataList)
+            {
+                Array.Copy(byteArray, 0, resultArray, currentIndex, byteArray.Length);
+                currentIndex += byteArray.Length;
+            }
+
+            return resultArray;
         }
     }
 }
