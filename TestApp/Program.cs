@@ -15,7 +15,7 @@ namespace TestApp
             {
                 Console.Write(Encoding.ASCII.GetString(message));
             };
-            foreach (var i in Enumerable.Range(0, 10))
+            foreach (var unused in Enumerable.Range(0, 10))
             {
                 serialPort.Write(Encoding.ASCII.GetBytes("Hello, Serial Port!\n"));
             }

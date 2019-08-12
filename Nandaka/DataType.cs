@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Nandaka
 {
-    public enum MessageType
+    public enum DataType
     {
         ReadDataRequest,
         WriteDataRequest,
