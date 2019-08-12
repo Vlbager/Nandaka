@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Nandaka
+namespace Nandaka.MilliGanjubus
 {
     public class MilliGanjubus : ProtocolBase<byte[]>
     {

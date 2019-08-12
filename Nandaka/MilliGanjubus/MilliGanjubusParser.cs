@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Nandaka
+namespace Nandaka.MilliGanjubus
 {
     public class MilliGanjubusParser : MilliGanjubusProtocolInfo, IParser<byte[]>
     {
@@ -23,8 +23,7 @@ namespace Nandaka
         private int _parserCounter = (int)ParsingStage.WaitingStartByte;
 
         // Visual Studio recommended make it readonly...
-        private readonly List<byte> _buffer = new List<byte>();
-        private bool _isStartByteFinded = false;
+        private readonly List<byte> _buffer = new List<byte>(MaxPacketLength);
 
         public void Parse(byte[] data)
         {
@@ -43,7 +42,7 @@ namespace Nandaka
 
             foreach (var value in data)
             {
-                AddByteToBuffer(value);
+                _buffer.Add(value);
                 switch ((ParsingStage)_parserCounter)
                 {
                     case ParsingStage.WaitingStartByte:
@@ -67,7 +66,6 @@ namespace Nandaka
                         {
                             MessageParsed(this, GetTransferData(_buffer.ToArray()));
                             _parserCounter = (int)ParsingStage.WaitingStartByte;
-                            _isStartByteFinded = false;
                             _buffer.Clear();
                         }
                         else
@@ -79,30 +77,14 @@ namespace Nandaka
             }
         }
 
-        // Buffer must be stored all bytes from the last unchecked StartByte-value.
-        private void AddByteToBuffer(byte value)
-        {
-            if (!_isStartByteFinded && value == StartByte)
-            {
-                _isStartByteFinded = true;
-            }
-            else if (!_isStartByteFinded)
-            {
-                return;
-            }
-            _buffer.Add(value);
-        }
-
         private void OnParserError()
         {
             _parserCounter = (int)ParsingStage.WaitingStartByte;
 
-            // If buffer isn't empty then there is missed start byte.
             if (_buffer.Count > 0)
             {
                 // Clear buffer before start reparse.
-                var bufferArray = _buffer.ToArray();
-                _isStartByteFinded = false;
+                var bufferArray = _buffer.GetRange(1, _buffer.Count - 1).ToArray();
                 _buffer.Clear();
 
                 // Reparse buffered bytes.

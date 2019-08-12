@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Nandaka
+namespace Nandaka.MilliGanjubus
 {
-    public class MilliGanjubusProtocolInfo : IProtocolInfo
+    public abstract class MilliGanjubusProtocolInfo : IProtocolInfo
     {
         // MinPacketLength = Header + Address + Length + CRC8-head + CRC-8 tail.
         protected const int MinPacketLength = 5;

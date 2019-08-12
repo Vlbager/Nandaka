@@ -1,6 +1,7 @@
 using System;
 using Xunit;
 using Nandaka;
+using Nandaka.MilliGanjubus;
 
 
 namespace Nandaka.MG.Tests

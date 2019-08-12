@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Nandaka
+namespace Nandaka.MilliGanjubus
 {
     public class MilliGanjubusComposer : MilliGanjubusProtocolInfo, IComposer<byte[]>
     {
@@ -37,14 +37,14 @@ namespace Nandaka
         {
             // Here I have to decide whether it's a series or a group.
             // Session does the same to calculate packet length.
-
-            // One of the solutions: Registers (or RegisterGroups) in ITransferData 
-            // should be sorted optimally at formation stage (Session guarantess it).
+            // Or not?
 
             // Length of result array is unknown, so list is used.
             var dataList = new List<byte[]>();
 
             // todo: Add GByte!!!
+
+            
             // Main problem: it is Slave or Master Session?
             // Add to DataType this information?
 
