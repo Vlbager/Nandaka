@@ -11,7 +11,7 @@ namespace Nandaka.MG.Tests
         private IParser<byte[]> _parser;
         private int _messageCount;
         private ITransferData _parsedMessage;
-        
+
 
         public ParserTests()
         {
@@ -26,20 +26,48 @@ namespace Nandaka.MG.Tests
         }
 
         [Theory]
-        [InlineData(new byte[] {0xBB, 0x01, 0x07, 0x00, 0x01, 0x01, 0x00})]
+        [InlineData(new byte[] { 0xBB, 0x01, 0x07, 0x00, 0x01, 0x01, 0x00 })]
+        [InlineData(new byte[] { 0xBB, 0x02, 0x07, 0x00, 0xA1, 0x01, 0x00 })]
+        [InlineData(new byte[] { 0xBB, 0xFF, 0x07, 0x00, 0x01, 0x02, 0x00 })]
+        [InlineData(new byte[] { 0xBB, 0x01, 0x08, 0x00, 0x03, 0x02, 0x01, 0x00 })]
+        [InlineData(new byte[] { 0xBB, 0xFF, 0x08, 0x00, 0x03, 0x02, 0x01, 0x00 })]
+        [InlineData(new byte[] { 0xBB, 0x00, 0x08, 0x00, 0x03, 0x02, 0x01, 0x00 })]
         public void MessageParsing(byte[] buffer)
         {
             // Arrange
             // fill checksums
-            buffer[3] = CheckSum.CRC8(buffer.AsSpan().Slice(0,3).ToArray());
+            buffer[3] = CheckSum.CRC8(buffer.AsSpan().Slice(0, 3).ToArray());
             buffer[buffer.Length - 1] = CheckSum.CRC8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             _parser.Parse(buffer);
             // Assert
-            Assert.Equal(1, _messageCount);            
+            Assert.Equal(1, _messageCount);
         }
 
-        [Fact]        
+        [Fact]
+        public void DoubleStartByte()
+        {
+            // Arrange
+            var buffer = new byte[] { 0xBB, 0xBB, 0x01, 0x07, 0xB8, 0x01, 0x01, 0xC5 };
+            // Act
+            _parser.Parse(buffer);
+            // Assert
+            Assert.Equal(1, _messageCount);
+        }
+
+        [Fact]
+        public void DoubleHeader()
+        {
+            // Arrange
+            var buffer = new byte[] { 0xBB, 0x01, 0x07, 0xB8, 0xBB, 0x01, 0x07, 0xB8, 0x01, 0x01, 0xC5 };
+            // Act
+            _parser.Parse(buffer);
+            // Assert
+            Assert.Equal(1, _messageCount);
+        }
+
+
+        [Fact]
         public void WrongHeaderChecksum()
         {
             // Arrange
