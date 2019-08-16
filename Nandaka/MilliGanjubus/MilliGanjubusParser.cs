@@ -6,7 +6,7 @@ namespace Nandaka.MilliGanjubus
 {
     public class MilliGanjubusParser : MilliGanjubusProtocolInfo, IParser<byte[]>
     {
-        public event EventHandler<ITransferData> MessageParsed;
+        public event EventHandler<IProtocolMessage> MessageParsed;
 
         public int AwaitingReplyAddress { get; set; }
 
@@ -81,10 +81,12 @@ namespace Nandaka.MilliGanjubus
         {
             _parserCounter = (int)ParsingStage.WaitingStartByte;
 
-            if (_buffer.Count > 0)
+            if (_buffer.Count > 1)
             {
-                // Clear buffer before start reparse.
+                // Reparse all buffer without first element (because it's previous StartByte).
                 var bufferArray = _buffer.GetRange(1, _buffer.Count - 1).ToArray();
+                
+                // Clear buffer for new packet.
                 _buffer.Clear();
 
                 // Reparse buffered bytes.
@@ -93,7 +95,7 @@ namespace Nandaka.MilliGanjubus
             // What else is needed here? Report at log?
         }
 
-        private ITransferData GetTransferData(byte[] checkedMessage)
+        private IProtocolMessage GetTransferData(byte[] checkedMessage)
         {
             var ackNibble = checkedMessage[DataOffset] >> 4;
             switch (ackNibble)

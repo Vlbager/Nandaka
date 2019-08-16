@@ -11,7 +11,7 @@ namespace Nandaka.MilliGanjubus
         // or DontKnowGanjubus? (Composer and parser can be the same for all of them)
         // Interface with getter-methods?
 
-        public byte[] Compose(ITransferData message)
+        public byte[] Compose(IProtocolMessage message)
         {
             var data = GetDataBytes(message);
             var packet = new byte[MinPacketLength + data.Length];
@@ -33,7 +33,7 @@ namespace Nandaka.MilliGanjubus
             return packet;
         }
 
-        private byte[] GetDataBytes(ITransferData message)
+        private byte[] GetDataBytes(IProtocolMessage message)
         {
             // Here I have to decide whether it's a series or a group.
             // Session does the same to calculate packet length.

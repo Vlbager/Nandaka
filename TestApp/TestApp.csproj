@@ -6,6 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="TestApp\**" />
+    <EmbeddedResource Remove="TestApp\**" />
+    <None Remove="TestApp\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Nandaka\Nandaka.csproj" />
   </ItemGroup>
 

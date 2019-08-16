@@ -10,7 +10,7 @@ namespace Nandaka.MG.Tests
     {
         private IParser<byte[]> _parser;
         private int _messageCount;
-        private ITransferData _parsedMessage;
+        private IProtocolMessage _parsedMessage;
 
 
         public ParserTests()
@@ -19,7 +19,7 @@ namespace Nandaka.MG.Tests
             _parser.MessageParsed += parser_MessageParsed;
         }
 
-        private void parser_MessageParsed(object sender, ITransferData e)
+        private void parser_MessageParsed(object sender, IProtocolMessage e)
         {
             _messageCount++;
             _parsedMessage = e;

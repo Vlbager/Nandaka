@@ -6,6 +6,6 @@ namespace Nandaka
 {
     public interface IComposer<out T>
     {
-        T Compose(ITransferData message);
+        T Compose(IProtocolMessage message);
     }
 }

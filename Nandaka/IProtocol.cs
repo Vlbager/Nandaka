@@ -6,8 +6,8 @@ namespace Nandaka
 {
     public interface IProtocol
     {
-        void SendMessage(ITransferData message);
+        void SendMessage(IProtocolMessage message);
 
-        event EventHandler<ITransferData> MessageReceived;
+        event EventHandler<IProtocolMessage> MessageReceived;
     }
 }

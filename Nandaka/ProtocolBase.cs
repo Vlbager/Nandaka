@@ -18,13 +18,13 @@ namespace Nandaka
             _dataPortProvider.OnDataRecieved += (sender, data) => _parser.Parse(data);
         }
 
-        public void SendMessage(ITransferData message)
+        public void SendMessage(IProtocolMessage message)
         {
             var composedMessage = _composer.Compose(message);
             _dataPortProvider.Write(composedMessage);
         }
 
-        public event EventHandler<ITransferData> MessageReceived
+        public event EventHandler<IProtocolMessage> MessageReceived
         {
             add => _parser.MessageParsed += value;
             remove => _parser.MessageParsed += value;

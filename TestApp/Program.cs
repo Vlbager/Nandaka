@@ -2,6 +2,7 @@
 using System.Text;
 using System.Linq;
 using Nandaka;
+using Nandaka.MilliGanjubus;
 
 
 namespace TestApp
@@ -9,6 +10,19 @@ namespace TestApp
     class Program
     {
         static void Main(string[] args)
+        {
+            var commonMessage = new CommonMessage(MessageType.ReadDataRequest);
+            commonMessage.AddRegister(new TestByteRegister(1, 2));
+            commonMessage.AddRegister(new TestByteRegister(1, 3));
+            commonMessage.AddRegister(new TestByteRegister(1, 4));
+
+            foreach (var register in commonMessage.Registers)
+            {
+                Console.WriteLine(register.GetBytes()[0].ToString());
+            }
+        }
+
+        private void TestSerialPort()
         {
             var serialPort = new SerivalDataPortProvider("COM6");
             serialPort.OnDataRecieved += (sender, message) =>

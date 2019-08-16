@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Nandaka
 {
-    public interface ITransferData
+    public interface IProtocolMessage
     {
         IEnumerable<IRegister> Registers { get; }
-        DataType DataType { get; }
+        MessageType MessageType { get; }
     }
 }

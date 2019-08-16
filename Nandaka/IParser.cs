@@ -8,6 +8,6 @@ namespace Nandaka
     {
         void Parse(T data);
 
-        event EventHandler<ITransferData> MessageParsed;
+        event EventHandler<IProtocolMessage> MessageParsed;
     }
 }
