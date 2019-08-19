@@ -7,4 +7,4 @@ install:
   - dotnet restore
 script:
   - dotnet build
-  - dotnet test Core.Shogi.Tests/Core.Shogi.Tests.csproj
+  - dotnet test Nandaka.Tests\Nandaka.Tests.csproj
