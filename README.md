@@ -1,1 +1,1 @@
-# Nandaka ![Travis (.com)](https://img.shields.io/travis/com/Vlbager/Nandaka?style=flat-square)
+# Nandaka [![Build Status](https://travis-ci.com/Vlbager/Nandaka.svg?token=7gzGbdbqDnzyKsuHKwX6&branch=master)](https://travis-ci.com/Vlbager/Nandaka)
