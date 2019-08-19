@@ -29,7 +29,7 @@ namespace Nandaka.MilliGanjubus
         public void Parse(byte[] data)
         {
             // Local function for assert byte value.
-            void checkByteValue(bool condition)
+            void CheckByteValue(bool condition)
             {
                 if (condition)
                 {
@@ -53,16 +53,16 @@ namespace Nandaka.MilliGanjubus
                 switch ((ParsingStage)_parserCounter)
                 {
                     case ParsingStage.WaitingStartByte:
-                        checkByteValue(byteValue == StartByte);
+                        CheckByteValue(byteValue == StartByte);
                         break;
                     case ParsingStage.WaitingAddress:
-                        checkByteValue(byteValue == AwaitingReplyAddress || byteValue == DirectCastAddress);
+                        CheckByteValue(byteValue == AwaitingReplyAddress || byteValue == DirectCastAddress);
                         break;
                     case ParsingStage.WaitingSize:
-                        checkByteValue(byteValue <= MaxPacketLength);
+                        CheckByteValue(byteValue <= MaxPacketLength);
                         break;
                     case ParsingStage.WaitingHeaderCrc:
-                        checkByteValue(byteValue == CheckSum.CRC8(_buffer.GetRange(0, _parserCounter).ToArray()));
+                        CheckByteValue(byteValue == CheckSum.CRC8(_buffer.GetRange(0, _parserCounter).ToArray()));
                         break;
                     default:
                         if (_parserCounter < _buffer[SizeOffset] - 1)
