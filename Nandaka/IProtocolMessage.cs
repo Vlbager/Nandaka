@@ -6,6 +6,7 @@ namespace Nandaka
 {
     public interface IProtocolMessage
     {
+        int DeviceAddress { get; }
         IEnumerable<IRegister> Registers { get; }
         MessageType MessageType { get; }
     }

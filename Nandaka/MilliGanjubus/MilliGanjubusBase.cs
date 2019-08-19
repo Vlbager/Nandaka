@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Nandaka.MilliGanjubus
 {
-    public abstract class MilliGanjubusProtocolInfo : IProtocolInfo
+    public abstract class MilliGanjubusBase
     {
         // MinPacketLength = Header + Address + Length + CRC8-head + CRC-8 tail.
         protected const int MinPacketLength = 5;
@@ -43,10 +43,5 @@ namespace Nandaka.MilliGanjubus
         /// На запрос с этим адресом должно ответить любое устройство.
         /// </summary>
         protected const byte DirectCastAddress = 0xFF;
-
-        public int GetMaxDataLength()
-        {
-            return MaxDataLength;
-        }
     }
 }

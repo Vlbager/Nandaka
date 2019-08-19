@@ -9,5 +9,7 @@ namespace Nandaka
         void Parse(T data);
 
         event EventHandler<IProtocolMessage> MessageParsed;
+
+        int AwaitingReplyAddress { get; set; }
     }
 }

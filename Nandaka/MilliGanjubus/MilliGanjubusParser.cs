@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Nandaka.MilliGanjubus
 {
-    public class MilliGanjubusParser : MilliGanjubusProtocolInfo, IParser<byte[]>
+    public class MilliGanjubusParser : MilliGanjubusBase, IParser<byte[]>
     {
         public event EventHandler<IProtocolMessage> MessageParsed;
 
@@ -34,28 +35,34 @@ namespace Nandaka.MilliGanjubus
                 {
                     _parserCounter++;
                 }
-                else
+                // If buffer contain 1 byte we don't have to reparse (it guaranted isn't StartByte).
+                else if (_buffer.Count > 1)
                 {
                     OnParserError();
                 }
+                // But always need to clear buffer.
+                else
+                {
+                    _buffer.Clear();
+                }
             }
 
-            foreach (var value in data)
+            foreach (var byteValue in data)
             {
-                _buffer.Add(value);
+                _buffer.Add(byteValue);
                 switch ((ParsingStage)_parserCounter)
                 {
                     case ParsingStage.WaitingStartByte:
-                        checkByteValue(value == StartByte);
+                        checkByteValue(byteValue == StartByte);
                         break;
                     case ParsingStage.WaitingAddress:
-                        checkByteValue(value == AwaitingReplyAddress || value == DirectCastAddress);
+                        checkByteValue(byteValue == AwaitingReplyAddress || byteValue == DirectCastAddress);
                         break;
                     case ParsingStage.WaitingSize:
-                        checkByteValue(value <= MaxPacketLength);
+                        checkByteValue(byteValue <= MaxPacketLength);
                         break;
                     case ParsingStage.WaitingHeaderCrc:
-                        checkByteValue(value == CheckSum.CRC8(_buffer.ToArray()));
+                        checkByteValue(byteValue == CheckSum.CRC8(_buffer.GetRange(0, _parserCounter).ToArray()));
                         break;
                     default:
                         if (_parserCounter < _buffer[SizeOffset] - 1)
@@ -64,7 +71,7 @@ namespace Nandaka.MilliGanjubus
                         }
                         else if (_buffer[_parserCounter] == CheckSum.CRC8(_buffer.GetRange(0, _parserCounter).ToArray()))
                         {
-                            MessageParsed(this, GetTransferData(_buffer.ToArray()));
+                            MessageParsed(this, GetProtocolMessage(_buffer.ToArray()));
                             _parserCounter = (int)ParsingStage.WaitingStartByte;
                             _buffer.Clear();
                         }
@@ -81,55 +88,93 @@ namespace Nandaka.MilliGanjubus
         {
             _parserCounter = (int)ParsingStage.WaitingStartByte;
 
-            if (_buffer.Count > 1)
-            {
-                // Reparse all buffer without first element (because it's previous StartByte).
-                var bufferArray = _buffer.GetRange(1, _buffer.Count - 1).ToArray();
-                
-                // Clear buffer for new packet.
-                _buffer.Clear();
+            // Reparse all buffer without first element (because it's previous StartByte).
+            var bufferArray = _buffer.GetRange(1, _buffer.Count - 1).ToArray();
 
-                // Reparse buffered bytes.
-                Parse(bufferArray);
-            }
+            // Clear buffer for new packet.
+            _buffer.Clear();
+
+            // Reparse buffered bytes.
+            Parse(bufferArray);
+
             // What else is needed here? Report at log?
         }
 
-        private IProtocolMessage GetTransferData(byte[] checkedMessage)
+        private IProtocolMessage GetProtocolMessage(byte[] checkedMessage)
         {
-            var ackNibble = checkedMessage[DataOffset] >> 4;
-            switch (ackNibble)
+            // Find out the type of message from gByte.
+            var gByte = checkedMessage[DataOffset];
+
+            switch (gByte)
             {
-                case GRequest:
-                    // aaand what difference with GAcknowledge???
-                    // RequestTransferData and ReplyTransferData classes?
-                    // Or request-reply extra field in ITransferData interface?
-                    throw new NotImplementedException();
-                case GReply:
-                    throw new NotImplementedException();
-                case GError:
-                    // todo: create and return Error class, that implement ITransferData.
-                    throw new NotImplementedException();
+                case GRequest << 4 | FReadSeries:
+                case GRequest << 4 | FReadSingle:
+                    return FromSeries(MessageType.ReadDataRequest, false);
+                case GRequest << 4 | FReadRange:
+                    return FromRange(MessageType.ReadDataRequest, false);
+                case GRequest << 4 | FWriteSingle:
+                case GRequest << 4 | FWriteSeries:
+                    return FromSeries(MessageType.WriteDataRequest, true);
+                case GRequest << 4 | FWriteRange:
+                    return FromRange(MessageType.WriteDataRequest, true);
+                case GReply << 4 | FReadSingle:
+                case GReply << 4 | FReadSeries:
+                    return FromSeries(MessageType.ReadDataResponse, true);
+                case GReply << 4 | FReadRange:
+                    return FromRange(MessageType.ReadDataResponse, true);
+                case GReply << 4 | FWriteSingle:
+                case GReply << 4 | FWriteSeries:
+                    return FromSeries(MessageType.WriteDataResponse, false);
+                case GReply << 4 | FWriteRange:
+                    return FromRange(MessageType.WriteDataResponse, false);
+                default:
+                    var errorType = (MilliGanjubusErrorType)checkedMessage[DataOffset + 1];
+                    return new MilliGanjubusErrorMessage(errorType);
             }
 
-            var fNibble = checkedMessage[DataOffset] & 0xF;
-            switch (fNibble)
+            // Local functions for different types of packet.
+            IProtocolMessage FromSeries(MessageType messageType, bool withValues)
             {
-                case FWriteSingle:
-                case FWriteSeries:
-                    // todo: create SingleRegister class
-                    throw new NotImplementedException();
-                case FWriteRange:
-                    // todo: create RangeRegister class.
-                    throw new NotImplementedException();
-                case FReadSingle:
-                case FReadSeries:
-                    throw new NotImplementedException();
-                case FReadRange:
-                    throw new NotImplementedException();
+                var message = new CommonMessage(messageType, checkedMessage[AddressOffset]);
+
+                // Look through all data bytes except CRC.
+                var packetSize = checkedMessage[SizeOffset];
+                var byteIndex = MinPacketLength;
+                while (byteIndex < packetSize - 1)
+                {
+                    // todo: add register class and rework this.
+                    var register = withValues ?
+                        new TestByteRegister(checkedMessage[byteIndex++], checkedMessage[byteIndex++]) :
+                        new TestByteRegister(checkedMessage[byteIndex++]);
+
+                    message.AddRegister(register);
+                }
+                return message;
             }
-            throw new NotImplementedException();
+
+            IProtocolMessage FromRange(MessageType messageType, bool withValues)
+            {
+                var message = new CommonMessage(messageType, checkedMessage[AddressOffset]);
+
+                // Ignore gByte.
+                var currentByteIndex = DataOffset + 1;
+
+                // Bytes after gByte are a range of addresses.
+                var startAddress = checkedMessage[currentByteIndex++];
+                var endAddress = checkedMessage[currentByteIndex++];
+                var registersCount = endAddress - startAddress;
+
+                foreach (var address in Enumerable.Range(startAddress, registersCount))
+                {
+                    // todo: add register class and rework this.
+                    var register = withValues ?
+                        new TestByteRegister(address, checkedMessage[currentByteIndex++]) :
+                        new TestByteRegister(address);
+
+                    message.AddRegister(register);
+                }
+                return message;
+            }
         }
-
     }
 }

@@ -9,9 +9,12 @@ namespace Nandaka
     {
         private readonly List<IRegister> _registers = new List<IRegister>();
 
-        public CommonMessage(MessageType messageType)
+        public int DeviceAddress { get; private set; }
+
+        public CommonMessage(MessageType messageType, int deviceAddress)
         {
             MessageType = messageType;
+            DeviceAddress = deviceAddress;
         }
 
         public IEnumerable<IRegister> Registers => _registers;

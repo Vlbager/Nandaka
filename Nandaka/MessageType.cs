@@ -9,7 +9,8 @@ namespace Nandaka
         ReadDataRequest,
         WriteDataRequest,
         ReadDataResponse,
-        WriteDataResponse
+        WriteDataResponse,
+        ErrorMessage
     }
 
 }
