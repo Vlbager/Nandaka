@@ -8,7 +8,7 @@ namespace Nandaka.MG.Tests
 {
     public class ParserTests
     {
-        private IParser<byte[]> _parser;
+        private IParser<byte[], IProtocolMessage> _parser;
         private int _messageCount;
         private IProtocolMessage _parsedMessage;
 

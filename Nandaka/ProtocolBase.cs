@@ -8,9 +8,9 @@ namespace Nandaka
     {
         private readonly IDataPortProvider<T> _dataPortProvider;
         private readonly IComposer<T> _composer;
-        private readonly IParser<T> _parser;
+        private readonly IParser<T, IProtocolMessage> _parser;
 
-        protected ProtocolBase(IDataPortProvider<T> dataPortProvider, IComposer<T> composer, IParser<T> parser)
+        protected ProtocolBase(IDataPortProvider<T> dataPortProvider, IComposer<T> composer, IParser<T, IProtocolMessage> parser)
         {
             _dataPortProvider = dataPortProvider;
             _composer = composer;

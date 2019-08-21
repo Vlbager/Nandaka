@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Nandaka.MilliGanjubus
 {
-    public class MilliGanjubusParser : MilliGanjubusBase, IParser<byte[]>
+    public class MilliGanjubusParser : MilliGanjubusBase, IParser<byte[], IProtocolMessage>
     {
         public event EventHandler<IProtocolMessage> MessageParsed;
 
