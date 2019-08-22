@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Nandaka
 {
-    public abstract class DataLinkParserBase<T> : IParser<T, byte[]>
+    public abstract class DataLinkParserBase<TIn> : IParser<TIn, byte[]>
     {
         public int AwaitingReplyAddress { get ; set; }
 
@@ -15,6 +15,6 @@ namespace Nandaka
             MessageParsed?.Invoke(this, checkedMessage);
         }
 
-        public abstract void Parse(T data);
+        public abstract void Parse(TIn data);
     }
 }

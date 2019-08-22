@@ -4,11 +4,11 @@ using System.Text;
 
 namespace Nandaka
 {
-    public interface IParser<in T, M>
+    public interface IParser<in TIn, TOut>
     {
-        void Parse(T data);
+        void Parse(TIn data);
 
-        event EventHandler<M> MessageParsed;
+        event EventHandler<TOut> MessageParsed;
 
         int AwaitingReplyAddress { get; set; }
     }
