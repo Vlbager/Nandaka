@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Nandaka.MilliGanjubus
 {
-    public class MilliGanjubusComposer : MilliGanjubusBase, IComposer<byte[]>
+    public class MilliGanjubusComposer : IComposer<byte[]>
     {
         // todo: how to make protocolInfo fields changeable for MilliGanjubus or GeneralGanjubus 
         // or DontKnowGanjubus? (Composer and parser can be the same for all of them)
@@ -14,20 +14,20 @@ namespace Nandaka.MilliGanjubus
         public byte[] Compose(IProtocolMessage message)
         {
             var data = GetDataBytes(message);
-            var packet = new byte[MinPacketLength + data.Length];
-            if (packet.Length > MaxPacketLength)
+            var packet = new byte[MilliGanjubusBase.MinPacketLength + data.Length];
+            if (packet.Length > MilliGanjubusBase.MaxPacketLength)
             {
                 // todo: create a custom exception.
                 throw new ArgumentOutOfRangeException();
             }
-            packet[StartByteOffset] = StartByte;
-            packet[AddressOffset] = (byte)message.DeviceAddress;
-            packet[SizeOffset] = (byte)packet.Length;
-            packet[HeaderCheckSumOffset] =
-                CheckSum.CRC8(packet.Take(HeaderCheckSumOffset).ToArray());
-            Array.Copy(data, 0, packet, DataOffset, data.Length);
+            packet[MilliGanjubusBase.StartByteOffset] = MilliGanjubusBase.StartByte;
+            packet[MilliGanjubusBase.AddressOffset] = (byte)message.DeviceAddress;
+            packet[MilliGanjubusBase.SizeOffset] = (byte)packet.Length;
+            packet[MilliGanjubusBase.HeaderCheckSumOffset] =
+                CheckSum.CRC8(packet.Take(MilliGanjubusBase.HeaderCheckSumOffset).ToArray());
+            Array.Copy(data, 0, packet, MilliGanjubusBase.DataOffset, data.Length);
             packet[packet.Length - 1] =
-                CheckSum.CRC8(packet.Take(packet.Length - PacketCheckSumSize).ToArray());
+                CheckSum.CRC8(packet.Take(packet.Length - MilliGanjubusBase.PacketCheckSumSize).ToArray());
             return packet;
         }
 

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Nandaka
 {
-    abstract class ApplicationParserBase<T> : IParser<T, IProtocolMessage>
+    public abstract class ApplicationParserBase<T> : IParser<T, IProtocolMessage>
     {
         private readonly DataLinkParserBase<T> _dataLinkParser;
 

@@ -15,7 +15,7 @@ namespace Nandaka.MG.Tests
 
         public ParserTests()
         {
-            _parser = new MilliGanjubusParser();
+            _parser = new MilliGanjubusApplicationParser();
             _parser.MessageParsed += parser_MessageParsed;
         }
 
