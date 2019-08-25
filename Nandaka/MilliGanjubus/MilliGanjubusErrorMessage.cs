@@ -13,10 +13,11 @@ namespace Nandaka.MilliGanjubus
 
         public MilliGanjubusErrorType ErrorType { get; private set; }
         
-        public int DeviceAddress { get; }
+        public int DeviceAddress { get; private set; }
 
-        public MilliGanjubusErrorMessage(MilliGanjubusErrorType type)
+        public MilliGanjubusErrorMessage(MilliGanjubusErrorType type, int deviceAddress)
         {
+            DeviceAddress = deviceAddress;
             ErrorType = type;
         }
     }

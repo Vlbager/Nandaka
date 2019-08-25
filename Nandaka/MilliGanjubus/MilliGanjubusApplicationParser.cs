@@ -51,7 +51,7 @@ namespace Nandaka.MilliGanjubus
                     throw new ArgumentException();
                 default:
                     var errorType = (MilliGanjubusErrorType)data[MilliGanjubusBase.DataOffset + 1];
-                    return new MilliGanjubusErrorMessage(errorType);
+                    return new MilliGanjubusErrorMessage(errorType, data[MilliGanjubusBase.AddressOffset]);
             }
 
             // Local functions for different types of packet.
@@ -69,7 +69,11 @@ namespace Nandaka.MilliGanjubus
                         new TestByteRegister(data[byteIndex++], data[byteIndex++]) :
                         new TestByteRegister(data[byteIndex++]);
 
-                    message.AddRegister(register);
+                    // todo: should parser check, if in register value wrote CRC byte?
+                    if (byteIndex < packetSize)
+                    {
+                        message.AddRegister(register);
+                    }
                 }
                 return message;
             }
@@ -84,7 +88,7 @@ namespace Nandaka.MilliGanjubus
                 // Bytes after gByte are a range of addresses.
                 var startAddress = data[currentByteIndex++];
                 var endAddress = data[currentByteIndex++];
-                var registersCount = endAddress - startAddress;
+                var registersCount = endAddress - startAddress + 1;
 
                 foreach (var address in Enumerable.Range(startAddress, registersCount))
                 {
