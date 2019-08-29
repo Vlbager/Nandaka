@@ -11,7 +11,7 @@ namespace Nandaka.MilliGanjubus
         // or DontKnowGanjubus? (Composer and parser can be the same for all of them)
         // Interface with getter-methods?
 
-        public byte[] Compose(IProtocolMessage message)
+        public byte[] Compose(IMessage message)
         {
             var data = GetDataBytes(message);
             var packet = new byte[MilliGanjubusBase.MinPacketLength + data.Length];
@@ -31,7 +31,7 @@ namespace Nandaka.MilliGanjubus
             return packet;
         }
 
-        private byte[] GetDataBytes(IProtocolMessage message)
+        private byte[] GetDataBytes(IMessage message)
         {
             // Length of result array is unknown, so list is used.
             var dataList = new List<byte[]>();

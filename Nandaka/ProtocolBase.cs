@@ -8,9 +8,9 @@ namespace Nandaka
     {
         private readonly IDataPortProvider<T> _dataPortProvider;
         private readonly IComposer<T> _composer;
-        private readonly IParser<T, IProtocolMessage> _parser;
+        private readonly IParser<T, IMessage> _parser;
 
-        protected ProtocolBase(IDataPortProvider<T> dataPortProvider, IComposer<T> composer, IParser<T, IProtocolMessage> parser)
+        protected ProtocolBase(IDataPortProvider<T> dataPortProvider, IComposer<T> composer, IParser<T, IMessage> parser)
         {
             _dataPortProvider = dataPortProvider;
             _composer = composer;
@@ -18,13 +18,13 @@ namespace Nandaka
             _dataPortProvider.OnDataRecieved += (sender, data) => _parser.Parse(data);
         }
 
-        public void SendMessage(IProtocolMessage message)
+        public void SendMessage(IMessage message)
         {
             var composedMessage = _composer.Compose(message);
             _dataPortProvider.Write(composedMessage);
         }
 
-        public event EventHandler<IProtocolMessage> MessageReceived
+        public event EventHandler<IMessage> MessageReceived
         {
             add => _parser.MessageParsed += value;
             remove => _parser.MessageParsed += value;

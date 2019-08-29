@@ -11,7 +11,7 @@ namespace TestApp
     {
         static void Main(string[] args)
         {
-            var commonMessage = new CommonMessage(MessageType.ReadDataRequest, 0xFF);
+            var commonMessage = new MilliGanjubusMessage(MessageType.ReadDataRequest, 0xFF);
             commonMessage.AddRegister(new TestByteRegister(1, 2));
             commonMessage.AddRegister(new TestByteRegister(1, 3));
             commonMessage.AddRegister(new TestByteRegister(1, 4));

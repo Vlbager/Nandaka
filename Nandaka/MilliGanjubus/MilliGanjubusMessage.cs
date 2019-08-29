@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Nandaka
+namespace Nandaka.MilliGanjubus
 {
-    public class CommonMessage : IProtocolMessage
+    public class MilliGanjubusMessage : IMessage
     {
         private readonly List<IRegister> _registers = new List<IRegister>();
 
         public int DeviceAddress { get; private set; }
 
-        public CommonMessage(MessageType messageType, int deviceAddress)
+        public MilliGanjubusMessage(MessageType messageType, int deviceAddress, int errorCode = 0)
         {
             MessageType = messageType;
             DeviceAddress = deviceAddress;
+            ErrorCode = errorCode;
         }
 
         public IEnumerable<IRegister> Registers => _registers;
@@ -25,5 +26,7 @@ namespace Nandaka
         }
 
         public MessageType MessageType { get; private set; }
+
+        public int ErrorCode { get; private set; }
     }
 }

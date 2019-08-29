@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Nandaka
 {
-    public abstract class ApplicationParserBase<TIn> : IParser<TIn, IProtocolMessage>
+    public abstract class ApplicationParserBase<TIn> : IParser<TIn, IMessage>
     {
         private readonly DataLinkParserBase<TIn> _dataLinkParser;
 
@@ -21,13 +21,13 @@ namespace Nandaka
             set => _dataLinkParser.AwaitingReplyAddress = value;
         }
 
-        public event EventHandler<IProtocolMessage> MessageParsed;
+        public event EventHandler<IMessage> MessageParsed;
 
         public void Parse(TIn data)
         {
             _dataLinkParser.Parse(data);
         }
 
-        protected abstract IProtocolMessage ApplicationParse(byte[] data);
+        protected abstract IMessage ApplicationParse(byte[] data);
     }
 }

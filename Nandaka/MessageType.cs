@@ -10,7 +10,10 @@ namespace Nandaka
         WriteDataRequest,
         ReadDataResponse,
         WriteDataResponse,
-        ErrorMessage
+        ErrorMessage,
+        // todo: think about it.
+        ApplicationDataError,
+        None
     }
 
 }

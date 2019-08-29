@@ -4,10 +4,11 @@ using System.Text;
 
 namespace Nandaka
 {
-    public interface IProtocolMessage
+    public interface IMessage
     {
         int DeviceAddress { get; }
         IEnumerable<IRegister> Registers { get; }
         MessageType MessageType { get; }
+        int ErrorCode { get; }
     }
 }

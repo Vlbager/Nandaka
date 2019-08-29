@@ -9,9 +9,9 @@ namespace Nandaka.MG.Tests
 {
     public class ParserTests
     {
-        private IParser<byte[], IProtocolMessage> _parser;
+        private IParser<byte[], IMessage> _parser;
         private int _messageCount;
-        private IProtocolMessage _parsedMessage;
+        private IMessage _parsedMessage;
 
 
         public ParserTests()
@@ -20,7 +20,7 @@ namespace Nandaka.MG.Tests
             _parser.MessageParsed += parser_MessageParsed;
         }
 
-        private void parser_MessageParsed(object sender, IProtocolMessage e)
+        private void parser_MessageParsed(object sender, IMessage e)
         {
             _messageCount++;
             _parsedMessage = e;
@@ -165,8 +165,8 @@ namespace Nandaka.MG.Tests
             Assert.Equal(MessageType.ErrorMessage, _parsedMessage.MessageType);
             Assert.Equal(_parsedMessage.DeviceAddress, buffer[1]);
             // Assert errorType
-            var mgError = _parsedMessage as MilliGanjubusErrorMessage;
-            Assert.Equal((MilliGanjubusErrorType)buffer[5], mgError.ErrorType);
+            var milliGanjubusMessage = _parsedMessage as MilliGanjubusMessage;
+            Assert.Equal(buffer[5], milliGanjubusMessage.ErrorCode);
         }
 
         [Fact]
@@ -287,7 +287,7 @@ namespace Nandaka.MG.Tests
         }
 
         [Fact]
-        [Trait("ShouldParse", "WithEmptyMessage")]
+        [Trait("ShouldParse", "AsApplicationDataError")]
         public void WrongDataAmount()
         {
             // Arrange
@@ -295,9 +295,46 @@ namespace Nandaka.MG.Tests
             // Act
             _parser.AwaitingReplyAddress = buffer[1];
             _parser.Parse(buffer);
+            var milliGanjubusMessage = _parsedMessage as MilliGanjubusMessage;
             // Assert
             Assert.Equal(1, _messageCount);
-            Assert.True(_parsedMessage.Registers.Count() <= 0);
+            Assert.Empty(_parsedMessage.Registers);
+            Assert.Equal((int)MilliGanjubusErrorType.WrongDataAmount, milliGanjubusMessage.ErrorCode);
+        }
+
+        [Fact]
+        [Trait("ShouldParse", "AsApplicationDataError")]
+        public void WrongGByte()
+        {
+            // Arrange
+            var buffer = new byte[] { 0xBB, 0x88, 0x10, 0x8C, 0xBB, 0xCC, 0xBB, 0x04, 0x08, 0xE1, 0x00, 0xBB, 0x88, 0x08, 0x76, 0xED };
+            // Act
+            _parser.AwaitingReplyAddress = buffer[1];
+            _parser.Parse(buffer);
+            var milliGanjubusMessage = _parsedMessage as MilliGanjubusMessage;
+            // Assert
+            Assert.Equal(1, _messageCount);
+            Assert.Empty(_parsedMessage.Registers);
+            Assert.Equal((int)MilliGanjubusErrorType.WrongGByte, milliGanjubusMessage.ErrorCode);
+        }
+
+        [Fact]
+        [Trait("ShouldParse", "AsApplicationDataError")]
+        public void StartAddressIsGreaterThanEndAddress()
+        {
+            // Arrange
+            var buffer = new byte[] { 0xBB, 0x00, 0x0C, 0x00, 0xA5, 0x04, 0x01, 0x03, 0x04, 0x05, 0x06, 0x00 };
+            // fill checksums
+            buffer[3] = CheckSum.CRC8(buffer.AsSpan().Slice(0, 3).ToArray());
+            buffer[buffer.Length - 1] = CheckSum.CRC8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            // Act
+            _parser.AwaitingReplyAddress = buffer[1];
+            _parser.Parse(buffer);
+            var milliGanjubusMessage = _parsedMessage as MilliGanjubusMessage;
+            // Assert
+            Assert.Equal(1, _messageCount);
+            Assert.Empty(_parsedMessage.Registers);
+            Assert.Equal((int)MilliGanjubusErrorType.WrongRegisterAddress, milliGanjubusMessage.ErrorCode);
         }
 
         [Fact]
@@ -334,6 +371,22 @@ namespace Nandaka.MG.Tests
             var buffer = new byte[] { 0xBB, 0x01, 0x07, 0xB8, 0x01, 0x01, 0x00 };
             // Act
             _parser.AwaitingReplyAddress = buffer[1];
+            _parser.Parse(buffer);
+            // Assert
+            Assert.Equal(0, _messageCount);
+        }
+
+        [Fact]
+        [Trait("ShouldNotParse", "")]
+        public void PacketTooLong()
+        {
+            // Arrange
+            var buffer = new byte[] { 0xBB, 0x01, 0x11, 0x00, 0xA5, 0x01, 0x08, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x00 };
+            // fill checksums
+            buffer[3] = CheckSum.CRC8(buffer.AsSpan().Slice(0, 3).ToArray());
+            buffer[buffer.Length - 1] = CheckSum.CRC8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            // Act
+            _parser.AwaitingReplyAddress = 0x01;
             _parser.Parse(buffer);
             // Assert
             Assert.Equal(0, _messageCount);
