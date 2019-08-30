@@ -9,7 +9,7 @@ namespace Nandaka.MG.Tests
 {
     public class ParserTests
     {
-        private IParser<byte[], IMessage> _parser;
+        private readonly IParser<byte[], IMessage> _parser;
         private int _messageCount;
         private IMessage _parsedMessage;
 
@@ -68,6 +68,8 @@ namespace Nandaka.MG.Tests
             // Asserts
             Assert.Equal(1, _messageCount);
             Assert.Equal(messageType, _parsedMessage.MessageType);
+
+            Assert.Equal(_parsedMessage.DeviceAddress, _parser.AwaitingReplyAddress);
             // Assert registers
             int byteIndex = 5;
             foreach (var register in _parsedMessage.Registers)
@@ -122,7 +124,7 @@ namespace Nandaka.MG.Tests
             // Asserts
             Assert.Equal(1, _messageCount);
             Assert.Equal(messageType, _parsedMessage.MessageType);
-            Assert.Equal(_parsedMessage.DeviceAddress, buffer[1]);
+            Assert.Equal(_parsedMessage.DeviceAddress, _parser.AwaitingReplyAddress);
             // Assert registers
             int byteIndex = 5;
             int currentAddress = buffer[byteIndex++];
@@ -308,6 +310,25 @@ namespace Nandaka.MG.Tests
         {
             // Arrange
             var buffer = new byte[] { 0xBB, 0x88, 0x10, 0x8C, 0xBB, 0xCC, 0xBB, 0x04, 0x08, 0xE1, 0x00, 0xBB, 0x88, 0x08, 0x76, 0xED };
+            // Act
+            _parser.AwaitingReplyAddress = buffer[1];
+            _parser.Parse(buffer);
+            var milliGanjubusMessage = _parsedMessage as MilliGanjubusMessage;
+            // Assert
+            Assert.Equal(1, _messageCount);
+            Assert.Empty(_parsedMessage.Registers);
+            Assert.Equal((int)MilliGanjubusErrorType.WrongGByte, milliGanjubusMessage.ErrorCode);
+        }
+
+        [Theory]
+        [Trait("ShouldParse", "AsApplicationDataError")]
+        [InlineData(new byte[] { 0xBB, 0x88, 0x10, 0x00, 0xAA, 0xCC, 0xBB, 0x04, 0x08, 0xE1, 0x00, 0xBB, 0x88, 0x08, 0x76, 0x00 })]
+        [InlineData(new byte[] { 0xBB, 0x88, 0x10, 0x00, 0x0A, 0xCC, 0xBB, 0x04, 0x08, 0xE1, 0x00, 0xBB, 0x88, 0x08, 0x76, 0x00 })]
+        public void WrongFNibble(byte[] buffer)
+        {
+            // fill checksums
+            buffer[3] = CheckSum.CRC8(buffer.AsSpan().Slice(0, 3).ToArray());
+            buffer[buffer.Length - 1] = CheckSum.CRC8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             _parser.AwaitingReplyAddress = buffer[1];
             _parser.Parse(buffer);

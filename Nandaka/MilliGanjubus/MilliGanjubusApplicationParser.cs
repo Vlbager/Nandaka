@@ -35,7 +35,7 @@ namespace Nandaka.MilliGanjubus
                         case MilliGanjubusBase.FWriteRange:
                             return FromRange(MessageType.WriteDataRequest, true);
                     }
-                    throw new ArgumentException();
+                    break;
                 case MilliGanjubusBase.GReply:
                     switch (gByte & 0xF)
                     {
@@ -50,14 +50,16 @@ namespace Nandaka.MilliGanjubus
                         case MilliGanjubusBase.FWriteRange:
                             return FromRange(MessageType.WriteDataResponse, false);
                     }
-                    throw new ArgumentException();
+                    break;
                 case MilliGanjubusBase.GError:
                     var errorCode = data[MilliGanjubusBase.DataOffset + 1];
                     return new MilliGanjubusMessage(MessageType.ErrorMessage, deviceAddress, errorCode);
-                default:
-                    return new MilliGanjubusMessage(MessageType.ApplicationDataError, 
-                        deviceAddress, (int)MilliGanjubusErrorType.WrongGByte);
+
             }
+            // If message not returned yet, then gByte is wrong.
+            // ReSharper disable once RedundantArgumentDefaultValue
+            return new MilliGanjubusMessage(MessageType.ApplicationDataError,
+                deviceAddress, (int)MilliGanjubusErrorType.WrongGByte);
 
             // Local functions for different types of packet.
             IMessage FromSeries(MessageType messageType, bool withValues)

@@ -1,8 +1,7 @@
 ﻿
 public enum ErrorCode
 {
-    None,
-    WrongRegisterAddress,
+    WrongRegisterAddress = 1,
     WrongDataAmount,
     Undefined
 }
