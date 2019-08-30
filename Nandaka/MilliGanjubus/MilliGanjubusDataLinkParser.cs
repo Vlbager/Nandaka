@@ -49,7 +49,9 @@ namespace Nandaka.MilliGanjubus
                         CheckByteValue(byteValue == MilliGanjubusBase.StartByte);
                         break;
                     case ParsingStage.WaitingAddress:
-                        CheckByteValue(byteValue == AwaitingReplyAddress || byteValue == MilliGanjubusBase.DirectCastAddress);
+                        CheckByteValue(byteValue == AwaitingReplyAddress || 
+                                       byteValue == MilliGanjubusBase.DirectCastAddress ||
+                                       byteValue == MilliGanjubusBase.BroadCastAddress);
                         break;
                     case ParsingStage.WaitingSize:
                         CheckByteValue(byteValue <= MilliGanjubusBase.MaxPacketLength);

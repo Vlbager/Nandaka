@@ -104,8 +104,8 @@ namespace Nandaka.MilliGanjubus
                         deviceAddress, (int)MilliGanjubusErrorType.WrongRegisterAddress);
                 }
 
-                // Check registers count is valid number (less than max data length minus addess bytes).
-                if (registersCount > MilliGanjubusBase.MaxDataLength - 2)
+                // Check registers count is valid number (less than register values bytes count).
+                if (withValues && registersCount > data[MilliGanjubusBase.SizeOffset] - MilliGanjubusBase.MinPacketLength - 2)
                 {
                     return new MilliGanjubusMessage(MessageType.ApplicationDataError,
                         deviceAddress, (int)MilliGanjubusErrorType.WrongDataAmount);

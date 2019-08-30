@@ -338,6 +338,25 @@ namespace Nandaka.MG.Tests
         }
 
         [Fact]
+        [Trait("ShouldParse", "AsApplicationDataError")]
+        public void TooManyRegistersInRangeMessage()
+        {
+            // Arrange
+            var buffer = new byte[] { 0xBB, 0x00, 0x0C, 0x00, 0xA5, 0x01, 0x07, 0x03, 0x04, 0x05, 0x06, 0x00 };
+            // fill checksums
+            buffer[3] = CheckSum.CRC8(buffer.AsSpan().Slice(0, 3).ToArray());
+            buffer[buffer.Length - 1] = CheckSum.CRC8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            // Act
+            _parser.AwaitingReplyAddress = buffer[1];
+            _parser.Parse(buffer);
+            var milliGanjubusMessage = _parsedMessage as MilliGanjubusMessage;
+            // Assert
+            Assert.Equal(1, _messageCount);
+            Assert.Empty(_parsedMessage.Registers);
+            Assert.Equal((int)MilliGanjubusErrorType.WrongDataAmount, milliGanjubusMessage.ErrorCode);
+        }
+
+        [Fact]
         [Trait("ShouldNotParse", "")]
         public void ZeroPacket()
         {

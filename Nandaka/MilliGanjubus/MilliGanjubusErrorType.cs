@@ -1,4 +1,5 @@
-﻿public enum MilliGanjubusErrorType
+﻿
+public enum MilliGanjubusErrorType
 {
     WrongGByte,
     WrongRegisterAddress,
