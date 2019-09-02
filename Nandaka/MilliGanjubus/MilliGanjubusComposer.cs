@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Nandaka.MilliGanjubus
 {
-    public class MilliGanjubusComposer : IComposer<byte[]>
+    public class MilliGanjubusComposer : IComposer<IMessage, byte[]>
     {
         // todo: how to make protocolInfo fields changeable for MilliGanjubus or GeneralGanjubus 
         // or DontKnowGanjubus? (Composer and parser can be the same for all of them)

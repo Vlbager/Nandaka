@@ -6,7 +6,7 @@ namespace Nandaka.MilliGanjubus
 {
     public class MilliGanjubus : ProtocolBase<byte[]>
     {
-        public MilliGanjubus(IDataPortProvider<byte[]> dataPortProvider, IComposer<byte[]> composer,
+        public MilliGanjubus(IDataPortProvider<byte[]> dataPortProvider, IComposer<IMessage, byte[]> composer,
             IParser<byte[], IMessage> parser) : base(dataPortProvider, composer, parser)
         {
         }

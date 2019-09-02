@@ -4,8 +4,8 @@ using System.Text;
 
 namespace Nandaka
 {
-    public interface IComposer<out T>
+    public interface IComposer<in TIn, out TOut>
     {
-        T Compose(IMessage message);
+        TOut Compose(TIn message);
     }
 }

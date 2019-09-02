@@ -7,10 +7,10 @@ namespace Nandaka
     public abstract class ProtocolBase<T> : IProtocol
     {
         private readonly IDataPortProvider<T> _dataPortProvider;
-        private readonly IComposer<T> _composer;
+        private readonly IComposer<IMessage, T> _composer;
         private readonly IParser<T, IMessage> _parser;
 
-        protected ProtocolBase(IDataPortProvider<T> dataPortProvider, IComposer<T> composer, IParser<T, IMessage> parser)
+        protected ProtocolBase(IDataPortProvider<T> dataPortProvider, IComposer<IMessage, T> composer, IParser<T, IMessage> parser)
         {
             _dataPortProvider = dataPortProvider;
             _composer = composer;
