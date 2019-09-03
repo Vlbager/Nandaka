@@ -1,8 +1,11 @@
 ﻿
-public enum MilliGanjubusErrorType
+namespace Nandaka.MilliGanjubus
 {
-    WrongGByte,
-    WrongRegisterAddress,
-    WrongDataAmount,
-    UnableToExecuteCommand
+    public enum MilliGanjubusErrorType
+    {
+        WrongGByte,
+        WrongRegisterAddress,
+        WrongDataAmount,
+        UnableToExecuteCommand
+    }
 }

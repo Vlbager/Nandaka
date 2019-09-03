@@ -9,17 +9,17 @@ using System.Text;
 
 namespace Nandaka
 {
-    public class SerivalDataPortProvider : IDataPortProvider<byte[]>
+    public class SerialDataPortProvider : IDataPortProvider<byte[]>
     {
         public event EventHandler<byte[]> OnDataRecieved;
 
         private readonly SerialPort _serialPort;
 
-        public SerivalDataPortProvider(string portName, int baudRate = 9600)
+        public SerialDataPortProvider(string portName, int baudRate = 9600)
         {
             _serialPort = new SerialPort(portName, baudRate);
             _serialPort.Open();
-            _serialPort.DataReceived += (sender, args) => OnDataRecieved(sender, Read());
+            _serialPort.DataReceived += (sender, args) => OnDataRecieved?.Invoke(sender, Read());
         }
 
         public byte[] Read()

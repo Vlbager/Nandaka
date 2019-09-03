@@ -7,8 +7,7 @@ namespace Nandaka.MilliGanjubus
 {
     public class MilliGanjubusComposer : IComposer<IMessage, byte[]>
     {
-        // todo: how to make protocolInfo fields changeable for MilliGanjubus or GeneralGanjubus 
-        // or DontKnowGanjubus? (Composer and parser can be the same for all of them)
+        // todo: how to make protocolInfo fields changeable
         // Interface with getter-methods?
 
         public byte[] Compose(IMessage message)
@@ -24,10 +23,10 @@ namespace Nandaka.MilliGanjubus
             packet[MilliGanjubusBase.AddressOffset] = (byte)message.DeviceAddress;
             packet[MilliGanjubusBase.SizeOffset] = (byte)packet.Length;
             packet[MilliGanjubusBase.HeaderCheckSumOffset] =
-                CheckSum.CRC8(packet.Take(MilliGanjubusBase.HeaderCheckSumOffset).ToArray());
+                CheckSum.Crc8(packet.Take(MilliGanjubusBase.HeaderCheckSumOffset).ToArray());
             Array.Copy(data, 0, packet, MilliGanjubusBase.DataOffset, data.Length);
             packet[packet.Length - 1] =
-                CheckSum.CRC8(packet.Take(packet.Length - MilliGanjubusBase.PacketCheckSumSize).ToArray());
+                CheckSum.Crc8(packet.Take(packet.Length - MilliGanjubusBase.PacketCheckSumSize).ToArray());
             return packet;
         }
 

@@ -6,12 +6,12 @@ namespace Nandaka
 {
     public class CheckSum
     {
-        public static byte CRC8(byte[] pcBlock)
+        public static byte Crc8(byte[] pcBlock)
         {
-            return CRC8(pcBlock, pcBlock.Length);
+            return Crc8(pcBlock, pcBlock.Length);
         }
 
-        private static byte CRC8(byte[] pcBlock, int len)
+        private static byte Crc8(byte[] pcBlock, int len)
         {
             byte crc = 0xFF;
 

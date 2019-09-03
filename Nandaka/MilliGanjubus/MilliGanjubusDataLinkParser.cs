@@ -57,14 +57,14 @@ namespace Nandaka.MilliGanjubus
                         CheckByteValue(byteValue <= MilliGanjubusBase.MaxPacketLength);
                         break;
                     case ParsingStage.WaitingHeaderCrc:
-                        CheckByteValue(byteValue == CheckSum.CRC8(_buffer.GetRange(0, _parserCounter).ToArray()));
+                        CheckByteValue(byteValue == CheckSum.Crc8(_buffer.GetRange(0, _parserCounter).ToArray()));
                         break;
                     default:
                         if (_parserCounter < _buffer[MilliGanjubusBase.SizeOffset] - 1)
                         {
                             _parserCounter++;
                         }
-                        else if (_buffer[_parserCounter] == CheckSum.CRC8(_buffer.GetRange(0, _parserCounter).ToArray()))
+                        else if (_buffer[_parserCounter] == CheckSum.Crc8(_buffer.GetRange(0, _parserCounter).ToArray()))
                         {
                             OnMessageParsed(_buffer.ToArray());
                             _parserCounter = (int)ParsingStage.WaitingStartByte;

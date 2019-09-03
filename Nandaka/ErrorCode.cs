@@ -1,7 +1,10 @@
 ﻿
-public enum ErrorCode
+namespace Nandaka
 {
-    WrongRegisterAddress = 1,
-    WrongDataAmount,
-    Undefined
+    public enum ErrorCode
+    {
+        WrongRegisterAddress = 1,
+        WrongDataAmount,
+        Undefined
+    }
 }

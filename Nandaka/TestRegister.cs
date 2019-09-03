@@ -18,7 +18,7 @@ namespace Nandaka
 
         public byte[] GetBytes()
         {
-            return new byte[] { Value };
+            return new [] { Value };
         }
     }
 }

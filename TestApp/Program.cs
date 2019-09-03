@@ -24,7 +24,7 @@ namespace TestApp
 
         private void TestSerialPort()
         {
-            var serialPort = new SerivalDataPortProvider("COM6");
+            var serialPort = new SerialDataPortProvider("COM6");
             serialPort.OnDataRecieved += (sender, message) =>
             {
                 Console.Write(Encoding.ASCII.GetString(message));

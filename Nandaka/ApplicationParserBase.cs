@@ -12,7 +12,7 @@ namespace Nandaka
         {
             _dataLinkParser = dataLinkParser;
             _dataLinkParser.MessageParsed += 
-                (sender, checkedMessage) => MessageParsed(sender, ApplicationParse(checkedMessage));
+                (sender, checkedMessage) => MessageParsed?.Invoke(sender, ApplicationParse(checkedMessage));
         }
 
         public int AwaitingReplyAddress

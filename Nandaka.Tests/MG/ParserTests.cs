@@ -1,11 +1,9 @@
 using System;
-using System.Linq;
 using Xunit;
-using Nandaka;
 using Nandaka.MilliGanjubus;
 
 
-namespace Nandaka.MG.Tests
+namespace Nandaka.Tests.MG
 {
     public class ParserTests
     {
@@ -59,16 +57,15 @@ namespace Nandaka.MG.Tests
         public void ParseSeries(byte[] buffer, MessageType messageType, bool withValues)
         {
             // Arrange
-            // fill checksums
-            buffer[3] = CheckSum.CRC8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.CRC8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            // fill checkSums
+            buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
+            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             _parser.AwaitingReplyAddress = buffer[1];
             _parser.Parse(buffer);
             // Asserts
             Assert.Equal(1, _messageCount);
             Assert.Equal(messageType, _parsedMessage.MessageType);
-
             Assert.Equal(_parsedMessage.DeviceAddress, _parser.AwaitingReplyAddress);
             // Assert registers
             int byteIndex = 5;
@@ -84,6 +81,8 @@ namespace Nandaka.MG.Tests
                     Assert.Equal(buffer[byteIndex++], byteInRegister);
                 }
             }
+            // Assert all data bytes added to message.
+            Assert.Equal(byteIndex, buffer.Length - 1);
         }
 
         [Theory]
@@ -115,9 +114,9 @@ namespace Nandaka.MG.Tests
         public void ParseRange(byte[] buffer, MessageType messageType, bool withValues)
         {
             // Arrange
-            // fill checksums
-            buffer[3] = CheckSum.CRC8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.CRC8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            // fill checkSums
+            buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
+            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             _parser.AwaitingReplyAddress = buffer[1];
             _parser.Parse(buffer);
@@ -156,9 +155,9 @@ namespace Nandaka.MG.Tests
         public void ParseErrorMessage(byte[] buffer)
         {
             // Arrange
-            // fill checksums
-            buffer[3] = CheckSum.CRC8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.CRC8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            // fill checkSums
+            buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
+            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             _parser.AwaitingReplyAddress = buffer[1];
             _parser.Parse(buffer);
@@ -168,6 +167,7 @@ namespace Nandaka.MG.Tests
             Assert.Equal(_parsedMessage.DeviceAddress, buffer[1]);
             // Assert errorType
             var milliGanjubusMessage = _parsedMessage as MilliGanjubusMessage;
+            Assert.NotNull(milliGanjubusMessage);
             Assert.Equal(buffer[5], milliGanjubusMessage.ErrorCode);
         }
 
@@ -247,7 +247,7 @@ namespace Nandaka.MG.Tests
         public void FragmentedMessage()
         {
             // Arrange
-            var buffer1 = new byte[] { 0xBB};
+            var buffer1 = new byte[] { 0xBB };
             var buffer2 = new byte[] { 0x01, 0x07, };
             var buffer3 = new byte[] { 0xB8, 0x01, 0x01 };
             var buffer4 = new byte[] { 0xC5 };
@@ -301,6 +301,7 @@ namespace Nandaka.MG.Tests
             // Assert
             Assert.Equal(1, _messageCount);
             Assert.Empty(_parsedMessage.Registers);
+            Assert.NotNull(milliGanjubusMessage);
             Assert.Equal((int)MilliGanjubusErrorType.WrongDataAmount, milliGanjubusMessage.ErrorCode);
         }
 
@@ -317,6 +318,7 @@ namespace Nandaka.MG.Tests
             // Assert
             Assert.Equal(1, _messageCount);
             Assert.Empty(_parsedMessage.Registers);
+            Assert.NotNull(milliGanjubusMessage);
             Assert.Equal((int)MilliGanjubusErrorType.WrongGByte, milliGanjubusMessage.ErrorCode);
         }
 
@@ -326,9 +328,9 @@ namespace Nandaka.MG.Tests
         [InlineData(new byte[] { 0xBB, 0x88, 0x10, 0x00, 0x0A, 0xCC, 0xBB, 0x04, 0x08, 0xE1, 0x00, 0xBB, 0x88, 0x08, 0x76, 0x00 })]
         public void WrongFNibble(byte[] buffer)
         {
-            // fill checksums
-            buffer[3] = CheckSum.CRC8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.CRC8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            // fill checkSums
+            buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
+            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             _parser.AwaitingReplyAddress = buffer[1];
             _parser.Parse(buffer);
@@ -336,6 +338,7 @@ namespace Nandaka.MG.Tests
             // Assert
             Assert.Equal(1, _messageCount);
             Assert.Empty(_parsedMessage.Registers);
+            Assert.NotNull(milliGanjubusMessage);
             Assert.Equal((int)MilliGanjubusErrorType.WrongGByte, milliGanjubusMessage.ErrorCode);
         }
 
@@ -345,9 +348,9 @@ namespace Nandaka.MG.Tests
         {
             // Arrange
             var buffer = new byte[] { 0xBB, 0x00, 0x0C, 0x00, 0xA5, 0x04, 0x01, 0x03, 0x04, 0x05, 0x06, 0x00 };
-            // fill checksums
-            buffer[3] = CheckSum.CRC8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.CRC8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            // fill checkSums
+            buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
+            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             _parser.AwaitingReplyAddress = buffer[1];
             _parser.Parse(buffer);
@@ -355,6 +358,7 @@ namespace Nandaka.MG.Tests
             // Assert
             Assert.Equal(1, _messageCount);
             Assert.Empty(_parsedMessage.Registers);
+            Assert.NotNull(milliGanjubusMessage);
             Assert.Equal((int)MilliGanjubusErrorType.WrongRegisterAddress, milliGanjubusMessage.ErrorCode);
         }
 
@@ -364,9 +368,9 @@ namespace Nandaka.MG.Tests
         {
             // Arrange
             var buffer = new byte[] { 0xBB, 0x00, 0x0C, 0x00, 0xA5, 0x01, 0x07, 0x03, 0x04, 0x05, 0x06, 0x00 };
-            // fill checksums
-            buffer[3] = CheckSum.CRC8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.CRC8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            // fill checkSums
+            buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
+            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             _parser.AwaitingReplyAddress = buffer[1];
             _parser.Parse(buffer);
@@ -374,6 +378,7 @@ namespace Nandaka.MG.Tests
             // Assert
             Assert.Equal(1, _messageCount);
             Assert.Empty(_parsedMessage.Registers);
+            Assert.NotNull(milliGanjubusMessage);
             Assert.Equal((int)MilliGanjubusErrorType.WrongDataAmount, milliGanjubusMessage.ErrorCode);
         }
 
@@ -422,9 +427,9 @@ namespace Nandaka.MG.Tests
         {
             // Arrange
             var buffer = new byte[] { 0xBB, 0x01, 0x11, 0x00, 0xA5, 0x01, 0x08, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x00 };
-            // fill checksums
-            buffer[3] = CheckSum.CRC8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.CRC8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            // fill checkSums
+            buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
+            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             _parser.AwaitingReplyAddress = 0x01;
             _parser.Parse(buffer);
