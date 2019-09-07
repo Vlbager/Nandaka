@@ -3,8 +3,13 @@ dist: xenial
 mono: none
 dotnet: 2.2
 
+before_install:
+  - chmod ugo+x .travis/.pvs.sh
+  - travis_retry bash .travis/.pvs.sh pvs_install
 install:
   - dotnet restore
 script:
   - dotnet build
   - dotnet test Nandaka.Tests/Nandaka.Tests.csproj
+after_success:
+  - bash .travis/.pvs.sh pvs_analyze

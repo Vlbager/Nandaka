@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Nandaka
 {
-    public class SerialDataPortProvider : IDataPortProvider<byte[]>
+    public class SerialDataPortProvider : IDataPortProvider<byte[]>, IDisposable
     {
         public event EventHandler<byte[]> OnDataRecieved;
 

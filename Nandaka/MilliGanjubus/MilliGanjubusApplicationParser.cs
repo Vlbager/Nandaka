@@ -77,15 +77,22 @@ namespace Nandaka.MilliGanjubus
 
                 var message = new MilliGanjubusMessage(messageType, data[MilliGanjubusBase.AddressOffset]);
 
-                while (byteIndex < packetSize - 1)
+                // todo: add register class and rework this.
+                if (withValues)
                 {
-                    // todo: add register class and rework this.
-                    var register = withValues ?
-                        new TestByteRegister(data[byteIndex++], data[byteIndex++]) :
-                        new TestByteRegister(data[byteIndex++]);
-
-                    message.AddRegister(register);
+                    while (byteIndex < packetSize - 1)
+                    {
+                        message.AddRegister(new TestByteRegister(data[byteIndex++], data[byteIndex++]));
+                    }
                 }
+                else
+                {
+                    while (byteIndex < packetSize - 1)
+                    {
+                        message.AddRegister(new TestByteRegister(data[byteIndex++]));
+                    }
+                }
+
                 return message;
             }
 
