@@ -1,15 +1,27 @@
 language: csharp
-dist: xenial
-mono: none
-dotnet: 2.2
+matrix:
+  include:
+    - os: linux
+      dist: xenial
+      mono: none
+      dotnet: 2.2
+    - os: windows
+      mono: none
 
 before_install:
-  - chmod ugo+x .travis/.pvs.sh
-  - travis_retry bash .travis/.pvs.sh pvs_install
+  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then
+      powershell -Command 'Set-ExecutionPolicy -ExecutionPolicy RemoteSigned';
+    fi
 install:
+  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then
+      powershell -Command '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; &([scriptblock]::Create((Invoke-WebRequest -useb 'https://dot.net/v1/dotnet-install.ps1'))) -Channel 2.2 -InstallDir "C:/Program Files/dotnet"';
+      powershell ".travis/pvs-install.ps1 -username ${PVS_USERNAME} -key ${PVS_KEY}";
+    fi
   - dotnet restore
 script:
   - dotnet build
   - dotnet test Nandaka.Tests/Nandaka.Tests.csproj
 after_success:
-  - bash .travis/.pvs.sh pvs_analyze
+  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then
+      powershell ".travis/pvs-analyze.ps1 -target Nandaka/Nandaka.csproj -mailFrom ${AUTOPOST_MAIL} -password ${AUTOPOST_PASSWORD} -mailTo ${OWNER_MAIL}";
+    fi
