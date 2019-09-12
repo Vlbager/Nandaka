@@ -8,6 +8,9 @@ matrix:
     - os: windows
       mono: none
 
+git:
+  depth: 3
+
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "windows" ]; then
       powershell -Command 'Set-ExecutionPolicy -ExecutionPolicy RemoteSigned';
