@@ -25,6 +25,17 @@ namespace Nandaka.MilliGanjubus
             _registers.Add(register);
         }
 
+        public void RemoveRegister(IRegister register)
+        {
+            if (!_registers.Contains(register))
+            {
+                // todo: Create a custom exception
+                throw new ArgumentException("Message do not contain this register");
+            }
+
+            _registers.Remove(register);
+        }
+
         public MessageType MessageType { get; private set; }
 
         public int ErrorCode { get; private set; }

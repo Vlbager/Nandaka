@@ -17,6 +17,7 @@ namespace Nandaka.MilliGanjubus
         public const int SizeOffset = 2;
         public const int HeaderCheckSumOffset = 3;
         public const int DataOffset = 4;
+        public const int AddressSize = 1;
         public const int HeaderCheckSumSize = sizeof(byte);
         public const int PacketCheckSumSize = sizeof(byte);
 
