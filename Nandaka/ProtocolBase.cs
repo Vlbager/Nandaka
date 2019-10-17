@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Nandaka
 {
-    public abstract class ProtocolBase<T> : IProtocol
+    public abstract class ProtocolBase<T> : IProtocol<T>
     {
         private readonly IDataPortProvider<T> _dataPortProvider;
         private readonly IComposer<IMessage, T> _composer;
@@ -18,10 +18,16 @@ namespace Nandaka
             _dataPortProvider.OnDataRecieved += (sender, data) => _parser.Parse(data);
         }
 
-        public void SendMessage(IMessage message)
+        public abstract IMessage GetMessage(IEnumerable<IRegister> registers, int deviceAddress, MessageType type, int errorCode = 0);
+
+        public T PreparePacket(IMessage message)
         {
-            var composedMessage = _composer.Compose(message);
-            _dataPortProvider.Write(composedMessage);
+            return _composer.Compose(message);
+        }
+
+        public void SendPacket(T packet)
+        {
+            _dataPortProvider.Write(packet);
         }
 
         public event EventHandler<IMessage> MessageReceived

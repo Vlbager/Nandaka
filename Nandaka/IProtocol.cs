@@ -4,9 +4,12 @@ using System.Text;
 
 namespace Nandaka
 {
-    public interface IProtocol
+    public interface IProtocol<T>
     {
-        void SendMessage(IMessage message);
+        IMessage GetMessage(IEnumerable<IRegister> registers, int deviceAddress, MessageType type, int errorCode = 0);
+        T PreparePacket(IMessage message);
+
+        void SendPacket(T packet);
 
         event EventHandler<IMessage> MessageReceived;
     }

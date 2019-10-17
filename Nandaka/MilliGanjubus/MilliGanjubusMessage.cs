@@ -9,7 +9,7 @@ namespace Nandaka.MilliGanjubus
     {
         private readonly List<IRegister> _registers = new List<IRegister>();
 
-        public int DeviceAddress { get; private set; }
+        public int DeviceAddress { get; }
 
         public MilliGanjubusMessage(MessageType messageType, int deviceAddress, int errorCode = 0)
         {
@@ -19,6 +19,7 @@ namespace Nandaka.MilliGanjubus
         }
 
         public IEnumerable<IRegister> Registers => _registers;
+        public int RegistersCount => _registers.Count;
 
         public void AddRegister(IRegister register)
         {
@@ -36,8 +37,8 @@ namespace Nandaka.MilliGanjubus
             _registers.Remove(register);
         }
 
-        public MessageType MessageType { get; private set; }
+        public MessageType MessageType { get;}
 
-        public int ErrorCode { get; private set; }
+        public int ErrorCode { get; }
     }
 }
