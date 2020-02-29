@@ -4,12 +4,12 @@ matrix:
     - os: linux
       dist: xenial
       mono: none
-      dotnet: 3.0
+      dotnet: 2.2
     - os: windows
       mono: none
 
 git:
-  depth: 3
+  depth: 1
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "windows" ]; then
@@ -17,7 +17,7 @@ before_install:
     fi
 install:
   - if [ "$TRAVIS_OS_NAME" == "windows" ]; then
-      powershell -Command '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; &([scriptblock]::Create((Invoke-WebRequest -useb 'https://dot.net/v1/dotnet-install.ps1'))) -Channel 3.0 -InstallDir "C:/Program Files/dotnet"';
+      powershell -Command '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; &([scriptblock]::Create((Invoke-WebRequest -useb 'https://dot.net/v1/dotnet-install.ps1'))) -Channel 2.2 -InstallDir "C:/Program Files/dotnet"';
       powershell ".travis/pvs-install.ps1 -username ${PVS_USERNAME} -key ${PVS_KEY}";
     fi
   - dotnet restore
