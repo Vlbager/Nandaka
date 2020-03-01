@@ -26,5 +26,5 @@ script:
   - dotnet test Nandaka.Tests/Nandaka.Tests.csproj
 after_success:
   - if [ "$TRAVIS_OS_NAME" == "windows" ]; then
-      powershell ".travis/pvs-analyze.ps1 -target Nandaka/Nandaka.csproj -mailFrom ${AUTOPOST_MAIL} -password ${AUTOPOST_PASSWORD} -mailTo ${OWNER_MAIL}";
+      powershell ".travis/pvs-analyze.ps1 -targets Nandaka.Core/Nandaka.Core.csproj, Nandaka.MilliGanjubus/Nandaka.MilliGanjubus.csproj -mailFrom ${AUTOPOST_MAIL} -password ${AUTOPOST_PASSWORD} -mailTo ${OWNER_MAIL}";
     fi
