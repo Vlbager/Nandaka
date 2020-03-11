@@ -8,7 +8,7 @@ namespace Nandaka.Core.Session
     {
         IDevice Device { get; }
         IProtocol<T> Protocol { get; }
-        void EnqueueRegisters(IEnumerable<IRegister> registers, MessageType operationType);
+        void EnqueueRegisters(IEnumerable<IRegisterGroup> registers, MessageType operationType);
         void SendMessage();
     }
 }

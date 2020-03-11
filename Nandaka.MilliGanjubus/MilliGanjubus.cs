@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Nandaka.Core.Network;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Table;
@@ -15,7 +13,7 @@ namespace Nandaka.MilliGanjubus
         {
         }
 
-        public override IMessage GetMessage(IEnumerable<IRegister> registers, int deviceAddress, MessageType type, int errorCode = 0)
+        public override IMessage GetMessage(IEnumerable<IRegisterGroup> registers, int deviceAddress, MessageType type, int errorCode = 0)
         {
             var message = new MilliGanjubusMessage(type, deviceAddress, errorCode);
             foreach (var register in registers)

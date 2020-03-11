@@ -93,7 +93,7 @@ namespace Nandaka.MilliGanjubus.Components
             {
                 dataList.Add(gByte);
                 AddAddressToPacket(dataList, registersArray[0].Address);
-                // End range register address will be added after fill the collection.
+                // End range registerGroup address will be added after fill the collection.
                 var endRangeIndex = dataList.Count;
                 if (!withValues)
                 {
@@ -118,7 +118,7 @@ namespace Nandaka.MilliGanjubus.Components
                     lastAddedRegisterAddress = register.Address;
                 }
 
-                // Add real last register address.
+                // Add real last registerGroup address.
                 var endRangeAddress = new List<byte>(MilliGanjubusBase.AddressSize);
                 AddAddressToPacket(endRangeAddress, lastAddedRegisterAddress);
                 dataList.InsertRange(endRangeIndex, endRangeAddress);
@@ -172,7 +172,7 @@ namespace Nandaka.MilliGanjubus.Components
         }
 
         // todo: maybe I can mark message as range at forming stage?
-        private bool IsRange(IRegister[] registers)
+        private bool IsRange(IRegisterGroup[] registers)
         {
             if (registers.Length < MilliGanjubusBase.MinimumRangeRegisterCount)
             {

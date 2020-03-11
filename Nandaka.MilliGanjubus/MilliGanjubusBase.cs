@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Nandaka.MilliGanjubus
+﻿namespace Nandaka.MilliGanjubus
 {
     internal static class MilliGanjubusBase
     {

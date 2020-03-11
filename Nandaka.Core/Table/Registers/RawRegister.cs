@@ -1,14 +1,13 @@
-﻿using Nandaka.Core.Protocol;
-
-namespace Nandaka.Core.Table
+﻿namespace Nandaka.Core.Table
 {
-    public class TestByteRegister : IRegister
+    public class RawRegister : IRegisterGroup
     {
         public int Address { get; }
+        public int Count => 1;
 
         public byte Value { get; set; }
 
-        public TestByteRegister(int address, byte value = 0)
+        public RawRegister(int address, byte value = 0)
         {
             Address = address;
             Value = value;

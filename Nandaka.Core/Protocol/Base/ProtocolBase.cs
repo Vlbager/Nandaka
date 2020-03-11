@@ -19,7 +19,7 @@ namespace Nandaka.Core.Protocol
             _dataPortProvider.OnDataReceived += (sender, data) => _parser.Parse(data);
         }
 
-        public abstract IMessage GetMessage(IEnumerable<IRegister> registers, int deviceAddress, MessageType type, int errorCode = 0);
+        public abstract IMessage GetMessage(IEnumerable<IRegisterGroup> registers, int deviceAddress, MessageType type, int errorCode = 0);
 
         public T PreparePacket(IMessage message)
         {

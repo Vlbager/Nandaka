@@ -7,8 +7,8 @@ namespace Nandaka.Core.Session
 {
     public class MasterSession<T> : ISession<T>
     {
-        private readonly Queue<IRegister> _readQueue = new Queue<IRegister>();
-        private readonly Queue<IRegister> _writeQueue = new Queue<IRegister>();
+        private readonly Queue<IRegisterGroup> _readQueue = new Queue<IRegisterGroup>();
+        private readonly Queue<IRegisterGroup> _writeQueue = new Queue<IRegisterGroup>();
 
         // Policy for autoUpdate device table. Not using yet.
         // ReSharper disable once NotAccessedField.Local
@@ -24,9 +24,9 @@ namespace Nandaka.Core.Session
         public IDevice Device { get; }
         public IProtocol<T> Protocol { get; }
 
-        public void EnqueueRegisters(IEnumerable<IRegister> registers, MessageType operationType)
+        public void EnqueueRegisters(IEnumerable<IRegisterGroup> registers, MessageType operationType)
         {
-            Queue<IRegister> queue;
+            Queue<IRegisterGroup> queue;
             switch (operationType)
             {
                 case MessageType.ReadDataRequest:
@@ -57,7 +57,7 @@ namespace Nandaka.Core.Session
         public void SendMessage()
         {
             IMessage message;
-            Queue<IRegister> queue;
+            Queue<IRegisterGroup> queue;
             if (_writeQueue.Count > 0)
             {
                 queue = _writeQueue;
@@ -71,7 +71,7 @@ namespace Nandaka.Core.Session
             else
             {
                 // todo: Create a custom exception.
-                throw new ApplicationException("There are no register in queue to send");
+                throw new ApplicationException("There are no registerGroup in queue to send");
             }
 
             var packet = Protocol.PreparePacket(message);

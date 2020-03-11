@@ -77,19 +77,19 @@ namespace Nandaka.MilliGanjubus.Components
 
                 var message = new MilliGanjubusMessage(messageType, data[MilliGanjubusBase.AddressOffset]);
 
-                // todo: add register class and rework this.
+                // todo: add registerGroup class and rework this.
                 if (withValues)
                 {
                     while (byteIndex < packetSize - 1)
                     {
-                        message.AddRegister(new TestByteRegister(data[byteIndex++], data[byteIndex++]));
+                        message.AddRegister(new RawRegister(data[byteIndex++], data[byteIndex++]));
                     }
                 }
                 else
                 {
                     while (byteIndex < packetSize - 1)
                     {
-                        message.AddRegister(new TestByteRegister(data[byteIndex++]));
+                        message.AddRegister(new RawRegister(data[byteIndex++]));
                     }
                 }
 
@@ -113,7 +113,7 @@ namespace Nandaka.MilliGanjubus.Components
                         deviceAddress, (int)MilliGanjubusErrorType.WrongRegisterAddress);
                 }
 
-                // Check registers count is valid number (less than register values bytes count).
+                // Check registers count is valid number (less than registerGroup values bytes count).
                 if (withValues && registersCount > data[MilliGanjubusBase.SizeOffset] - MilliGanjubusBase.MinPacketLength - 2)
                 {
                     return new MilliGanjubusMessage(MessageType.ApplicationDataError,
@@ -124,10 +124,10 @@ namespace Nandaka.MilliGanjubus.Components
 
                 foreach (var address in Enumerable.Range(startAddress, registersCount))
                 {
-                    // todo: add register class and rework this.
+                    // todo: add registerGroup class and rework this.
                     var register = withValues ?
-                        new TestByteRegister(address, data[currentByteIndex++]) :
-                        new TestByteRegister(address);
+                        new RawRegister(address, data[currentByteIndex++]) :
+                        new RawRegister(address);
 
                     message.AddRegister(register);
                 }

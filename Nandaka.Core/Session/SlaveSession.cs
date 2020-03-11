@@ -8,7 +8,7 @@ namespace Nandaka.Core.Session
 {
     public class SlaveSession<T> : ISession<T>
     {
-        private readonly Queue<IRegister> _queue = new Queue<IRegister>();
+        private readonly Queue<IRegisterGroup> _queue = new Queue<IRegisterGroup>();
 
         private MessageType _type;
 
@@ -20,7 +20,7 @@ namespace Nandaka.Core.Session
 
         public IDevice Device { get; }
         public IProtocol<T> Protocol { get; }
-        public void EnqueueRegisters(IEnumerable<IRegister> registers, MessageType operationType)
+        public void EnqueueRegisters(IEnumerable<IRegisterGroup> registers, MessageType operationType)
         {
             switch (operationType)
             {
@@ -51,7 +51,7 @@ namespace Nandaka.Core.Session
             var packet = Protocol.PreparePacket(message);
             if (message.RegistersCount != _queue.Count)
             {
-                message = Protocol.GetMessage(Enumerable.Empty<IRegister>(), Device.Address, MessageType.ErrorMessage,
+                message = Protocol.GetMessage(Enumerable.Empty<IRegisterGroup>(), Device.Address, MessageType.ErrorMessage,
                     (int)ErrorCode.WrongDataAmount);
                 packet = Protocol.PreparePacket(message);
             }

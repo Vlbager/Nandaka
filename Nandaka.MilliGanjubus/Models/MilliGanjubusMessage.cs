@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using Nandaka.Core.Protocol;
 using Nandaka.Core.Table;
 
 namespace Nandaka.MilliGanjubus.Models
 {
     public class MilliGanjubusMessage : IMessage
     {
-        private readonly List<IRegister> _registers = new List<IRegister>();
+        private readonly List<IRegisterGroup> _registers = new List<IRegisterGroup>();
 
         public int DeviceAddress { get; }
 
@@ -18,23 +17,23 @@ namespace Nandaka.MilliGanjubus.Models
             ErrorCode = errorCode;
         }
 
-        public IEnumerable<IRegister> Registers => _registers;
+        public IEnumerable<IRegisterGroup> Registers => _registers;
         public int RegistersCount => _registers.Count;
 
-        public void AddRegister(IRegister register)
+        public void AddRegister(IRegisterGroup registerGroup)
         {
-            _registers.Add(register);
+            _registers.Add(registerGroup);
         }
 
-        public void RemoveRegister(IRegister register)
+        public void RemoveRegister(IRegisterGroup registerGroup)
         {
-            if (!_registers.Contains(register))
+            if (!_registers.Contains(registerGroup))
             {
                 // todo: Create a custom exception
-                throw new ArgumentException("Message do not contain this register");
+                throw new ArgumentException("Message do not contain this registerGroup");
             }
 
-            _registers.Remove(register);
+            _registers.Remove(registerGroup);
         }
 
         public MessageType MessageType { get;}
