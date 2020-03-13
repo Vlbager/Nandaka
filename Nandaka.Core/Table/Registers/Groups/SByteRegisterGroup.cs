@@ -2,34 +2,17 @@
 
 namespace Nandaka.Core.Table
 {
-    internal class SByteRegisterGroup<TRegisterType> : RegisterGroupBase<sbyte, TRegisterType>
+    public sealed class SByteRegisterGroup<TRegisterType> : RegisterGroupBase<sbyte, TRegisterType>
         where TRegisterType : struct
     {
-        public SByteRegisterGroup(RegisterTable<TRegisterType> table, int address, int count) : base(table, address, count)
+        private SByteRegisterGroup(RegisterTable<TRegisterType> table, int address, int count,
+            Func<RegisterGroupBase<sbyte, TRegisterType>, sbyte> groupConversionFunc)
+            : base(table, address, count, groupConversionFunc) { }
+
+        public static SByteRegisterGroup<byte> Create(RegisterTable<byte> table, int address)
         {
-        }
-
-        public override byte[] GetBytes()
-        {
-            return new[] {GetByteFromTable()};
-        }
-
-        public override sbyte Value => GetValueFromTable();
-
-        private byte GetByteFromTable()
-        {
-            TRegisterType register = Table.GetRegister(Address);
-            if (!(register is byte byteRegister))
-                // todo: create a custom exception.
-                throw new ApplicationException($"Unsupported register type");
-
-            return byteRegister;
-        }
-
-        private sbyte GetValueFromTable()
-        {
-            byte byteRegister = GetByteFromTable();
-            return Convert.ToSByte(byteRegister);
+            return new SByteRegisterGroup<byte>(table, address, 1,
+                group => Convert.ToSByte(group.Table.GetRegister(group.Address)));
         }
     }
 }

@@ -3,46 +3,27 @@ using Nandaka.Core.Helpers;
 
 namespace Nandaka.Core.Table
 {
-    internal class Int16RegisterGroup<TRegisterType> : RegisterGroupBase<short, TRegisterType>
+    public sealed class Int16RegisterGroup<TRegisterType> : RegisterGroupBase<short, TRegisterType>
         where TRegisterType : struct
     {
-        public Int16RegisterGroup(RegisterTable<TRegisterType> table, int address, int count) : base(table, address, count)
+        private const int GroupSizeInBytes = sizeof(short); 
+
+        private Int16RegisterGroup(RegisterTable<TRegisterType> table, int address, int count,
+            Func<RegisterGroupBase<short, TRegisterType>, short> groupConversionFunc) 
+            : base(table, address, count, groupConversionFunc) { }
+
+        public static Int16RegisterGroup<byte> Create(RegisterTable<byte> table, int address)
         {
+            const int registersCount = GroupSizeInBytes;
+            return new Int16RegisterGroup<byte>(table, address, registersCount,
+                group => LittleEndianConverter.ToInt16(group.Table.GetRegisters(group.Address, group.Count)));
         }
 
-        public override byte[] GetBytes()
+        public static Int16RegisterGroup<ushort> Create(RegisterTable<ushort> table, int address)
         {
-            var registers = Table.GetRegisters(Address, Count) as byte[];
-            if (registers == null)
-                // todo: create a custom exception.
-                throw new ApplicationException($"Unsupported register type");
-
-            return registers;
-        }
-
-        public override short Value => GetValueFromTable();
-
-        private short GetValueFromTable()
-        {
-            switch (Count)
-            {
-                case 1:
-                    TRegisterType register = Table.GetRegister(Address);
-                    if (register is ushort ushortRegister)
-                        return Convert.ToInt16(ushortRegister);
-
-                    break;
-
-                case 2:
-                    TRegisterType[] registers = Table.GetRegisters(Address, Count);
-                    if (registers is byte[] byteRegisters)
-                        return LittleEndianConverter.ToInt16(byteRegisters);
-
-                    break;
-            }
-
-            // todo: create a custom exception.
-            throw new ApplicationException($"Unsupported register type");
+            const int registersCount = GroupSizeInBytes / sizeof(short);
+            return new Int16RegisterGroup<ushort>(table, address, registersCount,
+                group => Convert.ToInt16(group.Table.GetRegister(group.Address)));
         }
     }
 }

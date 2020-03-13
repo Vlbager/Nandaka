@@ -4,24 +4,52 @@ using System.Linq;
 
 namespace Nandaka.Core.Table
 {
-    public class RegisterTable<T> where T : struct
+    public class RegisterTable<TRegisterType> where TRegisterType : struct
     {
-        private readonly T[] _readOnlyRegisters;
-        private readonly T[] _writeOnlyRegisters;
+        private readonly TRegisterType[] _readOnlyRegisters;
+        private readonly TRegisterType[] _writeOnlyRegisters;
 
         private readonly int _readOnlyRegistersOffset;
         private readonly int _writeOnlyRegistersOffset;
 
-        public RegisterTable(int readOnlyRegistersCount, int readOnlyRegistersOffset,
+        private RegisterTable(int readOnlyRegistersCount, int readOnlyRegistersOffset,
             int writeOnlyRegistersCount, int writeOnlyRegistersOffset)
         {
-            _readOnlyRegisters = new T[readOnlyRegistersCount];
+            _readOnlyRegisters = new TRegisterType[readOnlyRegistersCount];
             _readOnlyRegistersOffset = readOnlyRegistersOffset;
-            _writeOnlyRegisters = new T[writeOnlyRegistersCount];
+            _writeOnlyRegisters = new TRegisterType[writeOnlyRegistersCount];
             _writeOnlyRegistersOffset = writeOnlyRegistersOffset;
         }
 
-        public T GetRegister(int address)
+        #region Create Methods
+
+        public static RegisterTable<byte> CreateByteTable(int readOnlyRegistersCount, int readOnlyRegistersOffset,
+            int writeOnlyRegistersCount, int writeOnlyRegistersOffset)
+        {
+            return new RegisterTable<byte>(readOnlyRegistersCount, readOnlyRegistersOffset, writeOnlyRegistersCount, writeOnlyRegistersOffset);
+        }
+
+        public static RegisterTable<ushort> CreateUInt16Table(int readOnlyRegistersCount, int readOnlyRegistersOffset,
+            int writeOnlyRegistersCount, int writeOnlyRegistersOffset)
+        {
+            return new RegisterTable<ushort>(readOnlyRegistersCount, readOnlyRegistersOffset, writeOnlyRegistersCount, writeOnlyRegistersOffset);
+        }
+
+        public static RegisterTable<uint> CreateUInt32Table(int readOnlyRegistersCount, int readOnlyRegistersOffset,
+            int writeOnlyRegistersCount, int writeOnlyRegistersOffset)
+        {
+            return new RegisterTable<uint>(readOnlyRegistersCount, readOnlyRegistersOffset, writeOnlyRegistersCount, writeOnlyRegistersOffset);
+        }
+
+        public static RegisterTable<ulong> CreateUInt64Table(int readOnlyRegistersCount, int readOnlyRegistersOffset,
+            int writeOnlyRegistersCount, int writeOnlyRegistersOffset)
+        {
+            return new RegisterTable<ulong>(readOnlyRegistersCount, readOnlyRegistersOffset, writeOnlyRegistersCount, writeOnlyRegistersOffset);
+        }
+
+        #endregion
+
+        public TRegisterType GetRegister(int address)
         {
             int index = address - _readOnlyRegistersOffset;
 
@@ -32,7 +60,7 @@ namespace Nandaka.Core.Table
             return _readOnlyRegisters[index];
         }
 
-        public T[] GetRegisters(int firstRegisterAddress, int count)
+        public TRegisterType[] GetRegisters(int firstRegisterAddress, int count)
         {
             int beginIndex = firstRegisterAddress - _readOnlyRegistersOffset;
             int endIndex = beginIndex + count;
@@ -47,7 +75,7 @@ namespace Nandaka.Core.Table
                 .ToArray();
         }
 
-        public void SetRegister(int address, T value)
+        public void SetRegister(int address, TRegisterType value)
         {
             int index = address - _writeOnlyRegistersOffset;
 
@@ -58,7 +86,7 @@ namespace Nandaka.Core.Table
             _writeOnlyRegisters[index] = value;
         }
 
-        public void SetRegisters(int firstRegisterAddress, IReadOnlyCollection<T> values)
+        public void SetRegisters(int firstRegisterAddress, IReadOnlyCollection<TRegisterType> values)
         {
             int beginIndex = firstRegisterAddress - _writeOnlyRegistersOffset;
             int endIndex = beginIndex + values.Count;
@@ -68,12 +96,12 @@ namespace Nandaka.Core.Table
                 throw new ArgumentException($"Does not exists {values.Count} registers with {firstRegisterAddress} first address");
 
             int arrayIndex = beginIndex;
-            foreach (T value in values)
+            foreach (TRegisterType value in values)
                 _writeOnlyRegisters[arrayIndex++] = value;
         }
 
 
-        private bool IsValidIndexOfCollection(int index, IReadOnlyCollection<T> collection)
+        private bool IsValidIndexOfCollection(int index, IReadOnlyCollection<TRegisterType> collection)
         {
             return (index >= 0 || index < collection.Count);
         }

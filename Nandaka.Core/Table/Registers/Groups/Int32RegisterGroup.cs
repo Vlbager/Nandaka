@@ -3,53 +3,34 @@ using Nandaka.Core.Helpers;
 
 namespace Nandaka.Core.Table
 {
-    class Int32RegisterGroup<TRegisterType> : RegisterGroupBase<int, TRegisterType>
+    public sealed class Int32RegisterGroup<TRegisterType> : RegisterGroupBase<int, TRegisterType>
         where TRegisterType : struct
     {
-        public Int32RegisterGroup(RegisterTable<TRegisterType> table, int address, int count) : base(table, address, count)
+        private const int GroupSizeInBytes = sizeof(int);
+
+        private Int32RegisterGroup(RegisterTable<TRegisterType> table, int address, int count,
+            Func<RegisterGroupBase<int, TRegisterType>, int> groupConversionFunc)
+            : base(table, address, count, groupConversionFunc) { }
+
+        public static Int32RegisterGroup<byte> Create(RegisterTable<byte> table, int address)
         {
+            const int registersCount = GroupSizeInBytes;
+            return new Int32RegisterGroup<byte>(table, address, registersCount,
+                group => LittleEndianConverter.ToInt32(group.Table.GetRegisters(group.Address, group.Count)));
         }
 
-        public override byte[] GetBytes()
+        public static Int32RegisterGroup<ushort> Create(RegisterTable<ushort> table, int address)
         {
-            var registers = Table.GetRegisters(Address, Count) as byte[];
-            if (registers == null)
-                // todo: create a custom exception.
-                throw new ApplicationException($"Unsupported register type");
-
-            return registers;
+            const int registersCount = GroupSizeInBytes / sizeof(ushort);
+            return new Int32RegisterGroup<ushort>(table, address, registersCount,
+                group => LittleEndianConverter.ToInt32(group.Table.GetRegisters(group.Address, group.Count)));
         }
 
-        public override int Value => GetValueFromTable();
-
-        private int GetValueFromTable()
+        public static Int32RegisterGroup<uint> Create(RegisterTable<uint> table, int address)
         {
-            switch (Count)
-            {
-                case 1:
-                    TRegisterType register = Table.GetRegister(Address);
-                    if (register is uint uintRegister)
-                        return Convert.ToInt32(uintRegister);
-
-                    break;
-
-                case 2:
-                    TRegisterType[] registers = Table.GetRegisters(Address, Count);
-                    if (registers is ushort[] ushortRegisters)
-                        return LittleEndianConverter.ToInt32(ushortRegisters);
-
-                    break;
-
-                case 4:
-                    TRegisterType[] registers2 = Table.GetRegisters(Address, Count);
-                    if (registers2 is byte[] byteRegisters)
-                        return LittleEndianConverter.ToInt32(byteRegisters);
-
-                    break;
-            }
-
-            // todo: create a custom exception.
-            throw new ApplicationException($"Unsupported register type");
+            const int registerCount = GroupSizeInBytes / sizeof(uint);
+            return new Int32RegisterGroup<uint>(table, address, registerCount,
+                group => Convert.ToInt32(group.Table.GetRegister(address)));
         }
     }
 }

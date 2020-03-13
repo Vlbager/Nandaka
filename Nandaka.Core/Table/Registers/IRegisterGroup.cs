@@ -1,9 +1,11 @@
-﻿namespace Nandaka.Core.Table
+﻿using System.Collections.Generic;
+
+namespace Nandaka.Core.Table
 {
-    public interface IRegisterGroup
+    public interface IRegisterGroup<TRegisterType> : IRegister
+        where TRegisterType : struct
     {
-        int Address { get; }
         int Count { get; }
-        byte[] GetBytes();
+        IReadOnlyCollection<RawRegister<TRegisterType>> GetRawRegisters();
     }
 }
