@@ -1,19 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 
 namespace Nandaka.MilliGanjubus.Models
 {
-    public class MilliGanjubusMessage : IMessage
+    public class MilliGanjubusMessage : IRegisterMessage
     {
         private readonly List<IRegisterGroup> _registers = new List<IRegisterGroup>();
 
-        public int DeviceAddress { get; }
+        public int SlaveDeviceAddress { get; }
 
         public MilliGanjubusMessage(MessageType messageType, int deviceAddress, int errorCode = 0)
         {
-            MessageType = messageType;
-            DeviceAddress = deviceAddress;
+            Type = messageType;
+            SlaveDeviceAddress = deviceAddress;
             ErrorCode = errorCode;
         }
 
@@ -36,7 +37,7 @@ namespace Nandaka.MilliGanjubus.Models
             _registers.Remove(registerGroup);
         }
 
-        public MessageType MessageType { get;}
+        public MessageType Type { get;}
 
         public int ErrorCode { get; }
     }

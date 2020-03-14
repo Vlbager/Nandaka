@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
+using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 
 namespace Nandaka.MilliGanjubus.Components
 {
-    public class MilliGanjubusComposer : IComposer<IMessage, byte[]>
+    public class MilliGanjubusComposer : IComposer<IRegisterMessage, byte[]>
     {
         // todo: how to make protocolInfo fields changeable
         // Interface with get-properties?
 
-        public byte[] Compose(IMessage message)
+        public byte[] Compose(IRegisterMessage message)
         {
             var data = GetDataBytes(message);
             var packet = new byte[MilliGanjubusBase.MinPacketLength + data.Length];
@@ -22,7 +23,7 @@ namespace Nandaka.MilliGanjubus.Components
                 throw new ArgumentOutOfRangeException();
             }
             packet[MilliGanjubusBase.StartByteOffset] = MilliGanjubusBase.StartByte;
-            packet[MilliGanjubusBase.AddressOffset] = (byte)message.DeviceAddress;
+            packet[MilliGanjubusBase.AddressOffset] = (byte)message.SlaveDeviceAddress;
             packet[MilliGanjubusBase.SizeOffset] = (byte)packet.Length;
             packet[MilliGanjubusBase.HeaderCheckSumOffset] =
                 CheckSum.Crc8(packet.Take(MilliGanjubusBase.HeaderCheckSumOffset).ToArray());
@@ -32,13 +33,13 @@ namespace Nandaka.MilliGanjubus.Components
             return packet;
         }
 
-        private byte[] GetDataBytes(IMessage message)
+        private byte[] GetDataBytes(IRegisterMessage message)
         {
             // Length of result array is unknown, so list is used.
             var dataList = new List<byte>();
 
             var registersArray = message.Registers.ToArray();
-            switch (message.MessageType)
+            switch (message.Type)
             {
                 case MessageType.ReadDataRequest:
                     if (IsRange(registersArray))

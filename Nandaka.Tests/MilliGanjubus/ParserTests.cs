@@ -1,6 +1,7 @@
 using System;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
+using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 using Nandaka.MilliGanjubus;
 using Nandaka.MilliGanjubus.Components;
@@ -11,9 +12,9 @@ namespace Nandaka.Tests.MilliGanjubus
 {
     public class ParserTests
     {
-        private readonly IParser<byte[], IMessage> _parser;
+        private readonly IParser<byte[], IRegisterMessage> _parser;
         private int _messageCount;
-        private IMessage _parsedMessage;
+        private IRegisterMessage _parsedMessage;
 
 
         public ParserTests()
@@ -22,7 +23,7 @@ namespace Nandaka.Tests.MilliGanjubus
             _parser.MessageParsed += Parser_MessageParsed;
         }
 
-        private void Parser_MessageParsed(object sender, IMessage e)
+        private void Parser_MessageParsed(object sender, IRegisterMessage e)
         {
             _messageCount++;
             _parsedMessage = e;
@@ -69,8 +70,8 @@ namespace Nandaka.Tests.MilliGanjubus
             _parser.Parse(buffer);
             // Asserts
             Assert.Equal(1, _messageCount);
-            Assert.Equal(messageType, _parsedMessage.MessageType);
-            Assert.Equal(_parsedMessage.DeviceAddress, _parser.AwaitingReplyAddress);
+            Assert.Equal(messageType, _parsedMessage.Type);
+            Assert.Equal(_parsedMessage.SlaveDeviceAddress, _parser.AwaitingReplyAddress);
             // Assert registers
             int byteIndex = 5;
             foreach (var register in _parsedMessage.Registers)
@@ -126,8 +127,8 @@ namespace Nandaka.Tests.MilliGanjubus
             _parser.Parse(buffer);
             // Asserts
             Assert.Equal(1, _messageCount);
-            Assert.Equal(messageType, _parsedMessage.MessageType);
-            Assert.Equal(_parsedMessage.DeviceAddress, _parser.AwaitingReplyAddress);
+            Assert.Equal(messageType, _parsedMessage.Type);
+            Assert.Equal(_parsedMessage.SlaveDeviceAddress, _parser.AwaitingReplyAddress);
             // Assert registers
             int byteIndex = 5;
             int currentAddress = buffer[byteIndex++];
@@ -167,8 +168,8 @@ namespace Nandaka.Tests.MilliGanjubus
             _parser.Parse(buffer);
             // Asserts
             Assert.Equal(1, _messageCount);
-            Assert.Equal(MessageType.ErrorMessage, _parsedMessage.MessageType);
-            Assert.Equal(_parsedMessage.DeviceAddress, buffer[1]);
+            Assert.Equal(MessageType.ErrorMessage, _parsedMessage.Type);
+            Assert.Equal(_parsedMessage.SlaveDeviceAddress, buffer[1]);
             // Assert errorType
             var milliGanjubusMessage = _parsedMessage as MilliGanjubusMessage;
             Assert.NotNull(milliGanjubusMessage);

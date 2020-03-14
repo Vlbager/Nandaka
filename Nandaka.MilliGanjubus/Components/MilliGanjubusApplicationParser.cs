@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using Nandaka.Core.Protocol;
+using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 using Nandaka.MilliGanjubus.Models;
 
@@ -11,7 +12,7 @@ namespace Nandaka.MilliGanjubus.Components
         {
         }
 
-        protected override IMessage ApplicationParse(byte[] data)
+        protected override IRegisterMessage ApplicationParse(byte[] data)
         {
             var deviceAddress = data[MilliGanjubusBase.AddressOffset];
 
@@ -62,7 +63,7 @@ namespace Nandaka.MilliGanjubus.Components
                 deviceAddress, (int)MilliGanjubusErrorType.WrongGByte);
 
             // Local functions for different types of packet.
-            IMessage FromSeries(MessageType messageType, bool withValues)
+            IRegisterMessage FromSeries(MessageType messageType, bool withValues)
             {
                 // Look through all data bytes except CRC.
                 var packetSize = data[MilliGanjubusBase.SizeOffset];
@@ -96,7 +97,7 @@ namespace Nandaka.MilliGanjubus.Components
                 return message;
             }
 
-            IMessage FromRange(MessageType messageType, bool withValues)
+            IRegisterMessage FromRange(MessageType messageType, bool withValues)
             {
                 // Ignore gByte.
                 var currentByteIndex = MilliGanjubusBase.DataOffset + 1;

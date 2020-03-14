@@ -2,7 +2,7 @@
 {
     //class ComposerTests
     //{
-    //    private readonly IComposer<IMessage, byte[]> _composer;
+    //    private readonly IComposer<IRegisterMessage, byte[]> _composer;
 
     //    public ComposerTests()
     //    {
@@ -11,7 +11,7 @@
 
     //    [Theory]
     //    [Trait("ShouldCompose", "AllMessage")]
-    //    public void ComposeSeries(IMessage inMessage, byte[] outBytes)
+    //    public void ComposeSeries(IRegisterMessage inMessage, byte[] outBytes)
     //    {
 
     //    }

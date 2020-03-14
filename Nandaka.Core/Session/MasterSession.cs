@@ -56,7 +56,7 @@ namespace Nandaka.Core.Session
 
         public void SendMessage()
         {
-            IMessage message;
+            IRegisterMessage message;
             Queue<IRegisterGroup> queue;
             if (_writeQueue.Count > 0)
             {

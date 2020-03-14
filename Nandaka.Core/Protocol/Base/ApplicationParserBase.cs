@@ -1,9 +1,10 @@
 ﻿using System;
+using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Protocol
 {
-    public abstract class ApplicationParserBase<TIn> : IParser<TIn, IMessage>
+    public abstract class ApplicationParserBase<TIn> : IParser<TIn, IRegisterMessage>
     {
         private readonly DataLinkParserBase<TIn> _dataLinkParser;
 
@@ -20,13 +21,13 @@ namespace Nandaka.Core.Protocol
             set => _dataLinkParser.AwaitingReplyAddress = value;
         }
 
-        public event EventHandler<IMessage> MessageParsed;
+        public event EventHandler<IRegisterMessage> MessageParsed;
 
         public void Parse(TIn data)
         {
             _dataLinkParser.Parse(data);
         }
 
-        protected abstract IMessage ApplicationParse(byte[] data);
+        protected abstract IRegisterMessage ApplicationParse(byte[] data);
     }
 }

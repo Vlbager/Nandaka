@@ -49,9 +49,9 @@ namespace Nandaka.Core.Session
         {
             var message = Protocol.GetMessage(_queue, Device.Address, _type);
             var packet = Protocol.PreparePacket(message);
-            if (message.RegistersCount != _queue.Count)
+            if (message.Registers.Count != _queue.Count)
             {
-                message = Protocol.GetMessage(Enumerable.Empty<IRegisterGroup>(), Device.Address, MessageType.ErrorMessage,
+                message = Protocol.GetMessage(Enumerable.Empty<IRegisterGroup>(), Device.Address, MessageType.Response,
                     (int)ErrorCode.WrongDataAmount);
                 packet = Protocol.PreparePacket(message);
             }

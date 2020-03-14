@@ -1,4 +1,4 @@
-﻿namespace Nandaka.Core.Table
+﻿namespace Nandaka.Core.Session
 {
     public enum MessageType
     {
@@ -6,10 +6,8 @@
         WriteDataRequest,
         ReadDataResponse,
         WriteDataResponse,
-        ErrorMessage,
-        // todo: think about it.
-        ApplicationDataError,
-        None
+        Request,
+        Response
     }
 
 }
