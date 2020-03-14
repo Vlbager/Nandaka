@@ -63,5 +63,20 @@ namespace Nandaka.Core.Helpers
         {
             throw new NotImplementedException();
         }
+
+        public static byte[] GetBytes(ushort value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static byte[] GetBytes(uint value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static byte[] GetBytes(ulong value)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

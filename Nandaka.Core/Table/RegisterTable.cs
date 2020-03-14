@@ -1,109 +1,115 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Nandaka.Core.Helpers;
 
 namespace Nandaka.Core.Table
 {
-    public class RegisterTable<TRegisterType> where TRegisterType : struct
+    public class RegisterTable
     {
-        private readonly TRegisterType[] _readOnlyRegisters;
-        private readonly TRegisterType[] _writeOnlyRegisters;
+        private readonly IRegister[] _registers;
 
-        private readonly int _readOnlyRegistersOffset;
-        private readonly int _writeOnlyRegistersOffset;
-
-        private RegisterTable(int readOnlyRegistersCount, int readOnlyRegistersOffset,
-            int writeOnlyRegistersCount, int writeOnlyRegistersOffset)
+        private RegisterTable(int tableSize)
         {
-            _readOnlyRegisters = new TRegisterType[readOnlyRegistersCount];
-            _readOnlyRegistersOffset = readOnlyRegistersOffset;
-            _writeOnlyRegisters = new TRegisterType[writeOnlyRegistersCount];
-            _writeOnlyRegistersOffset = writeOnlyRegistersOffset;
+            _registers = new IRegister[tableSize];
         }
 
-        #region Create Methods
-
-        public static RegisterTable<byte> CreateByteTable(int readOnlyRegistersCount, int readOnlyRegistersOffset,
-            int writeOnlyRegistersCount, int writeOnlyRegistersOffset)
+        public static RegisterTable Create(int tableSize, IEnumerable<IRegister> registers)
         {
-            return new RegisterTable<byte>(readOnlyRegistersCount, readOnlyRegistersOffset, writeOnlyRegistersCount, writeOnlyRegistersOffset);
+            var table = new RegisterTable(tableSize);
+            table.SetRegisters(registers);
+            return table;
         }
 
-        public static RegisterTable<ushort> CreateUInt16Table(int readOnlyRegistersCount, int readOnlyRegistersOffset,
-            int writeOnlyRegistersCount, int writeOnlyRegistersOffset)
+        public IRegister this[int address]
         {
-            return new RegisterTable<ushort>(readOnlyRegistersCount, readOnlyRegistersOffset, writeOnlyRegistersCount, writeOnlyRegistersOffset);
+            get => _registers[address];
+            set => SetRegister(value);
         }
 
-        public static RegisterTable<uint> CreateUInt32Table(int readOnlyRegistersCount, int readOnlyRegistersOffset,
-            int writeOnlyRegistersCount, int writeOnlyRegistersOffset)
+        public Register<byte> this[Register<byte> register]
         {
-            return new RegisterTable<uint>(readOnlyRegistersCount, readOnlyRegistersOffset, writeOnlyRegistersCount, writeOnlyRegistersOffset);
+            get => GetRegisterChecked(register);
+            set => SetRegisterChecked(value);
         }
 
-        public static RegisterTable<ulong> CreateUInt64Table(int readOnlyRegistersCount, int readOnlyRegistersOffset,
-            int writeOnlyRegistersCount, int writeOnlyRegistersOffset)
+        public Register<ushort> this[Register<ushort> register]
         {
-            return new RegisterTable<ulong>(readOnlyRegistersCount, readOnlyRegistersOffset, writeOnlyRegistersCount, writeOnlyRegistersOffset);
+            get => GetRegisterChecked(register);
+            set => SetRegisterChecked(value);
         }
 
-        #endregion
-
-        public TRegisterType GetRegister(int address)
+        public Register<uint> this[Register<uint> register]
         {
-            int index = address - _readOnlyRegistersOffset;
-
-            if (!IsValidIndexOfCollection(index, _readOnlyRegisters))
-                // todo: create a custom exception.
-                throw new ArgumentException($"{address} is not a valid address");
-
-            return _readOnlyRegisters[index];
+            get => GetRegisterChecked(register);
+            set => SetRegisterChecked(value);
         }
 
-        public TRegisterType[] GetRegisters(int firstRegisterAddress, int count)
+        public Register<ulong> this[Register<ulong> register]
         {
-            int beginIndex = firstRegisterAddress - _readOnlyRegistersOffset;
-            int endIndex = beginIndex + count;
+            get => GetRegisterChecked(register);
+            set => SetRegisterChecked(value);
+        }
 
-            if (!IsValidIndexOfCollection(beginIndex, _readOnlyRegisters) || !IsValidIndexOfCollection(endIndex, _readOnlyRegisters))
-                // todo: create a custom exception.
-                throw new ArgumentException($"Does not exists {count} registers with {firstRegisterAddress} first address");
-
-            return _readOnlyRegisters
-                .Skip(beginIndex)
+        public IRegister[] GetRawRegisters(int firstRegisterAddress, int count)
+        {
+            return _registers
+                .Skip(firstRegisterAddress)
                 .Take(count)
+                .IsNullAssert()
                 .ToArray();
         }
 
-        public void SetRegister(int address, TRegisterType value)
+        public void SetRegisters(IEnumerable<IRegister> registers)
         {
-            int index = address - _writeOnlyRegistersOffset;
-
-            if (!IsValidIndexOfCollection(index, _writeOnlyRegisters))
-                // todo: create a custom exception.
-                throw new ArgumentException($"{address} is not a valid address");
-
-            _writeOnlyRegisters[index] = value;
+            foreach (IRegister register in registers)
+            {
+                SetRegister(register);
+            }
         }
 
-        public void SetRegisters(int firstRegisterAddress, IReadOnlyCollection<TRegisterType> values)
+        private void SetRegister(IRegister register)
         {
-            int beginIndex = firstRegisterAddress - _writeOnlyRegistersOffset;
-            int endIndex = beginIndex + values.Count;
+            switch (register)
+            {
+                case Register<byte> byteRegister:
+                    this[byteRegister] = byteRegister;
+                    break;
 
-            if (!IsValidIndexOfCollection(beginIndex, _writeOnlyRegisters) || !IsValidIndexOfCollection(endIndex, _writeOnlyRegisters))
-                // todo: create a custom exception.
-                throw new ArgumentException($"Does not exists {values.Count} registers with {firstRegisterAddress} first address");
+                case Register<ushort> uint16Register:
+                    this[uint16Register] = uint16Register;
+                    break;
 
-            int arrayIndex = beginIndex;
-            foreach (TRegisterType value in values)
-                _writeOnlyRegisters[arrayIndex++] = value;
+                case Register<uint> uint32Register:
+                    this[uint32Register] = uint32Register;
+                    break;
+
+                case Register<ulong> uint64Register:
+                    this[uint64Register] = uint64Register;
+                    break;
+
+                default:
+                    // todo: create custom exception;
+                    throw new Exception();
+            }
         }
 
-
-        private bool IsValidIndexOfCollection(int index, IReadOnlyCollection<TRegisterType> collection)
+        private Register<T> GetRegisterChecked<T>(Register<T> register) where T : struct
         {
-            return (index >= 0 || index < collection.Count);
+            if (!(_registers[register.Address] is Register<T> tableRegister))
+                // todo: create a custom exception
+                throw new InvalidCastException();
+
+            return tableRegister;
+        }
+
+        private void SetRegisterChecked<T>(Register<T> register) where T : struct
+        {
+            if (!(_registers[register.Address] is Register<T>))
+                // todo: create a custom exception
+                throw new InvalidCastException();
+
+            _registers[register.Address] = register;
         }
     }
 }

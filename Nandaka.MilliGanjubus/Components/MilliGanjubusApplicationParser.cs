@@ -82,14 +82,14 @@ namespace Nandaka.MilliGanjubus.Components
                 {
                     while (byteIndex < packetSize - 1)
                     {
-                        message.AddRegister(new RawRegister(data[byteIndex++], data[byteIndex++]));
+                        message.AddRegister(new Register<>(data[byteIndex++], data[byteIndex++]));
                     }
                 }
                 else
                 {
                     while (byteIndex < packetSize - 1)
                     {
-                        message.AddRegister(new RawRegister(data[byteIndex++]));
+                        message.AddRegister(new Register<>(data[byteIndex++]));
                     }
                 }
 
@@ -126,8 +126,8 @@ namespace Nandaka.MilliGanjubus.Components
                 {
                     // todo: add registerGroup class and rework this.
                     var register = withValues ?
-                        new RawRegister(address, data[currentByteIndex++]) :
-                        new RawRegister(address);
+                        new Register<>(address, data[currentByteIndex++]) :
+                        new Register<>(address);
 
                     message.AddRegister(register);
                 }
