@@ -16,6 +16,8 @@ namespace Nandaka.MilliGanjubus.Components
 
         protected override IFrameworkMessage ApplicationParse(byte[] data)
         {
+            byte deviceAddress = data[MilliGanjubusBase.AddressOffset];
+
             // Find out the type of message from gByte.
             var gByte = data[MilliGanjubusBase.DataOffset];
 
@@ -36,7 +38,6 @@ namespace Nandaka.MilliGanjubus.Components
 
                 case MilliGanjubusBase.GError:
                     byte errorCode = data[MilliGanjubusBase.DataOffset + 1];
-                    byte deviceAddress = data[MilliGanjubusBase.AddressOffset];
                     return new MilliGanjubusErrorMessage(deviceAddress, MessageType.Response, (MilliGanjubusErrorType)errorCode);
 
                 default:
@@ -72,25 +73,20 @@ namespace Nandaka.MilliGanjubus.Components
 
                 default:
                     // todo: create a custom exception
-                    throw new Exception("Wring gByte");
+                    throw new Exception("Wrong gByte");
             }
 
-            return isRange
-                ? ParseAsRange(data, messageType, operationType, withValues)
-                : ParseAsSeries(data, messageType, operationType, withValues);
+            IReadOnlyCollection<IRegisterGroup> registers = isRange ? ParseAsRange(data, withValues)
+                : ParseAsSeries(data, withValues);
+
+            return new CommonMessage(deviceAddress, messageType, operationType, registers);
         }
 
-        private IFrameworkMessage ParseAsSeries(byte[] data, MessageType messageType, OperationType operationType, bool withValues)
+        private static IReadOnlyCollection<IRegisterGroup> ParseAsSeries(IReadOnlyList<byte> data, bool withValues)
         {
-            byte deviceAddress = data[MilliGanjubusBase.AddressOffset];
-
             // Look through all data bytes except CRC.
             byte packetSize = data[MilliGanjubusBase.SizeOffset];
             int byteIndex = MilliGanjubusBase.MinPacketLength;
-
-            // If message with values, then packet size should be an odd number.
-            if (withValues && packetSize % 2 != 0)
-                return new MilliGanjubusErrorMessage(deviceAddress, messageType, MilliGanjubusErrorType.WrongDataAmount);
 
             var registers = new List<SingleRegisterGroup<byte>>();
 
@@ -105,13 +101,15 @@ namespace Nandaka.MilliGanjubus.Components
                     registers.Add(new SingleRegisterGroup<byte>(Register<byte>.CreateByte(data[byteIndex++])));
             }
 
-            return new CommonMessage(deviceAddress, messageType, operationType, registers);
+            // Case of crc is register value.
+            if (byteIndex != packetSize - 1)
+                throw new Exception("Wrong data amount");
+
+            return registers;
         }
 
-        private IFrameworkMessage ParseAsRange(byte[] data, MessageType messageType, OperationType operationType, bool withValues)
+        private static IReadOnlyCollection<IRegisterGroup> ParseAsRange(IReadOnlyList<byte> data, bool withValues)
         {
-            byte deviceAddress = data[MilliGanjubusBase.AddressOffset];
-
             // Ignore gByte.
             int currentByteIndex = MilliGanjubusBase.DataOffset + 1;
 
@@ -122,12 +120,13 @@ namespace Nandaka.MilliGanjubus.Components
 
             // Check addresses validity.
             if (startAddress > endAddress)
-                return new MilliGanjubusErrorMessage(deviceAddress, messageType, MilliGanjubusErrorType.WrongRegisterAddress);
-            
+                //todo: create a custom exception
+                throw new Exception("Wrong register Address");
 
             // Check registers count is valid number (less than registerGroup values bytes count).
             if (withValues && registersCount > data[MilliGanjubusBase.SizeOffset] - MilliGanjubusBase.MinPacketLength - 2)
-                return new MilliGanjubusErrorMessage(deviceAddress, messageType, MilliGanjubusErrorType.WrongDataAmount);
+                //todo: create a custom exception
+                throw new Exception("Wrong data amount");
 
             var registers = new List<SingleRegisterGroup<byte>>(registersCount);
 
@@ -140,7 +139,7 @@ namespace Nandaka.MilliGanjubus.Components
                 registers.Add(register);
             }
 
-            return new CommonMessage(deviceAddress, messageType, operationType, registers);
+            return registers;
         }
     }
 }

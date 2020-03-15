@@ -7,6 +7,7 @@ using Nandaka.MilliGanjubus;
 using Nandaka.MilliGanjubus.Components;
 using Nandaka.MilliGanjubus.Models;
 using Xunit;
+using Xunit.Sdk;
 
 namespace Nandaka.Tests.MilliGanjubus
 {
@@ -177,8 +178,8 @@ namespace Nandaka.Tests.MilliGanjubus
         public void MultipleMessages()
         {
             // Arrange
-            var buffer = new byte[] { 0xBB, 0x01, 0x07, 0xB8, 0x01, 0x01, 0xC5,
-                0xBB, 0x01, 0x07, 0xB8, 0x01, 0x01, 0xC5 };
+            var buffer = new byte[] { 0xBB, 0x01, 0x07, 0xB8, 0xA1, 0x01, 0x3A,
+                0xBB, 0x01, 0x07, 0xB8, 0xA1, 0x01, 0x3A };
             // Act
             _parser.Parse(buffer);
             // Assert
@@ -190,9 +191,9 @@ namespace Nandaka.Tests.MilliGanjubus
         public void MultipleMessagesWithGarbage()
         {
             // Arrange
-            var buffer = new byte[] { 0xBB, 0x01, 0x07, 0xB8, 0x01, 0x01, 0xC5,
+            var buffer = new byte[] { 0xBB, 0x01, 0x07, 0xB8, 0xA1, 0x01, 0x3A,
                 0xAA, 0xBB, 0xEE, 0x67, 0x32,
-                0xBB, 0x01, 0x07, 0xB8, 0x01, 0x01, 0xC5 };
+                0xBB, 0x01, 0x07, 0xB8, 0xA1, 0x01, 0x3A };
             // Act
             _parser.Parse(buffer);
             // Assert
@@ -205,7 +206,7 @@ namespace Nandaka.Tests.MilliGanjubus
         {
             // Arrange
             var buffer = new byte[] { 0xBB, 0x23, 0x00, 0xB8, 0x01, 0x01, 0xC5,
-                0xBB, 0x01, 0x07, 0xB8, 0x01, 0x01, 0xC5 };
+                0xBB, 0x01, 0x07, 0xB8, 0xA1, 0x01, 0x3A };
             // Act
             _parser.Parse(buffer);
             // Assert
@@ -218,7 +219,7 @@ namespace Nandaka.Tests.MilliGanjubus
         {
             // Arrange
             var buffer = new byte[] { 0xBB, 0x01, 0x07, 0xB8, 0x01, 0x01, 0x00,
-                0xBB, 0x01, 0x07, 0xB8, 0x01, 0x01, 0xC5 };
+                0xBB, 0x01, 0x07, 0xB8, 0xA1, 0x01, 0x3A };
             // Act
             _parser.Parse(buffer);
             // Assert
@@ -231,7 +232,7 @@ namespace Nandaka.Tests.MilliGanjubus
         {
             // Arrange
             var buffer = new byte[] { 0xBB, 0x01, 0x07, 0xB8, 0x01,
-                0xBB, 0x01, 0x07, 0xB8, 0x01, 0x01, 0xC5 };
+                0xBB, 0x01, 0x07, 0xB8, 0xA1, 0x01, 0x3A };
             // Act
             _parser.Parse(buffer);
             // Assert
@@ -245,8 +246,8 @@ namespace Nandaka.Tests.MilliGanjubus
             // Arrange
             var buffer1 = new byte[] { 0xBB };
             var buffer2 = new byte[] { 0x01, 0x07, };
-            var buffer3 = new byte[] { 0xB8, 0x01, 0x01 };
-            var buffer4 = new byte[] { 0xC5 };
+            var buffer3 = new byte[] { 0xB8, 0xA1, 0x01 };
+            var buffer4 = new byte[] { 0x3A };
             // Act
             _parser.Parse(buffer1);
             _parser.Parse(buffer2);
@@ -262,7 +263,7 @@ namespace Nandaka.Tests.MilliGanjubus
         public void DoubleStartByte()
         {
             // Arrange
-            var buffer = new byte[] { 0xBB, 0xBB, 0x01, 0x07, 0xB8, 0x01, 0x01, 0xC5 };
+            var buffer = new byte[] { 0xBB, 0xBB, 0x01, 0x07, 0xB8, 0xA1, 0x01, 0x3A };
             // Act
             _parser.Parse(buffer);
             // Assert
@@ -274,7 +275,7 @@ namespace Nandaka.Tests.MilliGanjubus
         public void DoubleHeader()
         {
             // Arrange
-            var buffer = new byte[] { 0xBB, 0x01, 0x07, 0xB8, 0xBB, 0x01, 0x07, 0xB8, 0x01, 0x01, 0xC5 };
+            var buffer = new byte[] { 0xBB, 0x01, 0x07, 0xB8, 0xBB, 0x01, 0x07, 0xB8, 0xA1, 0x01, 0x3A };
             // Act
             _parser.Parse(buffer);
             // Assert
@@ -282,37 +283,31 @@ namespace Nandaka.Tests.MilliGanjubus
         }
 
         [Fact]
-        [Trait("ShouldParse", "AsApplicationDataError")]
+        [Trait("ShouldNotParse", "AsApplicationDataError")]
         public void WrongDataAmount()
         {
             // Arrange
             var buffer = new byte[] { 0xBB, 0xFF, 0x07, 0xCD, 0x01, 0x02, 0x96 };
             // Act
-            _parser.Parse(buffer);
-            var milliGanjubusMessage = _parsedMessage as MilliGanjubusErrorMessage;
+            Assert.Throws<Exception>(() =>_parser.Parse(buffer));
             // Assert
-            Assert.NotNull(milliGanjubusMessage);
-            Assert.Equal(1, _messageCount);
-            Assert.Equal((int)MilliGanjubusErrorType.WrongDataAmount, milliGanjubusMessage.ErrorCode);
+            Assert.Equal(0, _messageCount);
         }
 
         [Fact]
-        [Trait("ShouldParse", "AsApplicationDataError")]
+        [Trait("ShouldNotParse", "AsApplicationDataError")]
         public void WrongGByte()
         {
             // Arrange
             var buffer = new byte[] { 0xBB, 0x88, 0x10, 0x8C, 0xBB, 0xCC, 0xBB, 0x04, 0x08, 0xE1, 0x00, 0xBB, 0x88, 0x08, 0x76, 0xED };
             // Act
-            _parser.Parse(buffer);
-            var milliGanjubusMessage = _parsedMessage as MilliGanjubusErrorMessage;
+            Assert.Throws<Exception>(() => _parser.Parse(buffer));
             // Assert
-            Assert.Equal(1, _messageCount);
-            Assert.NotNull(milliGanjubusMessage);
-            Assert.Equal((int)MilliGanjubusErrorType.WrongGByte, milliGanjubusMessage.ErrorCode);
+            Assert.Equal(0, _messageCount);
         }
 
         [Theory]
-        [Trait("ShouldParse", "AsApplicationDataError")]
+        [Trait("ShouldNotParse", "AsApplicationDataError")]
         [InlineData(new byte[] { 0xBB, 0x88, 0x10, 0x00, 0xAA, 0xCC, 0xBB, 0x04, 0x08, 0xE1, 0x00, 0xBB, 0x88, 0x08, 0x76, 0x00 })]
         [InlineData(new byte[] { 0xBB, 0x88, 0x10, 0x00, 0x0A, 0xCC, 0xBB, 0x04, 0x08, 0xE1, 0x00, 0xBB, 0x88, 0x08, 0x76, 0x00 })]
         public void WrongFNibble(byte[] buffer)
@@ -321,16 +316,13 @@ namespace Nandaka.Tests.MilliGanjubus
             buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
             buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
-            _parser.Parse(buffer);
-            var milliGanjubusMessage = _parsedMessage as MilliGanjubusErrorMessage;
+            Assert.Throws<Exception>(() => _parser.Parse(buffer));
             // Assert
-            Assert.Equal(1, _messageCount);
-            Assert.NotNull(milliGanjubusMessage);
-            Assert.Equal((int)MilliGanjubusErrorType.WrongGByte, milliGanjubusMessage.ErrorCode);
+            Assert.Equal(0, _messageCount);
         }
 
         [Fact]
-        [Trait("ShouldParse", "AsApplicationDataError")]
+        [Trait("ShouldNotParse", "AsApplicationDataError")]
         public void StartAddressIsGreaterThanEndAddress()
         {
             // Arrange
@@ -339,16 +331,13 @@ namespace Nandaka.Tests.MilliGanjubus
             buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
             buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
-            _parser.Parse(buffer);
-            var milliGanjubusMessage = _parsedMessage as MilliGanjubusErrorMessage;
+            Assert.Throws<Exception>(() => _parser.Parse(buffer));
             // Assert
-            Assert.Equal(1, _messageCount);
-            Assert.NotNull(milliGanjubusMessage);
-            Assert.Equal((int)MilliGanjubusErrorType.WrongRegisterAddress, milliGanjubusMessage.ErrorCode);
+            Assert.Equal(0, _messageCount);
         }
 
         [Fact]
-        [Trait("ShouldParse", "AsApplicationDataError")]
+        [Trait("ShouldNotParse", "AsApplicationDataError")]
         public void TooManyRegistersInRangeMessage()
         {
             // Arrange
@@ -357,12 +346,9 @@ namespace Nandaka.Tests.MilliGanjubus
             buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
             buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
-            _parser.Parse(buffer);
-            var milliGanjubusMessage = _parsedMessage as MilliGanjubusErrorMessage;
+            Assert.Throws<Exception>(() => _parser.Parse(buffer));
             // Assert
-            Assert.Equal(1, _messageCount);
-            Assert.NotNull(milliGanjubusMessage);
-            Assert.Equal((int)MilliGanjubusErrorType.WrongDataAmount, milliGanjubusMessage.ErrorCode);
+            Assert.Equal(0, _messageCount);
         }
 
         [Fact]

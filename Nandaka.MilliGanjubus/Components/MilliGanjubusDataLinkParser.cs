@@ -44,6 +44,7 @@ namespace Nandaka.MilliGanjubus.Components
                         break;
 
                     case ParsingStage.WaitingAddress:
+                        _parserCounter++;
                         break;
 
                     case ParsingStage.WaitingSize:
