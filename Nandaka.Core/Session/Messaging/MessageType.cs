@@ -2,10 +2,6 @@
 {
     public enum MessageType
     {
-        ReadDataRequest,
-        WriteDataRequest,
-        ReadDataResponse,
-        WriteDataResponse,
         Request,
         Response
     }

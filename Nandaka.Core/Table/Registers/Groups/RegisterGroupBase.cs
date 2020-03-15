@@ -8,6 +8,7 @@ namespace Nandaka.Core.Table
     {
         public int Address { get; }
         public int Count { get; }
+        public abstract int DataSize { get; }
         public abstract TValue Value { get; }
 
         protected RegisterGroupBase(int address, int count)

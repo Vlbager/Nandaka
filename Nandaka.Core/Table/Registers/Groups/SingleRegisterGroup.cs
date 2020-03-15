@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Nandaka.Core.Table
 {
@@ -7,12 +8,13 @@ namespace Nandaka.Core.Table
     {
         private readonly Register<TValue> _register;
 
+        public override int DataSize => Marshal.SizeOf<TValue>();
+        public override TValue Value => _register.Value;
+
         public SingleRegisterGroup(Register<TValue> register) : base(register.Address, 1)
         {
             _register = register;
         }
-
-        public override TValue Value => _register.Value;
 
         public override IReadOnlyCollection<IRegister> GetRawRegisters()
         {

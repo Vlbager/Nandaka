@@ -10,6 +10,7 @@ namespace Nandaka.Core.Table
     {
         private readonly Func<ByteRegisterGroup<TValue>, TValue> _groupConversionFunc;
 
+        public override int DataSize => Registers.Count;
         public override TValue Value => _groupConversionFunc(this);
         public IReadOnlyCollection<Register<byte>> Registers { get; }
 

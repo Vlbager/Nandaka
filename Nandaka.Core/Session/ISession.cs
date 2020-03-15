@@ -6,9 +6,9 @@ namespace Nandaka.Core.Session
 {
     public interface ISession<T>
     {
-        IDevice Device { get; }
+        IDevice SlaveDevice { get; }
         IProtocol<T> Protocol { get; }
-        void EnqueueRegisters(IEnumerable<IRegisterGroup> registers, MessageType operationType);
+        void EnqueueRegisters(IEnumerable<IRegisterGroup> registerGroups, OperationType operationType);
         void SendMessage();
     }
 }

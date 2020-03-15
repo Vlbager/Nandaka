@@ -3,6 +3,7 @@
     public enum OperationType
     {
         Read,
-        Write
+        Write,
+        Specific
     }
 }

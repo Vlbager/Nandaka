@@ -2,7 +2,7 @@
 
 namespace Nandaka.Core.Helpers
 {
-    internal static class LittleEndianConverter
+    public static class LittleEndianConverter
     {
         public static short ToInt16(byte[] bytes)
         {
@@ -77,6 +77,17 @@ namespace Nandaka.Core.Helpers
         public static byte[] GetBytes(ulong value)
         {
             throw new NotImplementedException();
+        }
+
+        public static byte[] GetBytes(int value, int valueSizeInBytes)
+        {
+            var result = new byte[valueSizeInBytes];
+
+            var index = 0;
+            while (index < valueSizeInBytes)
+                result[index] = (byte) (value >> (8 * index++));
+
+            return result;
         }
     }
 }

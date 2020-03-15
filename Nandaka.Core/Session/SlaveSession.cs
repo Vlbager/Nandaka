@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Table;
 
@@ -10,50 +8,40 @@ namespace Nandaka.Core.Session
     {
         private readonly Queue<IRegisterGroup> _queue = new Queue<IRegisterGroup>();
 
-        private MessageType _type;
+        private OperationType _type;
 
-        public SlaveSession(IDevice device, IProtocol<T> protocol)
+        public SlaveSession(IDevice slaveDevice, IProtocol<T> protocol)
         {
-            Device = device;
+            SlaveDevice = slaveDevice;
             Protocol = protocol;
         }
 
-        public IDevice Device { get; }
+        public IDevice SlaveDevice { get; }
         public IProtocol<T> Protocol { get; }
-        public void EnqueueRegisters(IEnumerable<IRegisterGroup> registers, MessageType operationType)
+        public void EnqueueRegisters(IEnumerable<IRegisterGroup> registerGroups, OperationType operationType)
         {
-            switch (operationType)
-            {
-                case MessageType.ReadDataResponse:
-                case MessageType.WriteDataResponse:
-                    _type = operationType;
-                    break;
+            // todo: refactor slave device design.
+            _type = operationType;
 
-                default:
-                    // todo: Create custom exception.
-                    throw new ArgumentException("Wrong operation type");
-            }
-
-            foreach (var register in registers)
+            foreach (IRegisterGroup registerGroup in registerGroups)
             {
-                if (_queue.Contains(register))
-                {
+                if (_queue.Contains(registerGroup))
                     continue;
-                }
 
-                _queue.Enqueue(register);
+                _queue.Enqueue(registerGroup);
             }
         }
 
         public void SendMessage()
         {
-            var message = Protocol.GetMessage(_queue, Device.Address, _type);
-            var packet = Protocol.PreparePacket(message);
-            if (message.Registers.Count != _queue.Count)
+            var message = new CommonMessage(SlaveDevice.Address, MessageType.Response, _type);
+            T packet = Protocol.PreparePacket(message);
+
+            // todo: refactor this logic.
+            if (message.RegisterGroups.Count != _queue.Count)
             {
-                message = Protocol.GetMessage(Enumerable.Empty<IRegisterGroup>(), Device.Address, MessageType.Response,
-                    (int)ErrorCode.WrongDataAmount);
-                packet = Protocol.PreparePacket(message);
+                var errorMessage = new CommonErrorMessage(SlaveDevice.Address, MessageType.Response, ErrorType.TooMuchDataRequested);
+                packet = Protocol.PreparePacket(errorMessage);
             }
 
             Protocol.SendPacket(packet);

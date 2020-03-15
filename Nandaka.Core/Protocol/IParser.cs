@@ -7,7 +7,5 @@ namespace Nandaka.Core.Protocol
         void Parse(TIn data);
 
         event EventHandler<TOut> MessageParsed;
-
-        int AwaitingReplyAddress { get; set; }
     }
 }

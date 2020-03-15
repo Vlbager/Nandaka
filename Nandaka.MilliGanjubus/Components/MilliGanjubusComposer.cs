@@ -8,189 +8,191 @@ using Nandaka.Core.Table;
 
 namespace Nandaka.MilliGanjubus.Components
 {
-    public class MilliGanjubusComposer : IComposer<IRegisterMessage, byte[]>
+    public class MilliGanjubusComposer : IComposer<IFrameworkMessage, byte[]>
     {
         // todo: how to make protocolInfo fields changeable
         // Interface with get-properties?
 
-        public byte[] Compose(IRegisterMessage message)
+        public byte[] Compose(IFrameworkMessage message)
+        {
+            switch (message)
+            {
+                case IRegisterMessage registerMessage:
+                    return Compose(registerMessage);
+
+                case IErrorMessage errorMessage:
+                    return Compose(errorMessage);
+
+                default:
+                    // todo: create a custom exception
+                    throw new Exception("Unexpected type of message");
+            }
+        }
+
+        private byte[] Compose(IErrorMessage message)
+        {
+            throw new NotImplementedException();
+        }
+
+        private byte[] Compose(IRegisterMessage message)
         {
             var data = GetDataBytes(message);
+
             var packet = new byte[MilliGanjubusBase.MinPacketLength + data.Length];
-            if (packet.Length > MilliGanjubusBase.MaxPacketLength)
-            {
-                // todo: create a custom exception.
-                throw new ArgumentOutOfRangeException();
-            }
+
             packet[MilliGanjubusBase.StartByteOffset] = MilliGanjubusBase.StartByte;
             packet[MilliGanjubusBase.AddressOffset] = (byte)message.SlaveDeviceAddress;
             packet[MilliGanjubusBase.SizeOffset] = (byte)packet.Length;
             packet[MilliGanjubusBase.HeaderCheckSumOffset] =
                 CheckSum.Crc8(packet.Take(MilliGanjubusBase.HeaderCheckSumOffset).ToArray());
+
             Array.Copy(data, 0, packet, MilliGanjubusBase.DataOffset, data.Length);
             packet[packet.Length - 1] =
                 CheckSum.Crc8(packet.Take(packet.Length - MilliGanjubusBase.PacketCheckSumSize).ToArray());
+
             return packet;
         }
 
         private byte[] GetDataBytes(IRegisterMessage message)
         {
-            // Length of result array is unknown, so list is used.
-            var dataList = new List<byte>();
-
-            var registersArray = message.Registers.ToArray();
+            byte gByte;
+            bool withValues = false;
             switch (message.Type)
             {
-                case MessageType.ReadDataRequest:
-                    if (IsRange(registersArray))
-                    {
-                        FillRange(MilliGanjubusBase.FReadRange, false);
-                        break;
-                    }
-                    FillSeries(MilliGanjubusBase.FReadSeries, false);
+                case MessageType.Request:
+                    gByte = MilliGanjubusBase.GRequest;
                     break;
 
-                case MessageType.ReadDataResponse:
-                    if (IsRange(registersArray))
-                    {
-                        FillRange(MilliGanjubusBase.GReply << 4 | MilliGanjubusBase.FReadRange, true);
-                        break;
-                    }
-                    FillSeries(MilliGanjubusBase.GReply << 4 | MilliGanjubusBase.FReadSeries, true);
-                    break;
-
-                case MessageType.WriteDataRequest:
-                    if (IsRange(registersArray))
-                    {
-                        FillRange(MilliGanjubusBase.FWriteRange, true);
-                        break;
-                    }
-                    FillSeries(MilliGanjubusBase.FWriteSeries, true);
-                    break;
-
-                case MessageType.WriteDataResponse:
-                    if (IsRange(registersArray))
-                    {
-                        FillRange(MilliGanjubusBase.GReply << 4 | MilliGanjubusBase.FWriteRange, false);
-                        break;
-                    }
-                    FillSeries(MilliGanjubusBase.GReply << 4 | MilliGanjubusBase.FWriteSeries, false);
-                    break;
-
-                case MessageType.ErrorMessage:
-                    dataList.Add(MilliGanjubusBase.GError << 4);
-                    dataList.Add((byte)message.ErrorCode);
+                case MessageType.Response:
+                    gByte = MilliGanjubusBase.GReply << 4;
+                    withValues = true;
                     break;
 
                 default:
-                    // todo: Create a custom exception
-                    throw new ArgumentException("Wrong message type");
+                    //todo: create a custom exception
+                    throw new Exception("Undefined message type");
             }
 
-            return dataList.ToArray();
-
-            // Local functions for application data filling.
-            void FillRange(byte gByte, bool withValues)
+            switch (message.OperationType)
             {
-                dataList.Add(gByte);
-                AddAddressToPacket(dataList, registersArray[0].Address);
-                // End range registerGroup address will be added after fill the collection.
-                var endRangeIndex = dataList.Count;
-                if (!withValues)
-                {
-                    return;
-                }
+                case OperationType.Read:
+                    break;
 
-                int lastAddedRegisterAddress = 0;
-                foreach (var register in registersArray)
-                {
-                    var registerValue = register.GetBytes();
-                    if (dataList.Count + registerValue.Length + MilliGanjubusBase.AddressSize > MilliGanjubusBase.MaxDataLength)
-                    {
-                        break;
-                    }
+                case OperationType.Write:
+                    // By default assume that this is read operation. Otherwise invert variable.
+                    withValues = !withValues;
+                    break;
 
-                    foreach (var b in registerValue)
-                    {
-                        dataList.Add(b);
-                    }
-
-                    message.RemoveRegister(register);
-                    lastAddedRegisterAddress = register.Address;
-                }
-
-                // Add real last registerGroup address.
-                var endRangeAddress = new List<byte>(MilliGanjubusBase.AddressSize);
-                AddAddressToPacket(endRangeAddress, lastAddedRegisterAddress);
-                dataList.InsertRange(endRangeIndex, endRangeAddress);
+                default:
+                    // todo: create a custom exception;
+                    throw new Exception("Undefined operation type");
             }
 
-            void FillSeries(byte gByte, bool withValues)
-            {
-                dataList.Add(gByte);
-                if (withValues)
-                {
-                    foreach (var register in registersArray)
-                    {
-                        if (dataList.Count + MilliGanjubusBase.AddressSize > MilliGanjubusBase.MaxDataLength)
-                        {
-                            break;
-                        }
-                        AddAddressToPacket(dataList, register.Address);
-                        message.RemoveRegister(register);
-                    } 
-                    return;
-                }
-
-                foreach (var register in registersArray)
-                {
-                    var registerValue = register.GetBytes();
-                    if (dataList.Count + registerValue.Length + MilliGanjubusBase.AddressSize > MilliGanjubusBase.MaxDataLength)
-                    {
-                        break;
-                    }
-
-                    AddAddressToPacket(dataList, register.Address);
-                    foreach (var b in registerValue)
-                    {
-                        dataList.Add(b);
-                    }
-
-                    message.RemoveRegister(register);
-                }
-            }
-
+            
+            if (IsRange(message.RegisterGroups as IList<IRegisterGroup>))
+                return ComposeDataAsRange(message, (byte)(gByte | MilliGanjubusBase.FReadRange), withValues);
+            
+            return ComposeDataAsSeries(message, (byte)(gByte | MilliGanjubusBase.FReadSeries), withValues);
         }
 
-        // In little endian.
-        void AddAddressToPacket(List<byte> packet, int address)
+        private byte[] ComposeDataAsRange(IRegisterMessage message, byte gByte, bool withValues)
         {
-            int index = 0;
-            while (index < MilliGanjubusBase.AddressSize)
+            IRegisterGroup[] registerGroups = message.RegisterGroups.ToArray();
+
+            var result = new List<byte> {gByte};
+
+            result.AddRange(GetRegisterAddress(registerGroups.First().Address));
+
+            if (!withValues)
             {
-                packet.Add((byte)(address >> (8 * index++)));
+                result.AddRange(GetRegisterAddress(registerGroups.Last().Address));
+                return result.ToArray();
             }
+
+            int lastRegisterAddressResultIndex = result.Count;
+
+            var lastAddedRegisterAddress = 0;
+            foreach (IRegisterGroup registerGroup in registerGroups)
+            {
+                byte[] groupData = registerGroup.ToBytes();
+
+                if (result.Count + groupData.Length + MilliGanjubusBase.AddressSize > MilliGanjubusBase.MaxDataLength)
+                    break;
+
+                result.AddRange(groupData);
+
+                message.RegisterGroups.Remove(registerGroup);
+                lastAddedRegisterAddress = registerGroup.Address;
+            }
+
+            byte[] endRangeAddress = GetRegisterAddress(lastAddedRegisterAddress);
+            result.InsertRange(lastRegisterAddressResultIndex, endRangeAddress);
+
+            return result.ToArray();
         }
 
-        // todo: maybe I can mark message as range at forming stage?
-        private bool IsRange(IRegisterGroup[] registers)
+        private byte[] ComposeDataAsSeries(IRegisterMessage message, byte gByte, bool withValues)
         {
-            if (registers.Length < MilliGanjubusBase.MinimumRangeRegisterCount)
+            ICollection<IRegisterGroup> registerGroups = message.RegisterGroups;
+
+            var result = new List<byte> {gByte};
+
+            foreach (IRegisterGroup registerGroup in registerGroups)
             {
-                return false;
+                int groupSize = GetGroupSize(registerGroup);
+
+                if (result.Count + groupSize > MilliGanjubusBase.MaxDataLength)
+                    break;
+
+                foreach (IRegister register in registerGroup.GetRawRegisters())
+                {
+                    result.AddRange(GetRegisterAddress(register.Address));
+
+                    if (withValues)
+                        result.AddRange(register.ToBytes());
+                }
+
+                message.RegisterGroups.Remove(registerGroup);
             }
 
-            var index = 0;
-            var previousAddress = registers[index++].Address;
-            while (index < registers.Length)
+            return result.ToArray();
+        }
+
+        private int GetGroupSize(IRegisterGroup registerGroup)
+        {
+            return registerGroup.Count * (MilliGanjubusBase.AddressSize + registerGroup.DataSize);
+        }
+
+        private byte[] GetRegisterAddress(int address)
+        {
+            return LittleEndianConverter.GetBytes(address, MilliGanjubusBase.AddressSize);
+        }
+
+        /// <summary>
+        /// Check for addresses ordering.
+        /// </summary>
+        private bool IsRange(IList<IRegisterGroup> registerGroups)
+        {
+            var registerInRangeCount = 0;
+            var dataSize = 0;
+
+            int nextAddress = registerGroups.First().Address;
+            foreach (IRegisterGroup registerGroup in registerGroups)
             {
-                var currentAddress = registers[index++].Address;
-                // All addresses must be in order.
-                if (currentAddress - previousAddress != 1)
-                {
+                if (registerGroup.Address != nextAddress)
                     return false;
-                }
+
+                dataSize += GetGroupSize(registerGroup);
+                if (dataSize > MilliGanjubusBase.MaxDataLength)
+                    break;
+
+                nextAddress += registerGroup.Count;
+
+                registerInRangeCount++;
             }
+
+            if (registerInRangeCount < MilliGanjubusBase.MinimumRangeRegisterCount)
+                return false;
 
             return true;
         }

@@ -25,22 +25,16 @@ namespace Nandaka.MilliGanjubus.Components
             void CheckByteValue(bool condition)
             {
                 if (condition)
-                {
                     _parserCounter++;
-                }
                 // If buffer contain 1 byte we don't have to reparse (it guaranted isn't StartByte).
                 else if (_buffer.Count > 1)
-                {
                     OnParserError();
-                }
                 // But always need to clear buffer.
                 else
-                {
                     _buffer.Clear();
-                }
             }
 
-            foreach (var byteValue in data)
+            foreach (byte byteValue in data)
             {
                 _buffer.Add(byteValue);
                 switch ((ParsingStage)_parserCounter)
@@ -48,17 +42,18 @@ namespace Nandaka.MilliGanjubus.Components
                     case ParsingStage.WaitingStartByte:
                         CheckByteValue(byteValue == MilliGanjubusBase.StartByte);
                         break;
+
                     case ParsingStage.WaitingAddress:
-                        CheckByteValue(byteValue == AwaitingReplyAddress || 
-                                       byteValue == MilliGanjubusBase.DirectCastAddress ||
-                                       byteValue == MilliGanjubusBase.BroadCastAddress);
                         break;
+
                     case ParsingStage.WaitingSize:
                         CheckByteValue(byteValue <= MilliGanjubusBase.MaxPacketLength);
                         break;
+
                     case ParsingStage.WaitingHeaderCrc:
                         CheckByteValue(byteValue == CheckSum.Crc8(_buffer.GetRange(0, _parserCounter).ToArray()));
                         break;
+
                     default:
                         if (_parserCounter < _buffer[MilliGanjubusBase.SizeOffset] - 1)
                         {
@@ -91,8 +86,6 @@ namespace Nandaka.MilliGanjubus.Components
 
             // Reparse buffered bytes.
             Parse(bufferArray);
-
-            // What else is needed here? Report at log?
         }
     }
 }

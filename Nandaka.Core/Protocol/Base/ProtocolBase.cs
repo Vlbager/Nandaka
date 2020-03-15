@@ -1,18 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using Nandaka.Core.Network;
 using Nandaka.Core.Session;
-using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Protocol
 {
     public abstract class ProtocolBase<T> : IProtocol<T>
     {
         private readonly IDataPortProvider<T> _dataPortProvider;
-        private readonly IComposer<IRegisterMessage, T> _composer;
-        private readonly IParser<T, IRegisterMessage> _parser;
+        private readonly IComposer<IFrameworkMessage, T> _composer;
+        private readonly IParser<T, IFrameworkMessage> _parser;
 
-        protected ProtocolBase(IDataPortProvider<T> dataPortProvider, IComposer<IRegisterMessage, T> composer, IParser<T, IRegisterMessage> parser)
+        protected ProtocolBase(IDataPortProvider<T> dataPortProvider, IComposer<IFrameworkMessage, T> composer, IParser<T, IFrameworkMessage> parser)
         {
             _dataPortProvider = dataPortProvider;
             _composer = composer;
@@ -20,9 +18,7 @@ namespace Nandaka.Core.Protocol
             _dataPortProvider.OnDataReceived += (sender, data) => _parser.Parse(data);
         }
 
-        public abstract IRegisterMessage GetMessage(IEnumerable<IRegisterGroup> registers, int deviceAddress, MessageType type, int errorCode = 0);
-
-        public T PreparePacket(IRegisterMessage message)
+        public T PreparePacket(IFrameworkMessage message)
         {
             return _composer.Compose(message);
         }
@@ -32,10 +28,10 @@ namespace Nandaka.Core.Protocol
             _dataPortProvider.Write(packet);
         }
 
-        public event EventHandler<IRegisterMessage> MessageReceived
+        public event EventHandler<IFrameworkMessage> MessageReceived
         {
             add => _parser.MessageParsed += value;
-            remove => _parser.MessageParsed += value;
+            remove => _parser.MessageParsed -= value;
         }
 
     }

@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
 using Nandaka.Core.Table;
@@ -12,128 +14,133 @@ namespace Nandaka.MilliGanjubus.Components
         {
         }
 
-        protected override IRegisterMessage ApplicationParse(byte[] data)
+        protected override IFrameworkMessage ApplicationParse(byte[] data)
         {
-            var deviceAddress = data[MilliGanjubusBase.AddressOffset];
-
             // Find out the type of message from gByte.
             var gByte = data[MilliGanjubusBase.DataOffset];
+
+            MessageType messageType;
+            bool withValues = false;
 
             // Left nibble is ack code. Right - F code.
             switch (gByte >> 4)
             {
                 case MilliGanjubusBase.GRequest:
-                    switch (gByte & 0xF)
-                    {
-                        case MilliGanjubusBase.FReadSeries:
-                        case MilliGanjubusBase.FReadSingle:
-                            return FromSeries(MessageType.ReadDataRequest, false);
-                        case MilliGanjubusBase.FReadRange:
-                            return FromRange(MessageType.ReadDataRequest, false);
-                        case MilliGanjubusBase.FWriteSingle:
-                        case MilliGanjubusBase.FWriteSeries:
-                            return FromSeries(MessageType.WriteDataRequest, true);
-                        case MilliGanjubusBase.FWriteRange:
-                            return FromRange(MessageType.WriteDataRequest, true);
-                    }
+                    messageType = MessageType.Request;
                     break;
+
                 case MilliGanjubusBase.GReply:
-                    switch (gByte & 0xF)
-                    {
-                        case MilliGanjubusBase.FReadSingle:
-                        case MilliGanjubusBase.FReadSeries:
-                            return FromSeries(MessageType.ReadDataResponse, true);
-                        case MilliGanjubusBase.FReadRange:
-                            return FromRange(MessageType.ReadDataResponse, true);
-                        case MilliGanjubusBase.FWriteSingle:
-                        case MilliGanjubusBase.FWriteSeries:
-                            return FromSeries(MessageType.WriteDataResponse, false);
-                        case MilliGanjubusBase.FWriteRange:
-                            return FromRange(MessageType.WriteDataResponse, false);
-                    }
+                    messageType = MessageType.Response;
+                    withValues = true;
                     break;
+
                 case MilliGanjubusBase.GError:
-                    var errorCode = data[MilliGanjubusBase.DataOffset + 1];
-                    return new MilliGanjubusMessage(MessageType.ErrorMessage, deviceAddress, errorCode);
+                    byte errorCode = data[MilliGanjubusBase.DataOffset + 1];
+                    byte deviceAddress = data[MilliGanjubusBase.AddressOffset];
+                    return new MilliGanjubusErrorMessage(deviceAddress, MessageType.Response, (MilliGanjubusErrorType)errorCode);
 
+                default:
+                    // todo: create a custom exception 
+                    throw new Exception("Wrong gByte");
             }
-            // If message not returned yet, then gByte is wrong.
-            // ReSharper disable once RedundantArgumentDefaultValue
-            return new MilliGanjubusMessage(MessageType.ApplicationDataError,
-                deviceAddress, (int)MilliGanjubusErrorType.WrongGByte);
 
-            // Local functions for different types of packet.
-            IRegisterMessage FromSeries(MessageType messageType, bool withValues)
+            bool isRange = false;
+            OperationType operationType;
+
+            switch (gByte & 0xF)
             {
-                // Look through all data bytes except CRC.
-                var packetSize = data[MilliGanjubusBase.SizeOffset];
-                var byteIndex = MilliGanjubusBase.MinPacketLength;
+                case MilliGanjubusBase.FReadSingle:
+                case MilliGanjubusBase.FReadSeries:
+                    operationType = OperationType.Read;
+                    break;
+                case MilliGanjubusBase.FReadRange:
+                    operationType = OperationType.Read;
+                    isRange = true;
+                    break;
 
-                // If message with values, then packet size should be an odd number.
-                if (withValues && packetSize % 2 != 0)
-                {
-                    return new MilliGanjubusMessage(MessageType.ApplicationDataError,
-                            deviceAddress, (int)MilliGanjubusErrorType.WrongDataAmount);
-                }
+                case MilliGanjubusBase.FWriteSingle:
+                case MilliGanjubusBase.FWriteSeries:
+                    operationType = OperationType.Write;
+                    // By default assume that this is read operation. Otherwise invert variable.
+                    withValues = !withValues;
+                    break;
+                case MilliGanjubusBase.FWriteRange:
+                    operationType = OperationType.Write;
+                    withValues = !withValues;
+                    isRange = true;
+                    break;
 
-                var message = new MilliGanjubusMessage(messageType, data[MilliGanjubusBase.AddressOffset]);
-
-                // todo: add registerGroup class and rework this.
-                if (withValues)
-                {
-                    while (byteIndex < packetSize - 1)
-                    {
-                        message.AddRegister(new Register<>(data[byteIndex++], data[byteIndex++]));
-                    }
-                }
-                else
-                {
-                    while (byteIndex < packetSize - 1)
-                    {
-                        message.AddRegister(new Register<>(data[byteIndex++]));
-                    }
-                }
-
-                return message;
+                default:
+                    // todo: create a custom exception
+                    throw new Exception("Wring gByte");
             }
 
-            IRegisterMessage FromRange(MessageType messageType, bool withValues)
+            return isRange
+                ? ParseAsRange(data, messageType, operationType, withValues)
+                : ParseAsSeries(data, messageType, operationType, withValues);
+        }
+
+        private IFrameworkMessage ParseAsSeries(byte[] data, MessageType messageType, OperationType operationType, bool withValues)
+        {
+            byte deviceAddress = data[MilliGanjubusBase.AddressOffset];
+
+            // Look through all data bytes except CRC.
+            byte packetSize = data[MilliGanjubusBase.SizeOffset];
+            int byteIndex = MilliGanjubusBase.MinPacketLength;
+
+            // If message with values, then packet size should be an odd number.
+            if (withValues && packetSize % 2 != 0)
+                return new MilliGanjubusErrorMessage(deviceAddress, messageType, MilliGanjubusErrorType.WrongDataAmount);
+
+            var registers = new List<SingleRegisterGroup<byte>>();
+
+            if (withValues)
             {
-                // Ignore gByte.
-                var currentByteIndex = MilliGanjubusBase.DataOffset + 1;
-
-                // Bytes after gByte are a range of addresses.
-                var startAddress = data[currentByteIndex++];
-                var endAddress = data[currentByteIndex++];
-                var registersCount = endAddress - startAddress + 1;
-
-                // Check addresses validity.
-                if (startAddress > endAddress)
-                {
-                    return new MilliGanjubusMessage(MessageType.ApplicationDataError, 
-                        deviceAddress, (int)MilliGanjubusErrorType.WrongRegisterAddress);
-                }
-
-                // Check registers count is valid number (less than registerGroup values bytes count).
-                if (withValues && registersCount > data[MilliGanjubusBase.SizeOffset] - MilliGanjubusBase.MinPacketLength - 2)
-                {
-                    return new MilliGanjubusMessage(MessageType.ApplicationDataError,
-                        deviceAddress, (int)MilliGanjubusErrorType.WrongDataAmount);
-                }
-
-                var message = new MilliGanjubusMessage(messageType, data[MilliGanjubusBase.AddressOffset]);
-
-                foreach (var address in Enumerable.Range(startAddress, registersCount))
-                {
-                    // todo: add registerGroup class and rework this.
-                    var register = withValues ?
-                        new Register<>(address, data[currentByteIndex++]) :
-                        new Register<>(address);
-
-                    message.AddRegister(register);
-                }
-                return message;
+                while (byteIndex < packetSize - 1)
+                    registers.Add(new SingleRegisterGroup<byte>(Register<byte>.CreateByte(data[byteIndex++], data[byteIndex++])));
             }
+            else
+            {
+                while (byteIndex < packetSize - 1)
+                    registers.Add(new SingleRegisterGroup<byte>(Register<byte>.CreateByte(data[byteIndex++])));
+            }
+
+            return new CommonMessage(deviceAddress, messageType, operationType, registers);
+        }
+
+        private IFrameworkMessage ParseAsRange(byte[] data, MessageType messageType, OperationType operationType, bool withValues)
+        {
+            byte deviceAddress = data[MilliGanjubusBase.AddressOffset];
+
+            // Ignore gByte.
+            int currentByteIndex = MilliGanjubusBase.DataOffset + 1;
+
+            // Bytes after gByte are a range of addresses.
+            byte startAddress = data[currentByteIndex++];
+            byte endAddress = data[currentByteIndex++];
+            int registersCount = endAddress - startAddress + 1;
+
+            // Check addresses validity.
+            if (startAddress > endAddress)
+                return new MilliGanjubusErrorMessage(deviceAddress, messageType, MilliGanjubusErrorType.WrongRegisterAddress);
+            
+
+            // Check registers count is valid number (less than registerGroup values bytes count).
+            if (withValues && registersCount > data[MilliGanjubusBase.SizeOffset] - MilliGanjubusBase.MinPacketLength - 2)
+                return new MilliGanjubusErrorMessage(deviceAddress, messageType, MilliGanjubusErrorType.WrongDataAmount);
+
+            var registers = new List<SingleRegisterGroup<byte>>(registersCount);
+
+            foreach (int address in Enumerable.Range(startAddress, registersCount))
+            {
+                SingleRegisterGroup<byte> register = withValues
+                    ? new SingleRegisterGroup<byte>(Register<byte>.CreateByte(address, data[currentByteIndex++]))
+                    : new SingleRegisterGroup<byte>(Register<byte>.CreateByte(address));
+
+                registers.Add(register);
+            }
+
+            return new CommonMessage(deviceAddress, messageType, operationType, registers);
         }
     }
 }
