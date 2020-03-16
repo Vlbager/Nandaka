@@ -89,7 +89,7 @@ namespace Nandaka.MilliGanjubus.Components
             }
 
             
-            if (IsRange(message.RegisterGroups as IList<IRegisterGroup>))
+            if (IsRange(message.RegisterGroups))
                 return ComposeDataAsRange(message, (byte)(gByte | MilliGanjubusBase.FReadRange), withValues);
             
             return ComposeDataAsSeries(message, (byte)(gByte | MilliGanjubusBase.FReadSeries), withValues);
@@ -171,7 +171,7 @@ namespace Nandaka.MilliGanjubus.Components
         /// <summary>
         /// Check for addresses ordering.
         /// </summary>
-        private bool IsRange(IList<IRegisterGroup> registerGroups)
+        private bool IsRange(ICollection<IRegisterGroup> registerGroups)
         {
             var registerInRangeCount = 0;
             var dataSize = 0;
