@@ -8,36 +8,40 @@ using Nandaka.MilliGanjubus.Models;
 
 namespace Nandaka.MilliGanjubus.Components
 {
-    public class MilliGanjubusApplicationParser : ApplicationParserBase<byte[]>
+    internal class MilliGanjubusApplicationParser : ApplicationParserBase<byte[]>
     {
-        public MilliGanjubusApplicationParser() : base(new MilliGanjubusDataLinkParser())
+        private readonly MilliGanjubusInfo _info;
+
+        public MilliGanjubusApplicationParser(MilliGanjubusInfo ganjubusInfo) 
+            : base(new MilliGanjubusDataLinkParser(ganjubusInfo))
         {
+            _info = ganjubusInfo;
         }
 
         protected override IFrameworkMessage ApplicationParse(byte[] data)
         {
-            byte deviceAddress = data[MilliGanjubusBase.AddressOffset];
+            byte deviceAddress = data[_info.AddressOffset];
 
             // Find out the type of message from gByte.
-            var gByte = data[MilliGanjubusBase.DataOffset];
+            var gByte = data[_info.DataOffset];
 
             MessageType messageType;
             bool withValues = false;
 
-            // Left nibble is ack code. Right - F code.
-            switch (gByte >> 4)
+            int ackCode = gByte >> 4;
+            switch (ackCode)
             {
-                case MilliGanjubusBase.GRequest:
+                case MilliGanjubusInfo.GRequest:
                     messageType = MessageType.Request;
                     break;
 
-                case MilliGanjubusBase.GReply:
+                case MilliGanjubusInfo.GReply:
                     messageType = MessageType.Response;
                     withValues = true;
                     break;
 
-                case MilliGanjubusBase.GError:
-                    byte errorCode = data[MilliGanjubusBase.DataOffset + 1];
+                case MilliGanjubusInfo.GError:
+                    byte errorCode = data[_info.DataOffset + 1];
                     return new MilliGanjubusErrorMessage(deviceAddress, MessageType.Response, (MilliGanjubusErrorType)errorCode);
 
                 default:
@@ -48,24 +52,25 @@ namespace Nandaka.MilliGanjubus.Components
             bool isRange = false;
             OperationType operationType;
 
-            switch (gByte & 0xF)
+            int fCode = gByte & 0xF;
+            switch (fCode)
             {
-                case MilliGanjubusBase.FReadSingle:
-                case MilliGanjubusBase.FReadSeries:
+                case MilliGanjubusInfo.FReadSingle:
+                case MilliGanjubusInfo.FReadSeries:
                     operationType = OperationType.Read;
                     break;
-                case MilliGanjubusBase.FReadRange:
+                case MilliGanjubusInfo.FReadRange:
                     operationType = OperationType.Read;
                     isRange = true;
                     break;
 
-                case MilliGanjubusBase.FWriteSingle:
-                case MilliGanjubusBase.FWriteSeries:
+                case MilliGanjubusInfo.FWriteSingle:
+                case MilliGanjubusInfo.FWriteSeries:
                     operationType = OperationType.Write;
                     // By default assume that this is read operation. Otherwise invert variable.
                     withValues = !withValues;
                     break;
-                case MilliGanjubusBase.FWriteRange:
+                case MilliGanjubusInfo.FWriteRange:
                     operationType = OperationType.Write;
                     withValues = !withValues;
                     isRange = true;
@@ -76,17 +81,17 @@ namespace Nandaka.MilliGanjubus.Components
                     throw new Exception("Wrong gByte");
             }
 
-            IReadOnlyCollection<IRegisterGroup> registers = isRange ? ParseAsRange(data, withValues)
-                : ParseAsSeries(data, withValues);
+            IReadOnlyCollection<IRegisterGroup> registers = isRange ? ParseAsRange(data, _info, withValues)
+                : ParseAsSeries(data, _info, withValues);
 
             return new CommonMessage(deviceAddress, messageType, operationType, registers);
         }
 
-        private static IReadOnlyCollection<IRegisterGroup> ParseAsSeries(IReadOnlyList<byte> data, bool withValues)
+        private static IReadOnlyCollection<IRegisterGroup> ParseAsSeries(IReadOnlyList<byte> data, IProtocolInfo info, bool withValues)
         {
             // Look through all data bytes except CRC.
-            byte packetSize = data[MilliGanjubusBase.SizeOffset];
-            int byteIndex = MilliGanjubusBase.MinPacketLength;
+            byte packetSize = data[info.SizeOffset];
+            int byteIndex = info.MinPacketLength;
 
             var registers = new List<SingleRegisterGroup<byte>>();
 
@@ -108,10 +113,10 @@ namespace Nandaka.MilliGanjubus.Components
             return registers;
         }
 
-        private static IReadOnlyCollection<IRegisterGroup> ParseAsRange(IReadOnlyList<byte> data, bool withValues)
+        private static IReadOnlyCollection<IRegisterGroup> ParseAsRange(IReadOnlyList<byte> data, IProtocolInfo info, bool withValues)
         {
             // Ignore gByte.
-            int currentByteIndex = MilliGanjubusBase.DataOffset + 1;
+            int currentByteIndex = info.DataOffset + 1;
 
             // Bytes after gByte are a range of addresses.
             byte startAddress = data[currentByteIndex++];
@@ -124,7 +129,7 @@ namespace Nandaka.MilliGanjubus.Components
                 throw new Exception("Wrong register Address");
 
             // Check registers count is valid number (less than registerGroup values bytes count).
-            if (withValues && registersCount > data[MilliGanjubusBase.SizeOffset] - MilliGanjubusBase.MinPacketLength - 2)
+            if (withValues && registersCount > data[info.SizeOffset] - info.MinPacketLength - 2)
                 //todo: create a custom exception
                 throw new Exception("Wrong data amount");
 

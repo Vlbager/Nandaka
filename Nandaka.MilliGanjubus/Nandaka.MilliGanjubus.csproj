@@ -6,6 +6,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Nandaka.Core\Nandaka.Core.csproj" />
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Nandaka.Tests</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
 </Project>

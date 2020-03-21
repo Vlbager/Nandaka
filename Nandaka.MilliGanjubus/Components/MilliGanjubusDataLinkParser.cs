@@ -4,7 +4,7 @@ using Nandaka.Core.Protocol;
 
 namespace Nandaka.MilliGanjubus.Components
 {
-    public class MilliGanjubusDataLinkParser : DataLinkParserBase<byte[]>
+    internal class MilliGanjubusDataLinkParser : DataLinkParserBase<byte[]>
     {
         private enum ParsingStage
         {
@@ -15,9 +15,18 @@ namespace Nandaka.MilliGanjubus.Components
             WaitingData = 4
         }
 
-        private int _parserCounter = (int)ParsingStage.WaitingStartByte;
+        private readonly MilliGanjubusInfo _info;
 
-        private readonly List<byte> _buffer = new List<byte>(MilliGanjubusBase.MaxPacketLength);
+        private int _parserCounter;
+
+        private readonly List<byte> _buffer;
+
+        public MilliGanjubusDataLinkParser(MilliGanjubusInfo ganjubusInfo)
+        {
+            _info = ganjubusInfo;
+            _parserCounter = (int)ParsingStage.WaitingStartByte;
+            _buffer = new List<byte>(_info.MaxPacketLength);
+        }
 
         public override void Parse(byte[] data)
         {
@@ -40,7 +49,7 @@ namespace Nandaka.MilliGanjubus.Components
                 switch ((ParsingStage)_parserCounter)
                 {
                     case ParsingStage.WaitingStartByte:
-                        CheckByteValue(byteValue == MilliGanjubusBase.StartByte);
+                        CheckByteValue(byteValue == _info.StartByte);
                         break;
 
                     case ParsingStage.WaitingAddress:
@@ -48,15 +57,16 @@ namespace Nandaka.MilliGanjubus.Components
                         break;
 
                     case ParsingStage.WaitingSize:
-                        CheckByteValue(byteValue <= MilliGanjubusBase.MaxPacketLength);
+                        CheckByteValue(byteValue <= _info.MaxPacketLength);
                         break;
 
                     case ParsingStage.WaitingHeaderCrc:
                         CheckByteValue(byteValue == CheckSum.Crc8(_buffer.GetRange(0, _parserCounter).ToArray()));
                         break;
 
+                    case ParsingStage.WaitingData:
                     default:
-                        if (_parserCounter < _buffer[MilliGanjubusBase.SizeOffset] - 1)
+                        if (_parserCounter < _buffer[_info.SizeOffset] - 1)
                         {
                             _parserCounter++;
                         }
@@ -85,7 +95,6 @@ namespace Nandaka.MilliGanjubus.Components
             // Clear buffer for new packet.
             _buffer.Clear();
 
-            // Reparse buffered bytes.
             Parse(bufferArray);
         }
     }

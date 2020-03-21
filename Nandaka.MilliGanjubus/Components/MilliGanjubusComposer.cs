@@ -1,17 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
-using Nandaka.Core.Table;
 
 namespace Nandaka.MilliGanjubus.Components
 {
-    public class MilliGanjubusComposer : IComposer<IFrameworkMessage, byte[]>
+    internal class MilliGanjubusComposer : IComposer<IFrameworkMessage, byte[]>
     {
-        // todo: how to make protocolInfo fields changeable
-        // Interface with get-properties?
+        private readonly MilliGanjubusInfo _info;
+
+        public MilliGanjubusComposer(MilliGanjubusInfo ganjubusInfo)
+        {
+            _info = ganjubusInfo;
+        }
 
         public byte[] Compose(IFrameworkMessage message)
         {
@@ -36,19 +38,19 @@ namespace Nandaka.MilliGanjubus.Components
 
         private byte[] Compose(IRegisterMessage message)
         {
-            var data = GetDataBytes(message);
+            byte[] data = GetDataBytes(message);
 
-            var packet = new byte[MilliGanjubusBase.MinPacketLength + data.Length];
+            var packet = new byte[_info.MinPacketLength + data.Length];
 
-            packet[MilliGanjubusBase.StartByteOffset] = MilliGanjubusBase.StartByte;
-            packet[MilliGanjubusBase.AddressOffset] = (byte)message.SlaveDeviceAddress;
-            packet[MilliGanjubusBase.SizeOffset] = (byte)packet.Length;
-            packet[MilliGanjubusBase.HeaderCheckSumOffset] =
-                CheckSum.Crc8(packet.Take(MilliGanjubusBase.HeaderCheckSumOffset).ToArray());
+            packet[_info.StartByteOffset] = _info.StartByte;
+            packet[_info.AddressOffset] = (byte)message.SlaveDeviceAddress;
+            packet[_info.SizeOffset] = (byte)packet.Length;
+            packet[_info.HeaderCheckSumOffset] =
+                CheckSum.Crc8(packet.Take(_info.HeaderCheckSumOffset).ToArray());
 
-            Array.Copy(data, 0, packet, MilliGanjubusBase.DataOffset, data.Length);
+            Array.Copy(data, 0, packet, _info.DataOffset, data.Length);
             packet[packet.Length - 1] =
-                CheckSum.Crc8(packet.Take(packet.Length - MilliGanjubusBase.PacketCheckSumSize).ToArray());
+                CheckSum.Crc8(packet.Take(packet.Length - _info.PacketCheckSumSize).ToArray());
 
             return packet;
         }
@@ -60,11 +62,11 @@ namespace Nandaka.MilliGanjubus.Components
             switch (message.Type)
             {
                 case MessageType.Request:
-                    gByte = MilliGanjubusBase.GRequest;
+                    gByte = MilliGanjubusInfo.GRequest;
                     break;
 
                 case MessageType.Response:
-                    gByte = MilliGanjubusBase.GReply << 4;
+                    gByte = (byte)(MilliGanjubusInfo.GReply << 4);
                     withValues = true;
                     break;
 
@@ -73,12 +75,24 @@ namespace Nandaka.MilliGanjubus.Components
                     throw new Exception("Undefined message type");
             }
 
+            bool isRange = RegisterConverter.IsRange(message.RegisterGroups, _info);
+
             switch (message.OperationType)
             {
                 case OperationType.Read:
+                    if (isRange)
+                        gByte |= MilliGanjubusInfo.FReadRange;
+                    else
+                        gByte |= MilliGanjubusInfo.FReadSeries;
+
                     break;
 
                 case OperationType.Write:
+                    if (isRange)
+                        gByte |= MilliGanjubusInfo.FWriteRange;
+                    else
+                        gByte |= MilliGanjubusInfo.FWriteSeries;
+
                     // By default assume that this is read operation. Otherwise invert variable.
                     withValues = !withValues;
                     break;
@@ -88,114 +102,15 @@ namespace Nandaka.MilliGanjubus.Components
                     throw new Exception("Undefined operation type");
             }
 
-            
-            if (IsRange(message.RegisterGroups))
-                return ComposeDataAsRange(message, (byte)(gByte | MilliGanjubusBase.FReadRange), withValues);
-            
-            return ComposeDataAsSeries(message, (byte)(gByte | MilliGanjubusBase.FReadSeries), withValues);
+            byte[] dataHeader = new[] {gByte};
+
+            if (isRange)
+                return RegisterConverter.ComposeDataAsRange(message, _info, dataHeader, withValues);
+
+            return RegisterConverter.ComposeDataAsSeries(message, _info, dataHeader, withValues);
         }
 
-        private byte[] ComposeDataAsRange(IRegisterMessage message, byte gByte, bool withValues)
-        {
-            IRegisterGroup[] registerGroups = message.RegisterGroups.ToArray();
 
-            var result = new List<byte> {gByte};
-
-            result.AddRange(GetRegisterAddress(registerGroups.First().Address));
-
-            if (!withValues)
-            {
-                result.AddRange(GetRegisterAddress(registerGroups.Last().Address));
-                return result.ToArray();
-            }
-
-            int lastRegisterAddressResultIndex = result.Count;
-
-            var lastAddedRegisterAddress = 0;
-            foreach (IRegisterGroup registerGroup in registerGroups)
-            {
-                byte[] groupData = registerGroup.ToBytes();
-
-                if (result.Count + groupData.Length + MilliGanjubusBase.AddressSize > MilliGanjubusBase.MaxDataLength)
-                    break;
-
-                result.AddRange(groupData);
-
-                message.RegisterGroups.Remove(registerGroup);
-                lastAddedRegisterAddress = registerGroup.Address;
-            }
-
-            byte[] endRangeAddress = GetRegisterAddress(lastAddedRegisterAddress);
-            result.InsertRange(lastRegisterAddressResultIndex, endRangeAddress);
-
-            return result.ToArray();
-        }
-
-        private byte[] ComposeDataAsSeries(IRegisterMessage message, byte gByte, bool withValues)
-        {
-            ICollection<IRegisterGroup> registerGroups = message.RegisterGroups;
-
-            var result = new List<byte> {gByte};
-
-            foreach (IRegisterGroup registerGroup in registerGroups)
-            {
-                int groupSize = GetGroupSize(registerGroup);
-
-                if (result.Count + groupSize > MilliGanjubusBase.MaxDataLength)
-                    break;
-
-                foreach (IRegister register in registerGroup.GetRawRegisters())
-                {
-                    result.AddRange(GetRegisterAddress(register.Address));
-
-                    if (withValues)
-                        result.AddRange(register.ToBytes());
-                }
-
-                message.RegisterGroups.Remove(registerGroup);
-            }
-
-            return result.ToArray();
-        }
-
-        private int GetGroupSize(IRegisterGroup registerGroup)
-        {
-            return registerGroup.Count * (MilliGanjubusBase.AddressSize + registerGroup.DataSize);
-        }
-
-        private byte[] GetRegisterAddress(int address)
-        {
-            return LittleEndianConverter.GetBytes(address, MilliGanjubusBase.AddressSize);
-        }
-
-        /// <summary>
-        /// Check for addresses ordering.
-        /// </summary>
-        private bool IsRange(ICollection<IRegisterGroup> registerGroups)
-        {
-            var registerInRangeCount = 0;
-            var dataSize = 0;
-
-            int nextAddress = registerGroups.First().Address;
-            foreach (IRegisterGroup registerGroup in registerGroups)
-            {
-                if (registerGroup.Address != nextAddress)
-                    return false;
-
-                dataSize += GetGroupSize(registerGroup);
-                if (dataSize > MilliGanjubusBase.MaxDataLength)
-                    break;
-
-                nextAddress += registerGroup.Count;
-
-                registerInRangeCount++;
-            }
-
-            if (registerInRangeCount < MilliGanjubusBase.MinimumRangeRegisterCount)
-                return false;
-
-            return true;
-        }
 
 
     }

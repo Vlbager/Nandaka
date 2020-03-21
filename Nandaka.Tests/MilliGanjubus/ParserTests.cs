@@ -3,11 +3,9 @@ using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
 using Nandaka.Core.Table;
-using Nandaka.MilliGanjubus;
 using Nandaka.MilliGanjubus.Components;
 using Nandaka.MilliGanjubus.Models;
 using Xunit;
-using Xunit.Sdk;
 
 namespace Nandaka.Tests.MilliGanjubus
 {
@@ -20,7 +18,7 @@ namespace Nandaka.Tests.MilliGanjubus
 
         public ParserTests()
         {
-            _parser = new MilliGanjubusApplicationParser();
+            _parser = new MilliGanjubusApplicationParser(new MilliGanjubusInfo());
             _parser.MessageParsed += Parser_MessageParsed;
         }
 
