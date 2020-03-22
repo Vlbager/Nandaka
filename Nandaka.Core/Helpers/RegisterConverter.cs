@@ -1,27 +1,29 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Protocol;
-using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Helpers
 {
     public static class RegisterConverter
     {
-        public static byte[] ComposeDataAsRange(IRegisterMessage message, IProtocolInfo info, IEnumerable<byte> dataHeader,
-            bool withValues)
+        public static byte[] ComposeDataAsRange(ICollection<IRegisterGroup> registerGroups, IProtocolInfo info, IEnumerable<byte> dataHeader,
+            bool withValues, out IReadOnlyCollection<IRegisterGroup> composedGroups)
         {
-            IRegisterGroup[] registerGroups = message.RegisterGroups.ToArray();
-
             var result = new List<byte>(dataHeader);
-
+            
             result.AddRange(GetRegisterAddress(registerGroups.First().Address, info));
 
             if (!withValues)
             {
                 result.AddRange(GetRegisterAddress(registerGroups.Last().Address, info));
+
+                composedGroups = Array.Empty<IRegisterGroup>();
                 return result.ToArray();
             }
+
+            var composedGroupList = new List<IRegisterGroup>();
 
             int lastRegisterAddressResultIndex = result.Count;
 
@@ -35,22 +37,22 @@ namespace Nandaka.Core.Helpers
 
                 result.AddRange(groupData);
 
-                message.RegisterGroups.Remove(registerGroup);
+                composedGroupList.Add(registerGroup);
                 lastAddedRegisterAddress = registerGroup.Address;
             }
 
             byte[] endRangeAddress = GetRegisterAddress(lastAddedRegisterAddress, info);
             result.InsertRange(lastRegisterAddressResultIndex, endRangeAddress);
 
+            composedGroups = composedGroupList;
             return result.ToArray();
         }
 
-        public static byte[] ComposeDataAsSeries(IRegisterMessage message, IProtocolInfo info, IEnumerable<byte> dataHeader,
-            bool withValues)
+        public static byte[] ComposeDataAsSeries(ICollection<IRegisterGroup> registerGroups, IProtocolInfo info, IEnumerable<byte> dataHeader,
+            bool withValues, out IReadOnlyCollection<IRegisterGroup> composedGroups)
         {
-            ICollection<IRegisterGroup> registerGroups = message.RegisterGroups;
-
             var result = new List<byte>(dataHeader);
+            var composedGroupList = new List<IRegisterGroup>();
 
             foreach (IRegisterGroup registerGroup in registerGroups)
             {
@@ -67,9 +69,10 @@ namespace Nandaka.Core.Helpers
                         result.AddRange(register.ToBytes());
                 }
 
-                message.RegisterGroups.Remove(registerGroup);
+                composedGroupList.Add(registerGroup);
             }
 
+            composedGroups = composedGroupList;
             return result.ToArray();
         }
 

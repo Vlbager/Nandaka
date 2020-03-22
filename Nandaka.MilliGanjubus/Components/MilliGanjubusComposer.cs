@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
+using Nandaka.Core.Table;
 
 namespace Nandaka.MilliGanjubus.Components
 {
@@ -15,14 +17,15 @@ namespace Nandaka.MilliGanjubus.Components
             _info = ganjubusInfo;
         }
 
-        public byte[] Compose(IFrameworkMessage message)
+        public byte[] Compose(IFrameworkMessage message, out IReadOnlyCollection<IRegisterGroup> composedGroups)
         {
             switch (message)
             {
                 case IRegisterMessage registerMessage:
-                    return Compose(registerMessage);
+                    return Compose(registerMessage, out composedGroups);
 
                 case IErrorMessage errorMessage:
+                    composedGroups = Array.Empty<IRegisterGroup>();
                     return Compose(errorMessage);
 
                 default:
@@ -36,9 +39,9 @@ namespace Nandaka.MilliGanjubus.Components
             throw new NotImplementedException();
         }
 
-        private byte[] Compose(IRegisterMessage message)
+        private byte[] Compose(IRegisterMessage message, out IReadOnlyCollection<IRegisterGroup> composedGroups)
         {
-            byte[] data = GetDataBytes(message);
+            byte[] data = GetDataBytes(message, out composedGroups);
 
             var packet = new byte[_info.MinPacketLength + data.Length];
 
@@ -55,7 +58,7 @@ namespace Nandaka.MilliGanjubus.Components
             return packet;
         }
 
-        private byte[] GetDataBytes(IRegisterMessage message)
+        private byte[] GetDataBytes(IRegisterMessage message, out IReadOnlyCollection<IRegisterGroup> composedGroups)
         {
             byte gByte;
             bool withValues = false;
@@ -102,12 +105,12 @@ namespace Nandaka.MilliGanjubus.Components
                     throw new Exception("Undefined operation type");
             }
 
-            byte[] dataHeader = new[] {gByte};
+            byte[] dataHeader = {gByte};
 
             if (isRange)
-                return RegisterConverter.ComposeDataAsRange(message, _info, dataHeader, withValues);
+                return RegisterConverter.ComposeDataAsRange(message.RegisterGroups, _info, dataHeader, withValues, out composedGroups);
 
-            return RegisterConverter.ComposeDataAsSeries(message, _info, dataHeader, withValues);
+            return RegisterConverter.ComposeDataAsSeries(message.RegisterGroups, _info, dataHeader, withValues, out composedGroups);
         }
 
 

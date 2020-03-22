@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using Nandaka.Core.Network;
 using Nandaka.Core.Session;
+using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Protocol
 {
-    public abstract class ProtocolBase<T> : IProtocol<T>
+    public abstract class ProtocolBase<T> : IProtocol
     {
         private readonly IDataPortProvider<T> _dataPortProvider;
         private readonly IComposer<IFrameworkMessage, T> _composer;
@@ -18,13 +20,9 @@ namespace Nandaka.Core.Protocol
             _dataPortProvider.OnDataReceived += (sender, data) => _parser.Parse(data);
         }
 
-        public T PreparePacket(IFrameworkMessage message)
+        public void SendMessage(IFrameworkMessage message, out IReadOnlyCollection<IRegisterGroup> sentGroups)
         {
-            return _composer.Compose(message);
-        }
-
-        public void SendPacket(T packet)
-        {
+            T packet = _composer.Compose(message, out sentGroups);
             _dataPortProvider.Write(packet);
         }
 
@@ -33,6 +31,5 @@ namespace Nandaka.Core.Protocol
             add => _parser.MessageParsed += value;
             remove => _parser.MessageParsed -= value;
         }
-
     }
 }

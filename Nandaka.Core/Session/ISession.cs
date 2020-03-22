@@ -1,14 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using Nandaka.Core.Device;
 using Nandaka.Core.Protocol;
-using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Session
 {
-    public interface ISession<T>
+    public interface ISession
     {
-        IDevice SlaveDevice { get; }
-        IProtocol<T> Protocol { get; }
-        void EnqueueRegisters(IEnumerable<IRegisterGroup> registerGroups, OperationType operationType);
-        void SendMessage();
+        IProtocol Protocol { get; }
+        void SendMessage(SlaveDevice device);
     }
 }

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using Nandaka.Core.Device;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Session
 {
-    public class MasterSession<T> : ISession<T>
+    public class MasterSession : ISession
     {
         private readonly Queue<IRegisterGroup> _readQueue = new Queue<IRegisterGroup>();
         private readonly Queue<IRegisterGroup> _writeQueue = new Queue<IRegisterGroup>();
@@ -14,45 +15,43 @@ namespace Nandaka.Core.Session
         // ReSharper disable once NotAccessedField.Local
         private object _updatePolicy;
 
-        public MasterSession(IDevice slaveDevice, IProtocol<T> protocol, object updatePolicy = null)
+        public MasterSession(IProtocol protocol, object updatePolicy = null)
         {
-            SlaveDevice = slaveDevice;
             Protocol = protocol;
             _updatePolicy = updatePolicy;
         }
 
-        public IDevice SlaveDevice { get; }
-        public IProtocol<T> Protocol { get; }
+        public IProtocol Protocol { get; }
 
-        public void EnqueueRegisters(IEnumerable<IRegisterGroup> registerGroups, OperationType operationType)
-        {
-            Queue<IRegisterGroup> queue;
-            switch (operationType)
-            {
-                case OperationType.Read:
-                    queue = _readQueue;
-                    break;
+        //public void EnqueueRegisters(IEnumerable<IRegisterGroup> registerGroups, OperationType operationType)
+        //{
+        //    Queue<IRegisterGroup> queue;
+        //    switch (operationType)
+        //    {
+        //        case OperationType.Read:
+        //            queue = _readQueue;
+        //            break;
 
-                case OperationType.Write:
-                    queue = _writeQueue;
-                    break;
+        //        case OperationType.Write:
+        //            queue = _writeQueue;
+        //            break;
 
-                default:
-                    // todo: Create custom exception.
-                    throw new ArgumentException("Wrong message type");
+        //        default:
+        //            // todo: Create custom exception.
+        //            throw new ArgumentException("Wrong message type");
 
-            }
+        //    }
 
-            foreach (IRegisterGroup register in registerGroups)
-            {
-                if (queue.Contains(register))
-                    continue;
+        //    foreach (IRegisterGroup register in registerGroups)
+        //    {
+        //        if (queue.Contains(register))
+        //            continue;
 
-                queue.Enqueue(register);
-            }
-        }
+        //        queue.Enqueue(register);
+        //    }
+        //}
 
-        public void SendMessage()
+        public void SendMessage(SlaveDevice device)
         {
             // todo: refactor with update policy
             Queue<IRegisterGroup> queue;
@@ -73,19 +72,13 @@ namespace Nandaka.Core.Session
                 throw new ApplicationException("There are no register group in queue to send");
             }
 
-            var message = new CommonMessage(SlaveDevice.Address, MessageType.Request, operationType, queue);
+            var message = new CommonMessage(device.Address, MessageType.Request, operationType, queue);
 
-            T packet = Protocol.PreparePacket(message);
+            Protocol.SendMessage(message, out IReadOnlyCollection<IRegisterGroup> sentGroups);
 
-            Protocol.SendPacket(packet);
-
-            // todo: refactor this logic.
-            // All registerGroups that were in the packet, should be removed from queue.
-            queue.Clear();
-
-            foreach (IRegisterGroup registerGroup in message.RegisterGroups)
+            foreach (IRegisterGroup registerGroup in sentGroups)
             {
-                queue.Enqueue(registerGroup);
+                queue.Dequeue(registerGroup);
             }
         }
     }

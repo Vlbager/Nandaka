@@ -1,13 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using Nandaka.Core.Session;
+using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Protocol
 {
-    public interface IProtocol<T>
+    public interface IProtocol
     {
-        T PreparePacket(IFrameworkMessage message);
-
-        void SendPacket(T packet);
+        void SendMessage(IFrameworkMessage message, out IReadOnlyCollection<IRegisterGroup> sentGroups);
 
         event EventHandler<IFrameworkMessage> MessageReceived;
     }

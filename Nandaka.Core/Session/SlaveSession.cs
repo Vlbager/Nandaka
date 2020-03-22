@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Nandaka.Core.Device;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Table;
 
