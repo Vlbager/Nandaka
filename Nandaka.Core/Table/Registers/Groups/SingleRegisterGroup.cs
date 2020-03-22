@@ -11,7 +11,7 @@ namespace Nandaka.Core.Table
         public override int DataSize => Marshal.SizeOf<TValue>();
         public override TValue Value => _register.Value;
 
-        public SingleRegisterGroup(Register<TValue> register) : base(register.Address, 1)
+        public SingleRegisterGroup(Register<TValue> register) : base(register.Address,1, register.RegisterType)
         {
             _register = register;
         }
