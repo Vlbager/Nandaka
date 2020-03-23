@@ -1,85 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Nandaka.Core.Device;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Session
 {
-    public class MasterSession : ISession
+    public class MasterSession
     {
-        private readonly Queue<IRegisterGroup> _readQueue = new Queue<IRegisterGroup>();
-        private readonly Queue<IRegisterGroup> _writeQueue = new Queue<IRegisterGroup>();
+        private readonly IRegistersUpdatePolicy _updatePolicy;
 
-        // Policy for autoUpdate slave device table. Not using yet.
-        // ReSharper disable once NotAccessedField.Local
-        private object _updatePolicy;
+        public IProtocol Protocol { get; }
+        public RegisterDevice SlaveDevice { get; }
 
-        public MasterSession(IProtocol protocol, object updatePolicy = null)
+        public MasterSession(IProtocol protocol, RegisterDevice slaveDevice, IRegistersUpdatePolicy updatePolicy)
         {
             Protocol = protocol;
+            SlaveDevice = slaveDevice;
             _updatePolicy = updatePolicy;
         }
 
-        public IProtocol Protocol { get; }
-
-        //public void EnqueueRegisters(IEnumerable<IRegisterGroup> registerGroups, OperationType operationType)
-        //{
-        //    Queue<IRegisterGroup> queue;
-        //    switch (operationType)
-        //    {
-        //        case OperationType.Read:
-        //            queue = _readQueue;
-        //            break;
-
-        //        case OperationType.Write:
-        //            queue = _writeQueue;
-        //            break;
-
-        //        default:
-        //            // todo: Create custom exception.
-        //            throw new ArgumentException("Wrong message type");
-
-        //    }
-
-        //    foreach (IRegisterGroup register in registerGroups)
-        //    {
-        //        if (queue.Contains(register))
-        //            continue;
-
-        //        queue.Enqueue(register);
-        //    }
-        //}
-
-        public void SendMessage(SlaveDevice device)
+        public void SendRegisterMessage(out IReadOnlyCollection<IRegisterGroup> sentGroups)
         {
-            // todo: refactor with update policy
-            Queue<IRegisterGroup> queue;
-            OperationType operationType;
-            if (_writeQueue.Count > 0)
-            {
-                queue = _writeQueue;
-                operationType = OperationType.Write;
-            }
-            else if (_readQueue.Count > 0)
-            {
-                queue = _readQueue;
-                operationType = OperationType.Read;
-            }
-            else
-            {
-                // todo: Create a custom exception.
-                throw new ApplicationException("There are no register group in queue to send");
-            }
+            IRegisterMessage message = _updatePolicy.GetNextMessage(SlaveDevice);
 
-            var message = new CommonMessage(device.Address, MessageType.Request, operationType, queue);
-
-            Protocol.SendMessage(message, out IReadOnlyCollection<IRegisterGroup> sentGroups);
-
-            foreach (IRegisterGroup registerGroup in sentGroups)
-            {
-                queue.Dequeue(registerGroup);
-            }
+            Protocol.SendMessage(message, out sentGroups);
         }
     }
 }

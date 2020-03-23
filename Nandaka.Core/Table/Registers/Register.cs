@@ -50,6 +50,10 @@ namespace Nandaka.Core.Table
             return ConvertToBytes(this);
         }
 
+        // todo: test this.
+        //private static byte[] ConvertToBytes(Register<byte> register)
+        //    => new[] {register.Value};
+
         private static byte[] ConvertToBytes<T>(Register<T> register) where T : struct
         {
             switch (register)

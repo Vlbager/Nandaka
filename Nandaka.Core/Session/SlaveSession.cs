@@ -5,7 +5,7 @@ using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Session
 {
-    public class SlaveSession<T> : ISession<T>
+    public class SlaveSession<T>
     {
         private readonly Queue<IRegisterGroup> _queue = new Queue<IRegisterGroup>();
 

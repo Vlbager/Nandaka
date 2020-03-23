@@ -6,6 +6,7 @@ namespace Nandaka.Core.Table
     {
         int Count { get; }
         int DataSize { get; }
+        bool IsUpdated { get; set; }
         IReadOnlyCollection<IRegister> GetRawRegisters();
     }
 }

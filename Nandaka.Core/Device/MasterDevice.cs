@@ -1,36 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Nandaka.Core.Protocol;
 
 namespace Nandaka.Core.Device
 {
-    public sealed class MasterDevice : IDevice
+    public sealed class MasterDevice
     {
-        private readonly ObservableCollection<SlaveDevice> _slaveDevices;
+        private readonly ObservableCollection<RegisterDevice> _slaveDevices;
 
         public IProtocol Protocol { get; }
-        public IReadOnlyCollection<SlaveDevice> SlaveDevices => _slaveDevices;
+        public IReadOnlyCollection<RegisterDevice> SlaveDevices => _slaveDevices;
 
-        public MasterDevice(IProtocol protocol)
+        private MasterDevice(IProtocol protocol, IEnumerable<RegisterDevice> slaveDevices)
         {
             Protocol = protocol;
-            _slaveDevices = new ObservableCollection<SlaveDevice>();
+            _slaveDevices = new ObservableCollection<RegisterDevice>(slaveDevices);
         }
 
-        public void AddSlaveDevice(SlaveDevice device)
+        public static MasterDevice Create(IProtocol protocol, IReadOnlyCollection<RegisterDevice> slaveDevices)
         {
-            if (device.Protocol.GetType() != Protocol.GetType())
+            if (slaveDevices.Any(device => device.Protocol.GetType() != protocol.GetType()))
                 // todo: create a custom exception
                 throw new Exception();
 
-            _slaveDevices.Add(device);
-        }
-
-        public void RemoveSlaveDevice(SlaveDevice device)
-        {
-            if (_slaveDevices.Contains(device))
-                _slaveDevices.Remove(device);
+            return new MasterDevice(protocol, slaveDevices);
         }
     }
 }
