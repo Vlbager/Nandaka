@@ -10,9 +10,15 @@ namespace Nandaka.Core.Protocol
     {
         private readonly IDataPortProvider<T> _dataPortProvider;
         private readonly IComposer<IFrameworkMessage, T> _composer;
-        private readonly IParser<T, IFrameworkMessage> _parser;
+        private readonly IParser<T, MessageReceivedEventArgs> _parser;
 
-        protected ProtocolBase(IDataPortProvider<T> dataPortProvider, IComposer<IFrameworkMessage, T> composer, IParser<T, IFrameworkMessage> parser)
+        public event EventHandler<MessageReceivedEventArgs> MessageReceived
+        {
+            add => _parser.MessageParsed += value;
+            remove => _parser.MessageParsed -= value;
+        }
+
+        protected ProtocolBase(IDataPortProvider<T> dataPortProvider, IComposer<IFrameworkMessage, T> composer, IParser<T, MessageReceivedEventArgs> parser)
         {
             _dataPortProvider = dataPortProvider;
             _composer = composer;
@@ -24,12 +30,6 @@ namespace Nandaka.Core.Protocol
         {
             T packet = _composer.Compose(message, out sentGroups);
             _dataPortProvider.Write(packet);
-        }
-
-        public event EventHandler<IFrameworkMessage> MessageReceived
-        {
-            add => _parser.MessageParsed += value;
-            remove => _parser.MessageParsed -= value;
         }
     }
 }

@@ -1,9 +1,8 @@
 ﻿using System;
-using Nandaka.Core.Session;
 
 namespace Nandaka.Core.Protocol
 {
-    public abstract class ApplicationParserBase<TIn> : IParser<TIn, IFrameworkMessage>
+    public abstract class ApplicationParserBase<TIn> : IParser<TIn, MessageReceivedEventArgs>
     {
         private readonly DataLinkParserBase<TIn> _dataLinkParser;
 
@@ -14,13 +13,13 @@ namespace Nandaka.Core.Protocol
                 (sender, checkedMessage) => MessageParsed?.Invoke(sender, ApplicationParse(checkedMessage));
         }
 
-        public event EventHandler<IFrameworkMessage> MessageParsed;
+        public event EventHandler<MessageReceivedEventArgs> MessageParsed;
 
         public void Parse(TIn data)
         {
             _dataLinkParser.Parse(data);
         }
 
-        protected abstract IFrameworkMessage ApplicationParse(byte[] data);
+        protected abstract MessageReceivedEventArgs ApplicationParse(byte[] data);
     }
 }

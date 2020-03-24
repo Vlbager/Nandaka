@@ -11,7 +11,7 @@ namespace Nandaka.Tests.MilliGanjubus
 {
     public class ParserTests
     {
-        private readonly IParser<byte[], IFrameworkMessage> _parser;
+        private readonly IParser<byte[], MessageReceivedEventArgs> _parser;
         private int _messageCount;
         private IFrameworkMessage _parsedMessage;
 
@@ -22,10 +22,10 @@ namespace Nandaka.Tests.MilliGanjubus
             _parser.MessageParsed += Parser_MessageParsed;
         }
 
-        private void Parser_MessageParsed(object sender, IFrameworkMessage e)
+        private void Parser_MessageParsed(object sender, MessageReceivedEventArgs e)
         {
             _messageCount++;
-            _parsedMessage = e;
+            _parsedMessage = e.ReceivedMessage;
         }
 
         [Theory]
@@ -289,7 +289,7 @@ namespace Nandaka.Tests.MilliGanjubus
             // Act
             Assert.Throws<Exception>(() =>_parser.Parse(buffer));
             // Assert
-            Assert.Equal(0, _messageCount);
+            Assert.Equal(1, _messageCount);
         }
 
         [Fact]
@@ -301,7 +301,7 @@ namespace Nandaka.Tests.MilliGanjubus
             // Act
             Assert.Throws<Exception>(() => _parser.Parse(buffer));
             // Assert
-            Assert.Equal(0, _messageCount);
+            Assert.Equal(1, _messageCount);
         }
 
         [Theory]
@@ -316,7 +316,7 @@ namespace Nandaka.Tests.MilliGanjubus
             // Act
             Assert.Throws<Exception>(() => _parser.Parse(buffer));
             // Assert
-            Assert.Equal(0, _messageCount);
+            Assert.Equal(1, _messageCount);
         }
 
         [Fact]
@@ -331,7 +331,7 @@ namespace Nandaka.Tests.MilliGanjubus
             // Act
             Assert.Throws<Exception>(() => _parser.Parse(buffer));
             // Assert
-            Assert.Equal(0, _messageCount);
+            Assert.Equal(1, _messageCount);
         }
 
         [Fact]
@@ -346,7 +346,7 @@ namespace Nandaka.Tests.MilliGanjubus
             // Act
             Assert.Throws<Exception>(() => _parser.Parse(buffer));
             // Assert
-            Assert.Equal(0, _messageCount);
+            Assert.Equal(1, _messageCount);
         }
 
         [Fact]

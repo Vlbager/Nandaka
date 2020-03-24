@@ -3,6 +3,7 @@
     public enum RegisterType
     {
         ReadOnly,
-        WriteOnly
+        WriteOnly,
+        Raw
     }
 }

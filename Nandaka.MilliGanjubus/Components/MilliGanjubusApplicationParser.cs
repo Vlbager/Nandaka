@@ -18,7 +18,20 @@ namespace Nandaka.MilliGanjubus.Components
             _info = ganjubusInfo;
         }
 
-        protected override IFrameworkMessage ApplicationParse(byte[] data)
+        protected override MessageReceivedEventArgs ApplicationParse(byte[] data)
+        {
+            try
+            {
+                IFrameworkMessage message = ParseMessage(data);
+                return new MessageReceivedEventArgs(message);
+            }
+            catch (Exception exception)
+            {
+                return new MessageReceivedEventArgs(exception);
+            }
+        }
+
+        private IFrameworkMessage ParseMessage(byte[] data)
         {
             byte deviceAddress = data[_info.AddressOffset];
 
@@ -98,12 +111,12 @@ namespace Nandaka.MilliGanjubus.Components
             if (withValues)
             {
                 while (byteIndex < packetSize - 1)
-                    registers.Add(new SingleRegisterGroup<byte>(Register<byte>.CreateByte(data[byteIndex++], data[byteIndex++])));
+                    registers.Add(new SingleRegisterGroup<byte>(Register<byte>.CreateByte(data[byteIndex++], RegisterType.Raw, data[byteIndex++])));
             }
             else
             {
                 while (byteIndex < packetSize - 1)
-                    registers.Add(new SingleRegisterGroup<byte>(Register<byte>.CreateByte(data[byteIndex++])));
+                    registers.Add(new SingleRegisterGroup<byte>(Register<byte>.CreateByte(data[byteIndex++], RegisterType.Raw)));
             }
 
             // Case of crc is register value.
@@ -138,8 +151,8 @@ namespace Nandaka.MilliGanjubus.Components
             foreach (int address in Enumerable.Range(startAddress, registersCount))
             {
                 SingleRegisterGroup<byte> register = withValues
-                    ? new SingleRegisterGroup<byte>(Register<byte>.CreateByte(address, data[currentByteIndex++]))
-                    : new SingleRegisterGroup<byte>(Register<byte>.CreateByte(address));
+                    ? new SingleRegisterGroup<byte>(Register<byte>.CreateByte(address, RegisterType.Raw, data[currentByteIndex++]))
+                    : new SingleRegisterGroup<byte>(Register<byte>.CreateByte(address, RegisterType.Raw));
 
                 registers.Add(register);
             }
