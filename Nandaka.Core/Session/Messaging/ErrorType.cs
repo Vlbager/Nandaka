@@ -2,8 +2,7 @@
 {
     public enum ErrorType
     {
-        // temp: 0 - no error
-        InvalidRegisterAddress = 1,
+        InvalidRegisterAddress,
         TooMuchDataRequested,
         SpecificCodeNotDefined,
         InternalProtocolError

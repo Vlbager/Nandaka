@@ -2,6 +2,8 @@
 {
     public enum DeviceError
     {
-        NotResponding
+        NotResponding,
+        ErrorReceived,
+        WrongPacketData
     }
 }

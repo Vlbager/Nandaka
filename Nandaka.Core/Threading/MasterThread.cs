@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using Nandaka.Core.Device;
 using Nandaka.Core.Session;
-using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Threading
 {
@@ -50,6 +49,7 @@ namespace Nandaka.Core.Threading
             {
                 // todo: Add loger.
                 Console.WriteLine(exception);
+                Stop();
             }
         }
 
@@ -58,30 +58,20 @@ namespace Nandaka.Core.Threading
             RegisterDevice device = _updatePolicy.GetNextDevice(_masterDevice);
             MasterSession session = _deviceSessions[device.Address];
 
-            session.SendRegisterMessage(out IReadOnlyCollection<IRegisterGroup> sentGroups);
-
-            var messageReceivedResetEvent = new ManualResetEventSlim(initialState: false);
-
-            void ResponseReceived(object sender, IFrameworkMessage message)
-                => OnResponseReceived(message, messageReceivedResetEvent);
-
-            _masterDevice.Protocol.MessageReceived += ResponseReceived;
-
-            if (messageReceivedResetEvent.Wait(_updatePolicy.MillisecondsTimeout))
+            try
             {
-                _masterDevice.Protocol.MessageReceived -= ResponseReceived;
-                return;
+                session.SendNextMessage(_updatePolicy.WaitTimeout);
+            }
+            // todo: refactor with exception handling system.
+            catch (ApplicationException expectedException)
+            {
+                _updatePolicy.OnErrorOccured(device, DeviceError.NotResponding);
+            }
+            catch (Exception unexpectedException)
+            {
+                throw;
             }
 
-            _masterDevice.Protocol.MessageReceived -= ResponseReceived;
-
-            DeviceErrorHandlerResult handlerResult = _updatePolicy.OnErrorOccured(device, DeviceError.NotResponding);
-            
-        }
-
-        private void OnResponseReceived(IFrameworkMessage response, ManualResetEventSlim resetEvent)
-        {
-            throw new NotImplementedException();
         }
 
         public void Dispose()
