@@ -7,46 +7,80 @@ namespace Nandaka.Core.Table
     public abstract class MultiByteRegisterGroupBase<TValue> : RegisterGroupBase<TValue>
         where TValue : struct
     {
+        private readonly object _syncRoot;
+
         public override int DataSize => Registers.Count;
         public IReadOnlyCollection<Register<byte>> Registers { get; }
+        public override TValue Value
+        {
+            get => GetValue();
+            set => SetValue(value);
+        }
 
         protected MultiByteRegisterGroupBase(IReadOnlyCollection<Register<byte>> registers)
             : base(registers.First().Address, registers.Count, registers.First().RegisterType)
         {
             AssertRegistersType(registers);
             Registers = registers;
+            _syncRoot = new object();
         }
 
         public override IReadOnlyCollection<IRegister> GetRawRegisters() => Registers;
 
         public override byte[] ToBytes()
         {
+            // todo: check for orderBy
             return Registers
                 .OrderBy(register => register.Address)
                 .Select(register => register.Value)
                 .ToArray();
         }
 
-        protected override void UpdateRegister(IRegister registerToUpdate)
+        public override void Update(IReadOnlyCollection<IRegister> registersToUpdate)
         {
-            if (!(registerToUpdate is Register<byte> byteRegister))
+            if (!(registersToUpdate is IReadOnlyCollection<Register<byte>> byteRegistersToUpdate))
                 // todo: create a custom exception
-                throw new Exception("Wrong register type");
+                throw new Exception("Wrong registers type");
 
-            Register<byte> storedRegister = Registers.Single(register => register.Address == byteRegister.Address);
+            lock (_syncRoot)
+            {
+                foreach (Register<byte> storedRegister in Registers)
+                {
+                    Register<byte> registerToUpdate = byteRegistersToUpdate
+                            .Single(register => register.Address == storedRegister.Address);
 
-            storedRegister.Value = byteRegister.Value;
+                    storedRegister.Value = registerToUpdate.Value;
+                }
+
+                IsUpdated = true;
+            }
         }
 
-        protected void UpdateValue(byte[] littleEndianBytes)
+        private void SetValue(TValue value)
         {
-            var index = 0;
-            Register<byte>[] registers = Enumerable.Range(Address, Count)
-                .Select(address => Register<byte>.CreateByte(address, RegisterType.Raw, littleEndianBytes[index++]))
-                .ToArray();
+            byte[] littleEndianBytes = ConvertValueToLittleEndianBytes(value);
 
-            Update(registers);
+            lock (_syncRoot)
+            {
+                var index = 0;
+                foreach (Register<byte> register in Registers)
+                    register.Value = littleEndianBytes[index++];
+
+                IsUpdated = false;
+            }
         }
+
+        private TValue GetValue()
+        {
+            lock (_syncRoot)
+            {
+                return ConvertGroupToValue();
+            }
+        }
+
+        protected abstract byte[] ConvertValueToLittleEndianBytes(TValue value);
+
+        protected abstract TValue ConvertGroupToValue();
 
         private static void AssertRegistersType(IReadOnlyCollection<IRegister> registers)
         {
