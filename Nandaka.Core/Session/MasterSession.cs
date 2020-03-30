@@ -31,7 +31,7 @@ namespace Nandaka.Core.Session
 
                 _protocol.SendMessage(message, out IReadOnlyCollection<IRegisterGroup> requestRegisters);
 
-                do
+                while (true)
                 {
                     if (!listener.WaitMessage(waitTime, out IFrameworkMessage receivedMessage))
                         // todo: create a custom exception
@@ -54,7 +54,8 @@ namespace Nandaka.Core.Session
 
                     UpdateRegisters(response.Registers, requestRegisters, message.OperationType);
 
-                } while (false);
+                    break;
+                }
             }
         }
 
@@ -64,7 +65,7 @@ namespace Nandaka.Core.Session
             {
                 _protocol.SendMessage(message, out _);
 
-                do
+                while (true)
                 {
                     if (!listener.WaitMessage(waitTime, out IFrameworkMessage receivedMessage))
                         // todo: create a custom exception
@@ -86,7 +87,8 @@ namespace Nandaka.Core.Session
 
                     _slaveDevice.OnSpecificMessageReceived(response);
 
-                } while (false);
+                    break;
+                }
             }
         }
 
