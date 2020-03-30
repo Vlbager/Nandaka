@@ -9,83 +9,125 @@ namespace Nandaka.Core.Session
 {
     public class MasterSession
     {
-        private readonly IRegistersUpdatePolicy _updatePolicy;
+        private readonly IRegistersUpdatePolicy _registersUpdatePolicy;
+        private readonly IDeviceUpdatePolicy _deviceUpdatePolicy;
         private readonly IProtocol _protocol;
+        private readonly RegisterDevice _slaveDevice;
 
-        public RegisterDevice SlaveDevice { get; }
-
-        public MasterSession(IProtocol protocol, RegisterDevice slaveDevice, IRegistersUpdatePolicy updatePolicy)
+        public MasterSession(IProtocol protocol, RegisterDevice slaveDevice, IRegistersUpdatePolicy registersUpdatePolicy,
+            IDeviceUpdatePolicy deviceUpdatePolicy)
         {
             _protocol = protocol;
-            SlaveDevice = slaveDevice;
-            _updatePolicy = updatePolicy;
+            _slaveDevice = slaveDevice;
+            _registersUpdatePolicy = registersUpdatePolicy;
+            _deviceUpdatePolicy = deviceUpdatePolicy;
         }
 
         public void SendNextMessage(TimeSpan waitTime)
         {
             using (var listener = new MessageListener(_protocol))
             {
-                IRegisterMessage message = _updatePolicy.GetNextMessage(SlaveDevice);
+                IRegisterMessage message = _registersUpdatePolicy.GetNextMessage(_slaveDevice);
 
                 _protocol.SendMessage(message, out IReadOnlyCollection<IRegisterGroup> requestRegisters);
 
                 do
                 {
-                    if (!listener.WaitMessage(waitTime, out IFrameworkMessage frameworkMessage))
+                    if (!listener.WaitMessage(waitTime, out IFrameworkMessage receivedMessage))
                         // todo: create a custom exception
                         throw new Exception("Device Not responding");
 
-                    if (frameworkMessage is IHighPriorityMessage highPriorityMessage)
-                        // note: may be do nothing? All high priority messages can be handled in separate thread.
-                        DoSomethingWithHighPriorityMessage(highPriorityMessage);
+                    // All high priority messages should be handled in separate thread.
+                    if (receivedMessage is HighPriorityMessage)
+                        continue;
 
-                    if (frameworkMessage.SlaveDeviceAddress != SlaveDevice.Address)
-                        // note: need to notice master thread about this, but continue listen next messages
-                        throw new NotImplementedException();
+                    if (receivedMessage.SlaveDeviceAddress != _slaveDevice.Address)
+                    {
+                        _deviceUpdatePolicy.OnUnexpectedDeviceResponse(_slaveDevice.Address,
+                            receivedMessage.SlaveDeviceAddress);
+                        continue;
+                    }
 
-                    if (!(frameworkMessage is IRawRegisterMessage response))
+                    if (!(receivedMessage is IRawRegisterMessage response))
                         // todo: create a custom exception
                         throw new Exception("Wrong response received");
 
-                    UpdateDeviceRegisters(response.Registers, requestRegisters, message.OperationType);
+                    UpdateRegisters(response.Registers, requestRegisters, message.OperationType);
 
                 } while (false);
             }
         }
 
-        private void DoSomethingWithHighPriorityMessage(IHighPriorityMessage message)
+        public void SendSpecificMessage(ISpecificMessage message, TimeSpan waitTime)
         {
-            throw new NotImplementedException();
-        }
-
-
-        private void UpdateDeviceRegisters(IReadOnlyCollection<IRegister> responseRegisters,
-            IReadOnlyCollection<IRegisterGroup> requestGroups, OperationType operationType)
-        {
-            AssertRegistersAddresses(responseRegisters, requestGroups);
-
-            if (operationType == OperationType.Write)
-                return;
-
-            foreach (IRegisterGroup registerGroup in requestGroups)
+            using (var listener = new MessageListener(_protocol))
             {
-                //todo: update device
+                _protocol.SendMessage(message, out _);
+
+                do
+                {
+                    if (!listener.WaitMessage(waitTime, out IFrameworkMessage receivedMessage))
+                        // todo: create a custom exception
+                        throw new Exception("Device not responding");
+
+                    if (receivedMessage is HighPriorityMessage)
+                        continue;
+
+                    if (receivedMessage.SlaveDeviceAddress != _slaveDevice.Address)
+                    {
+                        _deviceUpdatePolicy.OnUnexpectedDeviceResponse(_slaveDevice.Address,
+                            receivedMessage.SlaveDeviceAddress);
+                        continue;
+                    }
+
+                    if (!(receivedMessage is ISpecificMessage response))
+                        // todo: create a custom excepiton
+                        throw new Exception("Wrong response received");
+
+                    _slaveDevice.OnSpecificMessageReceived(response);
+
+                } while (false);
             }
         }
 
-        private void AssertRegistersAddresses(IReadOnlyCollection<IRegister> registers,
-            IReadOnlyCollection<IRegisterGroup> groups)
+        private void UpdateRegisters(IReadOnlyCollection<IRegister> responseRegisters,
+            IEnumerable<IRegisterGroup> requestGroups, OperationType operationType)
         {
-            IEnumerable<IRegister> groupRegisters = groups.SelectMany(group => group.GetRawRegisters());
+            IReadOnlyDictionary<IRegisterGroup, IRegister[]> registerMap = MapRegisters(requestGroups, responseRegisters);
 
-            int matchedPairsCount = registers.Join(groupRegisters,
-                    register => register.Address,
-                    groupRegister => groupRegister.Address,
-                    (register, groupRegister) => 1)
-                .Sum();
+            if (operationType == OperationType.Write)
+                return;
+            if (operationType != OperationType.Read)
+                // todo: create a custom exception
+                throw new Exception("Wrong Operation type");
 
-            if (registers.Count != matchedPairsCount)
-                throw new Exception("Received registers has invalid count");
+            foreach (IRegisterGroup registerGroup in registerMap.Keys)
+                registerGroup.Update(registerMap[registerGroup]);
+        }
+
+        private IReadOnlyDictionary<IRegisterGroup, IRegister[]> MapRegisters(
+            IEnumerable<IRegisterGroup> requestGroups,
+            IReadOnlyCollection<IRegister> responseRegisters)
+        {
+            var result = new Dictionary<IRegisterGroup, IRegister[]>();
+
+            try
+            {
+                foreach (IRegisterGroup requestGroup in requestGroups)
+                {
+                    IEnumerable<IRegister> registers = Enumerable.Range(requestGroup.Address, requestGroup.Count)
+                        .Select(address => responseRegisters.Single(register => register.Address == address));
+
+                    result.Add(requestGroup, registers.ToArray());
+                }
+            }
+            catch (InvalidOperationException exception)
+            {
+                // todo: create a custom exception
+                throw new Exception("Wrong registers received", exception);
+            }
+
+            return result;
         }
     }
 }

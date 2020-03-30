@@ -20,6 +20,8 @@ namespace Nandaka.MilliGanjubus.Components
         private const int _maxPacketLength = 16;
         private const int _maxDataLength = _maxPacketLength - _minPacketLength - 1;
         private const int _minPacketLength = 5;
+        private const bool _isSpecificMessageSupported = false;
+        private const bool _isHighPriorityMessageSupported = false;
 
         public const byte GReply = 0xA;
         public const byte GRequest = 0x0;
@@ -54,6 +56,8 @@ namespace Nandaka.MilliGanjubus.Components
         public int PacketCheckSumSize => _packetCheckSumSize;
 
         public int MinimumRangeRegisterCount => _minimumRangeRegisterCount;
+        public bool IsSpecificMessageSupported => _isSpecificMessageSupported;
+        public bool IsHighPriorityMessageSupported => _isHighPriorityMessageSupported;
 
         public byte StartByte => _startByte;
 

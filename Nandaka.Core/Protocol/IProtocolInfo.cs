@@ -16,5 +16,8 @@
         int PacketCheckSumSize { get; }
 
         int MinimumRangeRegisterCount { get; }
+
+        bool IsSpecificMessageSupported { get; }
+        bool IsHighPriorityMessageSupported { get; }
     }
 }

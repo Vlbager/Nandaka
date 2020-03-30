@@ -1,8 +1,7 @@
-﻿using System;
+﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 
@@ -10,28 +9,44 @@ namespace Nandaka.Core.Device
 {
     public abstract class RegisterDevice : INotifyPropertyChanged
     {
+        private readonly ISpecificMessageHandler _specificMessageHandler;
+        private readonly ConcurrentQueue<ISpecificMessage> _specificMessages;
+
         public abstract ObservableCollection<IRegisterGroup> RegisterGroups { get; }
         public RegisterTable Table { get; }
-        public IProtocol Protocol { get; }
         public int Address { get; }
-        public IRegistersUpdatePolicy UpdatePolicy { get; }
-        public int ErrorCounter { get; private set; }
+        internal IRegistersUpdatePolicy UpdatePolicy { get; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected RegisterDevice(IProtocol protocol, int address, RegisterTable table, IRegistersUpdatePolicy updatePolicy)
+        protected RegisterDevice(int address, RegisterTable table,
+            IRegistersUpdatePolicy updatePolicy, ISpecificMessageHandler specificMessageHandler)
         {
-            Protocol = protocol;
             Address = address;
             Table = table;
             UpdatePolicy = updatePolicy;
+            _specificMessageHandler = specificMessageHandler;
+            _specificMessages = new ConcurrentQueue<ISpecificMessage>();
         }
 
-        public void ErrorOccured()
+        protected RegisterDevice(int address, RegisterTable table, IRegistersUpdatePolicy updatePolicy)
+            : this(address, table, updatePolicy, new NullSpecificMessageHandler()) { }
+
+        public void SendSpecific(ISpecificMessage message, bool isAsync)
         {
-            ErrorCounter++;
-            RaisePropertyChanged(nameof(ErrorCounter));
+            _specificMessages.Enqueue(message);
+
+            if (isAsync) 
+                return;
+
+            while (!_specificMessages.IsEmpty)
+                _specificMessageHandler.WaitResponse();
         }
+        internal void OnSpecificMessageReceived(ISpecificMessage message)
+            => _specificMessageHandler.OnSpecificMessageReceived(message);
+
+        internal bool TryGetSpecific(out ISpecificMessage message)
+            => _specificMessages.TryDequeue(out message);
 
         protected virtual void RaisePropertyChanged([CallerMemberName] string propertyName = null)
         {
