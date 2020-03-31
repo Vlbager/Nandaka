@@ -6,6 +6,7 @@ namespace Nandaka.Core.Device
     {
         TimeSpan WaitTimeout { get; }
         RegisterDevice GetNextDevice(MasterDevice masterDevice);
+        void OnMessageReceived(RegisterDevice device);
         DeviceErrorHandlerResult OnErrorOccured(RegisterDevice device, DeviceError error);
         void OnUnexpectedDeviceResponse(int expectedDeviceAddress, int responseDeviceAddress);
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Nandaka.Core.Helpers
 {
@@ -14,6 +15,11 @@ namespace Nandaka.Core.Helpers
 
                 yield return element;
             }
+        }
+
+        public static bool IsEmpty<TSource>(this IEnumerable<TSource> source)
+        {
+            return !source.Any();
         }
     }
 }

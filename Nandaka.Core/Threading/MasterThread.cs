@@ -23,7 +23,7 @@ namespace Nandaka.Core.Threading
             _updatePolicy = updatePolicy;
             _deviceSessions = _masterDevice.SlaveDevices
                 .ToDictionary(device => device.Address,
-                    device => new MasterSession(protocol, device, device.UpdatePolicy, updatePolicy));
+                    device => new MasterSession(protocol, device, updatePolicy));
 
             _thread = new Thread(Routine) { IsBackground = true};
         }
@@ -67,11 +67,14 @@ namespace Nandaka.Core.Threading
                     session.SendSpecificMessage(specificMessage, _updatePolicy.WaitTimeout);
                 else
                     session.SendNextMessage(_updatePolicy.WaitTimeout);
+                
+                _updatePolicy.OnMessageReceived(device);
             }
             // todo: refactor with exception handling system.
             catch (ApplicationException expectedException)
             {
                 _updatePolicy.OnErrorOccured(device, DeviceError.NotResponding);
+                // Back specific message in specific message queue.
                 if (specificMessage != null)
                     device.SendSpecific(specificMessage, false);
             }

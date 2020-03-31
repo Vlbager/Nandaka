@@ -4,6 +4,7 @@
     {
         Connected,
         Disconnected,
-        NotResponding
+        NotResponding,
+        Corrupted
     }
 }

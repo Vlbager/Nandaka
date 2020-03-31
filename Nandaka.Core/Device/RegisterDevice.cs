@@ -16,10 +16,11 @@ namespace Nandaka.Core.Device
         public RegisterTable Table { get; }
         public int Address { get; }
         internal IRegistersUpdatePolicy UpdatePolicy { get; }
+        public DeviceState State { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected RegisterDevice(int address, RegisterTable table,
+        protected RegisterDevice(int address, RegisterTable table, DeviceState state,
             IRegistersUpdatePolicy updatePolicy, ISpecificMessageHandler specificMessageHandler)
         {
             Address = address;
@@ -27,10 +28,11 @@ namespace Nandaka.Core.Device
             UpdatePolicy = updatePolicy;
             _specificMessageHandler = specificMessageHandler;
             _specificMessages = new ConcurrentQueue<ISpecificMessage>();
+            State = state;
         }
 
-        protected RegisterDevice(int address, RegisterTable table, IRegistersUpdatePolicy updatePolicy)
-            : this(address, table, updatePolicy, new NullSpecificMessageHandler()) { }
+        protected RegisterDevice(int address, RegisterTable table, IRegistersUpdatePolicy updatePolicy, DeviceState state)
+            : this(address, table, state, updatePolicy, new NullSpecificMessageHandler()) { }
 
         public void SendSpecific(ISpecificMessage message, bool isAsync)
         {

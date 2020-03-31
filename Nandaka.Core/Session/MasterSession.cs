@@ -14,12 +14,11 @@ namespace Nandaka.Core.Session
         private readonly IProtocol _protocol;
         private readonly RegisterDevice _slaveDevice;
 
-        public MasterSession(IProtocol protocol, RegisterDevice slaveDevice, IRegistersUpdatePolicy registersUpdatePolicy,
-            IDeviceUpdatePolicy deviceUpdatePolicy)
+        public MasterSession(IProtocol protocol, RegisterDevice slaveDevice, IDeviceUpdatePolicy deviceUpdatePolicy)
         {
             _protocol = protocol;
             _slaveDevice = slaveDevice;
-            _registersUpdatePolicy = registersUpdatePolicy;
+            _registersUpdatePolicy = slaveDevice.UpdatePolicy;
             _deviceUpdatePolicy = deviceUpdatePolicy;
         }
 
