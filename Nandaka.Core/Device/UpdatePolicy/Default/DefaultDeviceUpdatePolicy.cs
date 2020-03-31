@@ -56,7 +56,7 @@ namespace Nandaka.Core.Device
             DeviceInfo deviceInfo = GetDeviceInfo(device);
             deviceInfo.ClearErrorCounter();
         }
-        
+
         public DeviceErrorHandlerResult OnErrorOccured(RegisterDevice device, DeviceError error)
         {
             DeviceInfo deviceInfo = GetDeviceInfo(device);
@@ -91,7 +91,7 @@ namespace Nandaka.Core.Device
                 responseDeviceInfo.Device.State = DeviceState.Corrupted;
                 return;
             }
-        
+
             RegisterDevice exceptedDevice = GetDeviceInfo(expectedDeviceAddress).Device;
             exceptedDevice.State = DeviceState.Corrupted;
         }
@@ -114,6 +114,5 @@ namespace Nandaka.Core.Device
 
         private DeviceInfo FindDeviceInfo(int deviceAddress)
             => _devicesToUpdate.FirstOrDefault(deviceInfo => deviceInfo.Device.Address == deviceAddress);
-
     }
 }

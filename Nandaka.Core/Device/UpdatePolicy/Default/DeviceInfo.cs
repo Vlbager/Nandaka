@@ -21,7 +21,7 @@ namespace Nandaka.Core.Device
             return errorCounter > maxErrorCount;
         }
 
-        public void ClearErrorCounter() 
+        public void ClearErrorCounter()
             => _errorCounter.Clear();
 
         public bool IsDeviceSkipPreviousMessage()
