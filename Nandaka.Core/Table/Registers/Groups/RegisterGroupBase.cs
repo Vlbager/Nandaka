@@ -9,6 +9,7 @@ namespace Nandaka.Core.Table
         public int Address { get; }
         public int Count { get; }
         public bool IsUpdated { get; set; }
+        public abstract int Version { get; protected set; }
         public RegisterType RegisterType { get; }
         public abstract int DataSize { get; }
         public abstract TValue Value { get; set; }

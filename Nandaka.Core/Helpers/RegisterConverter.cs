@@ -8,11 +8,11 @@ namespace Nandaka.Core.Helpers
 {
     public static class RegisterConverter
     {
-        public static byte[] ComposeDataAsRange(ICollection<IRegisterGroup> registerGroups, IProtocolInfo info, IEnumerable<byte> dataHeader,
+        public static byte[] ComposeDataAsRange(IReadOnlyCollection<IRegisterGroup> registerGroups, IProtocolInfo info, IEnumerable<byte> dataHeader,
             bool withValues, out IReadOnlyCollection<IRegisterGroup> composedGroups)
         {
             var result = new List<byte>(dataHeader);
-            
+
             result.AddRange(GetRegisterAddress(registerGroups.First().Address, info));
 
             if (!withValues)
@@ -48,7 +48,7 @@ namespace Nandaka.Core.Helpers
             return result.ToArray();
         }
 
-        public static byte[] ComposeDataAsSeries(ICollection<IRegisterGroup> registerGroups, IProtocolInfo info, IEnumerable<byte> dataHeader,
+        public static byte[] ComposeDataAsSeries(IReadOnlyCollection<IRegisterGroup> registerGroups, IProtocolInfo info, IEnumerable<byte> dataHeader,
             bool withValues, out IReadOnlyCollection<IRegisterGroup> composedGroups)
         {
             var result = new List<byte>(dataHeader);
@@ -79,7 +79,7 @@ namespace Nandaka.Core.Helpers
         /// <summary>
         /// Check for addresses ordering.
         /// </summary>
-        public static bool IsRange(ICollection<IRegisterGroup> registerGroups, IProtocolInfo info)
+        public static bool IsRange(IReadOnlyCollection<IRegisterGroup> registerGroups, IProtocolInfo info)
         {
             var registerInRangeCount = 0;
             var dataSize = 0;

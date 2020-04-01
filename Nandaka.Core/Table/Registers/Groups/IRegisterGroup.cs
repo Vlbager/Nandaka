@@ -7,6 +7,7 @@ namespace Nandaka.Core.Table
         int Count { get; }
         int DataSize { get; }
         bool IsUpdated { get; set; }
+        int Version { get; }
         void Update(IReadOnlyCollection<IRegister> registersToUpdate);
         IReadOnlyCollection<IRegister> GetRawRegisters();
     }

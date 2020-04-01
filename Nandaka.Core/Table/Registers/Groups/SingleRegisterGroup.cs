@@ -14,6 +14,7 @@ namespace Nandaka.Core.Table
         private readonly Register<TValue> _register;
 
         public override int DataSize => Marshal.SizeOf<TValue>();
+        public override int Version { get; protected set; }
 
         public override TValue Value
         {
@@ -23,6 +24,7 @@ namespace Nandaka.Core.Table
                 lock (_syncRoot)
                 {
                     _register.Value = value;
+                    Version++;
                     IsUpdated = false;
                 }
             }
@@ -44,6 +46,7 @@ namespace Nandaka.Core.Table
             lock (_syncRoot)
             {
                 _register.Value = valuedRegister.Value;
+                Version++;
                 IsUpdated = true;
             }
         }

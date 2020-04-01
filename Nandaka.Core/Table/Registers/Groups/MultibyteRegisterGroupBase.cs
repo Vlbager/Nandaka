@@ -8,9 +8,11 @@ namespace Nandaka.Core.Table
         where TValue : struct
     {
         private readonly object _syncRoot;
+        private readonly IReadOnlyCollection<Register<byte>> _registers;
 
-        public override int DataSize => Registers.Count;
-        public IReadOnlyCollection<Register<byte>> Registers { get; }
+        public override int DataSize => _registers.Count;
+        public override int Version { get; protected set; }
+        
         public override TValue Value
         {
             get => GetValue();
@@ -21,16 +23,16 @@ namespace Nandaka.Core.Table
             : base(registers.First().Address, registers.Count, registers.First().RegisterType)
         {
             AssertRegistersType(registers);
-            Registers = registers;
+            _registers = registers;
             _syncRoot = new object();
         }
 
-        public override IReadOnlyCollection<IRegister> GetRawRegisters() => Registers;
+        public override IReadOnlyCollection<IRegister> GetRawRegisters() => _registers;
 
         public override byte[] ToBytes()
         {
             // todo: check for orderBy
-            return Registers
+            return _registers
                 .OrderBy(register => register.Address)
                 .Select(register => register.Value)
                 .ToArray();
@@ -44,7 +46,7 @@ namespace Nandaka.Core.Table
 
             lock (_syncRoot)
             {
-                foreach (Register<byte> storedRegister in Registers)
+                foreach (Register<byte> storedRegister in _registers)
                 {
                     Register<byte> registerToUpdate = byteRegistersToUpdate
                             .Single(register => register.Address == storedRegister.Address);
@@ -52,6 +54,7 @@ namespace Nandaka.Core.Table
                     storedRegister.Value = registerToUpdate.Value;
                 }
 
+                Version++;
                 IsUpdated = true;
             }
         }
@@ -63,9 +66,10 @@ namespace Nandaka.Core.Table
             lock (_syncRoot)
             {
                 var index = 0;
-                foreach (Register<byte> register in Registers)
+                foreach (Register<byte> register in _registers)
                     register.Value = littleEndianBytes[index++];
 
+                Version++;
                 IsUpdated = false;
             }
         }

@@ -5,7 +5,7 @@ namespace Nandaka.Core.Session
 {
     public interface IRegisterMessage : IFrameworkMessage
     {
-        ICollection<IRegisterGroup> RegisterGroups { get; }
+        IReadOnlyCollection<IRegisterGroup> RegisterGroups { get; }
         OperationType OperationType { get; }
     }
 }
