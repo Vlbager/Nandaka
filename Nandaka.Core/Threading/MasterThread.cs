@@ -50,8 +50,7 @@ namespace Nandaka.Core.Threading
             }
             catch (Exception exception)
             {
-                // todo: Add loger.
-                Console.WriteLine(exception);
+                Log.Instance.AppendMessage(LogMessageType.Error, exception.ToString());
                 Stop();
             }
         }
