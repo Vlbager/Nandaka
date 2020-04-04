@@ -33,7 +33,8 @@ namespace Nandaka.Core.Session
                 _log.AppendMessage(LogMessageType.Info, $"Sending {message.OperationType}-register message");
 
                 _protocol.SendMessage(message, out IReadOnlyCollection<IRegisterGroup> requestRegisters);
-                _log.AppendMessage(LogMessageType.Info, $"Register groups with addresses {requestRegisters.AllAddresses()} was requested");
+                _log.AppendMessage(LogMessageType.Info, 
+                    $"Register groups with addresses {requestRegisters.GetAllAddressesAsString()} was requested");
 
                 while (true)
                 {
@@ -57,8 +58,8 @@ namespace Nandaka.Core.Session
                         throw new Exception("Wrong response received");
 
                     _log.AppendMessage(LogMessageType.Info, "Response received, updating registers");
-                    
-                    UpdateRegisters(response.Registers, requestRegisters, message.OperationType);
+
+                    requestRegisters.Update(response.Registers, message.OperationType);
 
                     _log.AppendMessage(LogMessageType.Info, "Registers updated");
 
@@ -99,46 +100,6 @@ namespace Nandaka.Core.Session
                     break;
                 }
             }
-        }
-
-        private void UpdateRegisters(IReadOnlyCollection<IRegister> responseRegisters,
-            IEnumerable<IRegisterGroup> requestGroups, OperationType operationType)
-        {
-            IReadOnlyDictionary<IRegisterGroup, IRegister[]> registerMap = MapRegisters(requestGroups, responseRegisters);
-
-            if (operationType == OperationType.Write)
-                return;
-            if (operationType != OperationType.Read)
-                // todo: create a custom exception
-                throw new Exception("Wrong Operation type");
-
-            foreach (IRegisterGroup registerGroup in registerMap.Keys)
-                registerGroup.Update(registerMap[registerGroup]);
-        }
-
-        private IReadOnlyDictionary<IRegisterGroup, IRegister[]> MapRegisters(
-            IEnumerable<IRegisterGroup> requestGroups,
-            IReadOnlyCollection<IRegister> responseRegisters)
-        {
-            var result = new Dictionary<IRegisterGroup, IRegister[]>();
-
-            try
-            {
-                foreach (IRegisterGroup requestGroup in requestGroups)
-                {
-                    IEnumerable<IRegister> registers = Enumerable.Range(requestGroup.Address, requestGroup.Count)
-                        .Select(address => responseRegisters.Single(register => register.Address == address));
-
-                    result.Add(requestGroup, registers.ToArray());
-                }
-            }
-            catch (InvalidOperationException exception)
-            {
-                // todo: create a custom exception
-                throw new Exception("Wrong registers received", exception);
-            }
-
-            return result;
         }
     }
 }
