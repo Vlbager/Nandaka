@@ -13,6 +13,7 @@ namespace Nandaka.Core.Device
         private readonly ConcurrentQueue<ISpecificMessage> _specificMessages;
 
         public abstract ObservableCollection<IRegisterGroup> RegisterGroups { get; }
+        public abstract string Name { get; }
         public RegisterTable Table { get; }
         public int Address { get; }
         internal IRegistersUpdatePolicy UpdatePolicy { get; }

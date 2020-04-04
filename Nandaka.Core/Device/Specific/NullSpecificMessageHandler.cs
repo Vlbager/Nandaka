@@ -6,12 +6,9 @@ namespace Nandaka.Core.Device
     {
         public void OnSpecificMessageReceived(ISpecificMessage message)
         {
-            // todo: add logger
+            Log.Instance.AppendMessage(LogMessageType.Warning, $"Received specific message ({message.SpecificCode}) was not handled");
         }
 
-        public void WaitResponse()
-        {
-            // todo: add logger
-        }
+        public void WaitResponse() { }
     }
 }

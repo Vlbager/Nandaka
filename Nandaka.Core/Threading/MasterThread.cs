@@ -13,19 +13,26 @@ namespace Nandaka.Core.Threading
         private readonly MasterDevice _masterDevice;
         private readonly Dictionary<int, MasterSession> _deviceSessions;
         private readonly IDeviceUpdatePolicy _updatePolicy;
+        private readonly ILog _log;
 
         private readonly Thread _thread;
         private bool _isStopped;
 
-        public MasterThread(MasterDevice masterDevice, IProtocol protocol, IDeviceUpdatePolicy updatePolicy)
+        private MasterThread(MasterDevice masterDevice, IProtocol protocol, IDeviceUpdatePolicy updatePolicy)
         {
             _masterDevice = masterDevice;
             _updatePolicy = updatePolicy;
+            _log = new PrefixLog(Log.Instance, $"[{masterDevice.Name}Thread]");
             _deviceSessions = _masterDevice.SlaveDevices
                 .ToDictionary(device => device.Address,
-                    device => new MasterSession(protocol, device, updatePolicy));
+                    device => new MasterSession(protocol, device, updatePolicy, _log));
 
             _thread = new Thread(Routine) { IsBackground = true};
+        }
+
+        public static MasterThread Create(MasterDevice masterDevice, IProtocol protocol)
+        {
+            throw new NotImplementedException();
         }
 
         public void StartRoutine() => _thread.Start();
@@ -45,12 +52,15 @@ namespace Nandaka.Core.Threading
 
                     RegisterDevice device = _updatePolicy.GetNextDevice(_masterDevice);
 
+                    _log.AppendMessage(LogMessageType.Info, $"Set current device: {device}");
+
                     SendNextMessage(device);
                 }
             }
             catch (Exception exception)
             {
-                Log.Instance.AppendMessage(LogMessageType.Error, exception.ToString());
+                _log.AppendMessage(LogMessageType.Error, "Unexpected error occured");
+                _log.AppendMessage(LogMessageType.Error, exception.ToString());
                 Stop();
             }
         }
@@ -76,10 +86,6 @@ namespace Nandaka.Core.Threading
                 // Back specific message in specific message queue.
                 if (specificMessage != null)
                     device.SendSpecific(specificMessage, false);
-            }
-            catch (Exception unexpectedException)
-            {
-                throw;
             }
         }
 
