@@ -6,9 +6,9 @@ namespace Nandaka.Core.Protocol
     public class MessageReceivedEventArgs : EventArgs
     {
         private readonly Exception _exception;
-        private readonly IFrameworkMessage _receivedMessage;
+        private readonly IMessage _receivedMessage;
 
-        public IFrameworkMessage ReceivedMessage 
+        public IMessage ReceivedMessage 
         {
             get
             {
@@ -19,7 +19,7 @@ namespace Nandaka.Core.Protocol
             }
         }
 
-        public MessageReceivedEventArgs(IFrameworkMessage receivedMessage)
+        public MessageReceivedEventArgs(IMessage receivedMessage)
         {
             _receivedMessage = receivedMessage;
         }

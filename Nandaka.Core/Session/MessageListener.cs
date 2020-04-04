@@ -20,7 +20,7 @@ namespace Nandaka.Core.Session
             _protocol.MessageReceived += _messageReceivedHandler;
         }
 
-        public bool WaitMessage(TimeSpan waitTimeout, out IFrameworkMessage receivedMessage)
+        public bool WaitMessage(TimeSpan waitTimeout, out IMessage receivedMessage)
         {
             receivedMessage = default;
 

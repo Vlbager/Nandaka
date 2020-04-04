@@ -22,7 +22,7 @@ namespace Nandaka.MilliGanjubus.Components
         {
             try
             {
-                IFrameworkMessage message = ParseMessage(data);
+                IMessage message = ParseMessage(data);
                 return new MessageReceivedEventArgs(message);
             }
             catch (Exception exception)
@@ -31,7 +31,7 @@ namespace Nandaka.MilliGanjubus.Components
             }
         }
 
-        private IFrameworkMessage ParseMessage(byte[] data)
+        private IMessage ParseMessage(byte[] data)
         {
             byte deviceAddress = data[_info.AddressOffset];
 

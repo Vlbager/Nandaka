@@ -1,12 +1,12 @@
 ﻿namespace Nandaka.Core.Session
 {
-    public class HighPriorityMessage : IFrameworkMessage
+    public class HighPriorityMessage : IMessage
     {
-        public IFrameworkMessage InnerMessage { get; }
+        public IMessage InnerMessage { get; }
         public int SlaveDeviceAddress => InnerMessage.SlaveDeviceAddress;
         public MessageType Type => InnerMessage.Type;
 
-        public HighPriorityMessage(IFrameworkMessage innerMessage)
+        public HighPriorityMessage(IMessage innerMessage)
         {
             InnerMessage = innerMessage;
         }

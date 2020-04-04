@@ -38,7 +38,7 @@ namespace Nandaka.Core.Session
 
                 while (true)
                 {
-                    if (!listener.WaitMessage(waitTime, out IFrameworkMessage receivedMessage))
+                    if (!listener.WaitMessage(waitTime, out IMessage receivedMessage))
                         // todo: create a custom exception
                         throw new Exception("Device Not responding");
 
@@ -76,7 +76,7 @@ namespace Nandaka.Core.Session
 
                 while (true)
                 {
-                    if (!listener.WaitMessage(waitTime, out IFrameworkMessage receivedMessage))
+                    if (!listener.WaitMessage(waitTime, out IMessage receivedMessage))
                         // todo: create a custom exception
                         throw new Exception("Device not responding");
 

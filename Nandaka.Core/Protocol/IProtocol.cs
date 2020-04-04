@@ -7,7 +7,7 @@ namespace Nandaka.Core.Protocol
 {
     public interface IProtocol
     {
-        void SendMessage(IFrameworkMessage message, out IReadOnlyCollection<IRegisterGroup> sentGroups);
+        void SendMessage(IMessage message, out IReadOnlyCollection<IRegisterGroup> sentGroups);
 
         event EventHandler<MessageReceivedEventArgs> MessageReceived;
     }

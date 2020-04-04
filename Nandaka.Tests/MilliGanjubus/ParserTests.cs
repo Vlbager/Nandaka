@@ -13,7 +13,7 @@ namespace Nandaka.Tests.MilliGanjubus
     {
         private readonly IParser<byte[], MessageReceivedEventArgs> _parser;
         private int _messageCount;
-        private IFrameworkMessage _parsedMessage;
+        private IMessage _parsedMessage;
 
 
         public ParserTests()

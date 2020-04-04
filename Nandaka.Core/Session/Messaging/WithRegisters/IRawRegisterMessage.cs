@@ -3,7 +3,7 @@ using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Session
 {
-    public interface IRawRegisterMessage : IFrameworkMessage
+    public interface IRawRegisterMessage : IMessage
     {
         IReadOnlyCollection<IRegister> Registers { get; }
         OperationType OperationType { get; }

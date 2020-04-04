@@ -8,7 +8,7 @@ using Nandaka.Core.Table;
 
 namespace Nandaka.MilliGanjubus.Components
 {
-    internal class MilliGanjubusComposer : IComposer<IFrameworkMessage, byte[]>
+    internal class MilliGanjubusComposer : IComposer<IMessage, byte[]>
     {
         private readonly MilliGanjubusInfo _info;
 
@@ -17,7 +17,7 @@ namespace Nandaka.MilliGanjubus.Components
             _info = ganjubusInfo;
         }
 
-        public byte[] Compose(IFrameworkMessage message, out IReadOnlyCollection<IRegisterGroup> composedGroups)
+        public byte[] Compose(IMessage message, out IReadOnlyCollection<IRegisterGroup> composedGroups)
         {
             switch (message)
             {
