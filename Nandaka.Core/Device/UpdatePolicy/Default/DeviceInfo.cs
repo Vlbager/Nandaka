@@ -5,9 +5,9 @@ namespace Nandaka.Core.Device
     public class DeviceInfo
     {
         private readonly Dictionary<DeviceError, int> _errorCounter;
-        public RegisterDevice Device { get; }
+        public NandakaDevice Device { get; }
 
-        public DeviceInfo(RegisterDevice device)
+        public DeviceInfo(NandakaDevice device)
         {
             Device = device;
             _errorCounter = new Dictionary<DeviceError, int>();

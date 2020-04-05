@@ -7,7 +7,7 @@ using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Device
 {
-    public abstract class RegisterDevice : INotifyPropertyChanged
+    public abstract class NandakaDevice : INotifyPropertyChanged
     {
         private readonly ISpecificMessageHandler _specificMessageHandler;
         private readonly ConcurrentQueue<ISpecificMessage> _specificMessages;
@@ -21,7 +21,7 @@ namespace Nandaka.Core.Device
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected RegisterDevice(int address, RegisterTable table, DeviceState state,
+        protected NandakaDevice(int address, RegisterTable table, DeviceState state,
             IRegistersUpdatePolicy updatePolicy, ISpecificMessageHandler specificMessageHandler)
         {
             Address = address;
@@ -32,7 +32,7 @@ namespace Nandaka.Core.Device
             State = state;
         }
 
-        protected RegisterDevice(int address, RegisterTable table, IRegistersUpdatePolicy updatePolicy, DeviceState state)
+        protected NandakaDevice(int address, RegisterTable table, IRegistersUpdatePolicy updatePolicy, DeviceState state)
             : this(address, table, state, updatePolicy, new NullSpecificMessageHandler()) { }
 
         public void SendSpecific(ISpecificMessage message, bool isAsync)

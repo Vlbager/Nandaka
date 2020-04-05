@@ -5,9 +5,9 @@ namespace Nandaka.Core.Device
     public interface IDeviceUpdatePolicy
     {
         TimeSpan WaitTimeout { get; }
-        RegisterDevice GetNextDevice(MasterDevice masterDevice);
-        void OnMessageReceived(RegisterDevice device);
-        DeviceErrorHandlerResult OnErrorOccured(RegisterDevice device, DeviceError error);
+        NandakaDevice GetNextDevice();
+        void OnMessageReceived(NandakaDevice device);
+        void OnErrorOccured(NandakaDevice device, DeviceError error);
         void OnUnexpectedDeviceResponse(int expectedDeviceAddress, int responseDeviceAddress);
     }
 }

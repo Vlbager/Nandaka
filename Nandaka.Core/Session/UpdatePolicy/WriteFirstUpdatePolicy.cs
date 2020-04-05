@@ -13,7 +13,7 @@ namespace Nandaka.Core.Session
     {
         public WriteFirstUpdatePolicy() { }
         
-        public IRegisterMessage GetNextMessage(RegisterDevice device)
+        public IRegisterMessage GetNextMessage(NandakaDevice device)
         {
             IRegisterGroup[] writeOnlyGroupsToUpdate = device.RegisterGroups
                 .Where(group => group.RegisterType == RegisterType.WriteOnly)

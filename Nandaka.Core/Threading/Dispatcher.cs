@@ -15,12 +15,12 @@ namespace Nandaka.Core.Threading
             _slaveThreads = new List<SlaveThread>();
         }
 
-        public static MasterThread StartDeviceSession(MasterDevice device, IDeviceUpdatePolicy updatePolicy)
+        public static MasterThread StartDeviceSession(MasterDeviceManager deviceManager, IDeviceUpdatePolicy updatePolicy)
         {
             throw new NotImplementedException();
         }
 
-        public static SlaveThread StartDeviceSession(SlaveDevice device)
+        public static SlaveThread StartDeviceSession(SlaveDeviceManager deviceManager)
         {
             throw new NotImplementedException();
         }

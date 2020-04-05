@@ -10,7 +10,7 @@ namespace Nandaka.Core.Threading
 {
     internal class MasterThread : IDisposable
     {
-        private readonly MasterDevice _masterDevice;
+        private readonly MasterDeviceManager _masterDeviceManager;
         private readonly Dictionary<int, MasterSession> _deviceSessions;
         private readonly IDeviceUpdatePolicy _updatePolicy;
         private readonly ILog _log;
@@ -18,19 +18,19 @@ namespace Nandaka.Core.Threading
         private readonly Thread _thread;
         private bool _isStopped;
 
-        private MasterThread(MasterDevice masterDevice, IProtocol protocol, IDeviceUpdatePolicy updatePolicy)
+        private MasterThread(MasterDeviceManager masterDeviceManager, IProtocol protocol, IDeviceUpdatePolicy updatePolicy)
         {
-            _masterDevice = masterDevice;
+            _masterDeviceManager = masterDeviceManager;
             _updatePolicy = updatePolicy;
-            _log = new PrefixLog(Log.Instance, $"[{masterDevice.Name}Thread]");
-            _deviceSessions = _masterDevice.SlaveDevices
+            _log = new PrefixLog(Log.Instance, $"[{masterDeviceManager.Name}Thread]");
+            _deviceSessions = _masterDeviceManager.SlaveDevices
                 .ToDictionary(device => device.Address,
                     device => new MasterSession(protocol, device, updatePolicy, _log));
 
             _thread = new Thread(Routine) { IsBackground = true};
         }
 
-        public static MasterThread Create(MasterDevice masterDevice, IProtocol protocol)
+        public static MasterThread Create(MasterDeviceManager masterDeviceManager, IProtocol protocol)
         {
             throw new NotImplementedException();
         }
@@ -50,7 +50,7 @@ namespace Nandaka.Core.Threading
                     if (_isStopped)
                         break;
 
-                    RegisterDevice device = _updatePolicy.GetNextDevice(_masterDevice);
+                    NandakaDevice device = _updatePolicy.GetNextDevice();
 
                     _log.AppendMessage(LogMessageType.Info, $"Set current device: {device}");
 
@@ -65,7 +65,7 @@ namespace Nandaka.Core.Threading
             }
         }
 
-        private void SendNextMessage(RegisterDevice device)
+        private void SendNextMessage(NandakaDevice device)
         {
             MasterSession session = _deviceSessions[device.Address];
 
@@ -73,9 +73,9 @@ namespace Nandaka.Core.Threading
             try
             {
                 if (device.TryGetSpecific(out specificMessage))
-                    session.SendSpecificMessage(specificMessage, _updatePolicy.WaitTimeout);
+                    session.SendSpecificMessage(specificMessage);
                 else
-                    session.SendNextMessage(_updatePolicy.WaitTimeout);
+                    session.SendNextMessage();
                 
                 _updatePolicy.OnMessageReceived(device);
             }

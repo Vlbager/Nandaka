@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Nandaka.Core.Device
 {
-    public class SlaveDevice
+    public class SlaveDeviceManager
     {
 
     }

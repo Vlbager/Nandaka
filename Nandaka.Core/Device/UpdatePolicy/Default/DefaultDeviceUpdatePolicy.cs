@@ -16,26 +16,26 @@ namespace Nandaka.Core.Device
 
         public TimeSpan WaitTimeout { get; }
 
-        private DefaultDeviceUpdatePolicy(TimeSpan waitTimeout, MasterDevice masterDevice, ILog log)
+        private DefaultDeviceUpdatePolicy(TimeSpan waitTimeout, MasterDeviceManager masterDeviceManager, ILog log)
         {
             WaitTimeout = waitTimeout;
             _log = log;
-            _devicesToUpdate = masterDevice.SlaveDevices
+            _devicesToUpdate = masterDeviceManager.SlaveDevices
                 .Select(device => new DeviceInfo(device))
                 .ToArray();
             _enumerator = GetNextEnumerator();
         }
 
-        public static DefaultDeviceUpdatePolicy Create(TimeSpan waitTimeout, MasterDevice masterDevice, ILog log)
+        public static DefaultDeviceUpdatePolicy Create(TimeSpan waitTimeout, MasterDeviceManager masterDeviceManager, ILog log)
         {
-            if (masterDevice.SlaveDevices.IsEmpty())
+            if (masterDeviceManager.SlaveDevices.IsEmpty())
                 // todo: create a custom exception
                 throw new Exception("Master device should contain at least 1 slave device");
             
-            return new DefaultDeviceUpdatePolicy(waitTimeout, masterDevice, new PrefixLog(log, "[Device Update Policy]"));
+            return new DefaultDeviceUpdatePolicy(waitTimeout, masterDeviceManager, new PrefixLog(log, "[Device Update Policy]"));
         }
 
-        public RegisterDevice GetNextDevice(MasterDevice masterDevice)
+        public NandakaDevice GetNextDevice()
         {
             while (true)
             {
@@ -45,7 +45,7 @@ namespace Nandaka.Core.Device
                     continue;
                 }
 
-                RegisterDevice nextDevice = _enumerator.Current?.Device;
+                NandakaDevice nextDevice = _enumerator.Current?.Device;
 
                 if (nextDevice?.State != DeviceState.Connected)
                     continue;
@@ -54,19 +54,19 @@ namespace Nandaka.Core.Device
             }
         }
 
-        public void OnMessageReceived(RegisterDevice device)
+        public void OnMessageReceived(NandakaDevice device)
         {
             DeviceInfo deviceInfo = GetDeviceInfo(device);
             deviceInfo.ClearErrorCounter();
         }
 
-        public DeviceErrorHandlerResult OnErrorOccured(RegisterDevice device, DeviceError error)
+        public void OnErrorOccured(NandakaDevice device, DeviceError error)
         {
             _log.AppendMessage(LogMessageType.Error, $"Error occured with {device}. Reason: {error}");
             
             DeviceInfo deviceInfo = GetDeviceInfo(device);
             if (!deviceInfo.IsDeviceShouldBeStopped(error, MaxErrorInRow))
-                return DeviceErrorHandlerResult.Continue;
+                return;
             
             switch (error)
             {
@@ -85,8 +85,6 @@ namespace Nandaka.Core.Device
             }
             
             _log.AppendMessage(LogMessageType.Error, $"Device has reached the max number of errors. {device} will be disconnected");
-            
-            return DeviceErrorHandlerResult.Stop;
         }
 
         public void OnUnexpectedDeviceResponse(int expectedDeviceAddress, int responseDeviceAddress)
@@ -104,7 +102,7 @@ namespace Nandaka.Core.Device
 
             _log.AppendMessage(LogMessageType.Error, $"Device {expectedDeviceAddress}");
             
-            RegisterDevice exceptedDevice = GetDeviceInfo(expectedDeviceAddress).Device;
+            NandakaDevice exceptedDevice = GetDeviceInfo(expectedDeviceAddress).Device;
             exceptedDevice.State = DeviceState.Corrupted;
         }
 
@@ -118,7 +116,7 @@ namespace Nandaka.Core.Device
             return _devicesToUpdate.GetEnumerator();
         }
 
-        private DeviceInfo GetDeviceInfo(RegisterDevice device)
+        private DeviceInfo GetDeviceInfo(NandakaDevice device)
             => GetDeviceInfo(device.Address);
 
         private DeviceInfo GetDeviceInfo(int deviceAddress)

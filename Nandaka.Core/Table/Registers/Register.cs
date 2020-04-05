@@ -22,26 +22,14 @@ namespace Nandaka.Core.Table
         public static Register<byte> CreateByte(int address, RegisterType registerType, byte value = 0) 
             => new Register<byte>(address, registerType, value);
 
-        public static Register<sbyte> CreateSByte(int address, RegisterType registerType, sbyte value = 0) 
-            => new Register<sbyte>(address, registerType, value);
-
         public static Register<ushort> CreateUInt16(int address, RegisterType registerType, ushort value = 0) 
             => new Register<ushort>(address, registerType, value);
-
-        public static Register<short> CreateInt16(int address, RegisterType registerType, short value = 0) 
-            => new Register<short>(address, registerType, value);
 
         public static Register<uint> CreateUInt32(int address, RegisterType registerType, uint value = 0) 
             => new Register<uint>(address, registerType, value);
 
-        public static Register<int> CreateInt32(int address, RegisterType registerType, int value = 0) 
-            => new Register<int>(address, registerType, value);
-
         public static Register<ulong> CreateUInt64(int address, RegisterType registerType, ulong value = 0) 
             => new Register<ulong>(address, registerType, value);
-
-        public static Register<long> CreateInt64(int address, RegisterType registerType, long value = 0) 
-            => new Register<long>(address, registerType, value); 
 
         #endregion
 

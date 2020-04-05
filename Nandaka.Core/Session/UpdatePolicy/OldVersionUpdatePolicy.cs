@@ -11,7 +11,7 @@ namespace Nandaka.Core.Session
     {
         public OldVersionUpdatePolicy() { }
         
-        public IRegisterMessage GetNextMessage(RegisterDevice device)
+        public IRegisterMessage GetNextMessage(NandakaDevice device)
         {
             IRegisterGroup[] orderedByVersionGroups = device.RegisterGroups
                 .OrderBy(group => group.Version)
