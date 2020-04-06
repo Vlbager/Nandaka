@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using Nandaka.Core.Protocol;
 
@@ -9,13 +10,13 @@ namespace Nandaka.Core.Session
         private readonly AutoResetEvent _resetEvent;
         private readonly IProtocol _protocol;
         private readonly EventHandler<MessageReceivedEventArgs> _messageReceivedHandler;
-
-        private MessageReceivedEventArgs _lastReceivedMessageArgs;
+        private readonly ConcurrentQueue<MessageReceivedEventArgs> _receivedMessages;
 
         public MessageListener(IProtocol protocol)
         {
             _protocol = protocol;
             _resetEvent = new AutoResetEvent(initialState: false);
+            _receivedMessages = new ConcurrentQueue<MessageReceivedEventArgs>();
             _messageReceivedHandler = (sender, args) => OnMessageReceived(args);
             _protocol.MessageReceived += _messageReceivedHandler;
         }
@@ -24,10 +25,25 @@ namespace Nandaka.Core.Session
         {
             receivedMessage = default;
 
-            if (!_resetEvent.WaitOne(waitTimeout))
+            if (_receivedMessages.IsEmpty && !_resetEvent.WaitOne(waitTimeout))
                 return false;
 
-            receivedMessage = _lastReceivedMessageArgs.ReceivedMessage;
+            _receivedMessages.TryDequeue(out MessageReceivedEventArgs receivedEventArgs);
+            receivedMessage = receivedEventArgs.ReceivedMessage;
+            
+            return true;
+        }
+
+        public bool WaitMessage(out IMessage receivedMessage)
+        {
+            receivedMessage = default;
+
+            if (_receivedMessages.IsEmpty && !_resetEvent.WaitOne())
+                return false;
+
+            _receivedMessages.TryDequeue(out MessageReceivedEventArgs receivedEventArgs);
+            receivedMessage = receivedEventArgs.ReceivedMessage;
+            
             return true;
         }
 
@@ -37,9 +53,9 @@ namespace Nandaka.Core.Session
             _resetEvent.Dispose();
         }
 
-        private void OnMessageReceived(MessageReceivedEventArgs args)
+        private void OnMessageReceived(MessageReceivedEventArgs receivedMessageArgs)
         {
-            _lastReceivedMessageArgs = args;
+            _receivedMessages.Enqueue(receivedMessageArgs);
             _resetEvent.Set();
         }
     }

@@ -14,7 +14,7 @@ namespace Nandaka.Core.Helpers
             return String.Join(", ", addresses);
         }
 
-        public static void Update(this IEnumerable<IRegisterGroup> targetGroups, IReadOnlyCollection<IRegister> sourceRegister,
+        public static void UpdateAsMaster(this IEnumerable<IRegisterGroup> targetGroups, IReadOnlyCollection<IRegister> sourceRegister,
             OperationType operationType)
         {
             IReadOnlyDictionary<IRegisterGroup, IRegister[]> registerMap = MapRegisters(targetGroups, sourceRegister);

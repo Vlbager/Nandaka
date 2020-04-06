@@ -1,6 +1,55 @@
-﻿namespace Nandaka.Core.Threading
+﻿using System;
+using System.Threading;
+using Nandaka.Core.Device;
+using Nandaka.Core.Protocol;
+using Nandaka.Core.Session;
+
+namespace Nandaka.Core.Threading
 {
-    class SlaveThread
+    internal class SlaveThread
     {
+        private readonly SlaveSession _session;
+        private readonly ILog _log;
+        
+        private readonly Thread _thread;
+        private bool _isStopped;
+        
+        public SlaveThread(SlaveSession session, ILog log)
+        {
+            _session = session;
+            _log = log;
+            _thread = new Thread(Routine) { IsBackground = true };
+        }
+        
+        public static SlaveThread Create(NandakaDevice device, IProtocol protocol, ILog log)
+        {
+            var threadLog = new PrefixLog(log, "[Thread]");
+            var session = SlaveSession.Create(device, protocol, threadLog);
+            return new SlaveThread(session, threadLog);
+        }
+
+        public void Start() => _thread.Start();
+        public void Stop() => _isStopped = true;
+
+        // todo: logger
+        private void Routine()
+        {
+            try
+            {
+                while (true)
+                {
+                    if (_isStopped)
+                        break;
+
+                    _session.ListenNextMessage();
+                }
+            }
+            catch (Exception exception)
+            {
+                _log.AppendMessage(LogMessageType.Error, "Unexpected error occured");
+                _log.AppendMessage(LogMessageType.Error, exception.ToString());
+                Stop();
+            }
+        }
     }
 }

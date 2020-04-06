@@ -59,7 +59,7 @@ namespace Nandaka.Core.Session
 
                     _log.AppendMessage(LogMessageType.Info, "Response received, updating registers");
 
-                    requestRegisters.Update(response.Registers, message.OperationType);
+                    requestRegisters.UpdateAsMaster(response.Registers, message.OperationType);
 
                     _log.AppendMessage(LogMessageType.Info, "Registers updated");
 
