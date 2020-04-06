@@ -1,71 +1,79 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Nandaka.Core.Helpers;
 
 namespace Nandaka.Core.Device
 {
     public class DefaultDeviceUpdatePolicy : IDeviceUpdatePolicy
     {
-        private const int MaxErrorInRow = 3;
+        // todo: specify default values.
+        private const int DefaultMaxErrorInRowCount = 3;
+        private const int DefaultWaitResponseTimeoutMilliseconds = 300;
+        private const int DefaultUpdateTimeoutMilliseconds = 300;
 
-        private readonly IReadOnlyCollection<DeviceInfo> _devicesToUpdate;
-        private readonly ILog _log;
+        private readonly int _maxErrorInRowCount;
         
-        private IEnumerator<DeviceInfo> _enumerator;
+        private IEnumerator<NandakaDevice> _enumerator;
+        private NandakaDevice _lastDeviceInCycle;
 
-        public TimeSpan WaitTimeout { get; }
+        /// <summary>
+        /// Timeout between request and response.
+        /// </summary>
+        public TimeSpan RequestTimeout { get; }
+        
+        /// <summary>
+        /// Timeout between each update cycle.
+        /// </summary>
+        public TimeSpan UpdateTimeout { get; }
 
-        private DefaultDeviceUpdatePolicy(TimeSpan waitTimeout, MasterDeviceManager masterDeviceManager, ILog log)
+        public DefaultDeviceUpdatePolicy(TimeSpan requestTimeout, TimeSpan updateTimeout, int maxErrorInRowCount)
         {
-            WaitTimeout = waitTimeout;
-            _log = log;
-            _devicesToUpdate = masterDeviceManager.SlaveDevices
-                .Select(device => new DeviceInfo(device))
-                .ToArray();
-            _enumerator = GetNextEnumerator();
+            RequestTimeout = requestTimeout;
+            UpdateTimeout = updateTimeout;
+            _maxErrorInRowCount = maxErrorInRowCount;
+            _enumerator = Enumerable.Empty<NandakaDevice>().GetEnumerator();
         }
+        
+        public DefaultDeviceUpdatePolicy(int waitResponseTimeoutMilliseconds = DefaultWaitResponseTimeoutMilliseconds,
+            int updateTimoutMilliseconds = DefaultUpdateTimeoutMilliseconds, int maxErrorInRowCount = DefaultMaxErrorInRowCount) 
+            : this(TimeSpan.FromMilliseconds(waitResponseTimeoutMilliseconds),
+            TimeSpan.FromMilliseconds(updateTimoutMilliseconds), maxErrorInRowCount) { }
+        
 
-        public static DefaultDeviceUpdatePolicy Create(TimeSpan waitTimeout, MasterDeviceManager masterDeviceManager, ILog log)
-        {
-            if (masterDeviceManager.SlaveDevices.IsEmpty())
-                // todo: create a custom exception
-                throw new Exception("Master device should contain at least 1 slave device");
-            
-            return new DefaultDeviceUpdatePolicy(waitTimeout, masterDeviceManager, new PrefixLog(log, "[Device Update Policy]"));
-        }
-
-        public NandakaDevice GetNextDevice()
+        public NandakaDevice GetNextDevice(MasterDeviceManager manager, ILog log, out bool isUpdateCycleCompleted)
         {
             while (true)
             {
                 if (!_enumerator.MoveNext())
                 {
-                    _enumerator = GetNextEnumerator();
+                    UpdateEnumerator(manager);
                     continue;
                 }
 
-                NandakaDevice nextDevice = _enumerator.Current?.Device;
+                NandakaDevice nextDevice = _enumerator.Current;
+                if (nextDevice == null)
+                    // todo: create a custom exception
+                    throw new Exception("Next device is null");
 
-                if (nextDevice?.State != DeviceState.Connected)
+                if (nextDevice.State != DeviceState.Connected)
                     continue;
 
-                return _enumerator.Current.Device;
+                isUpdateCycleCompleted = nextDevice.Address == _lastDeviceInCycle.Address;
+
+                return _enumerator.Current;
             }
         }
 
-        public void OnMessageReceived(NandakaDevice device)
+        public void OnMessageReceived(NandakaDevice device, ILog log)
         {
-            DeviceInfo deviceInfo = GetDeviceInfo(device);
-            deviceInfo.ClearErrorCounter();
+            device.ErrorCounter.Clear();
         }
 
-        public void OnErrorOccured(NandakaDevice device, DeviceError error)
+        public void OnErrorOccured(NandakaDevice device, DeviceError error, ILog log)
         {
-            _log.AppendMessage(LogMessageType.Error, $"Error occured with {device}. Reason: {error}");
+            log.AppendMessage(LogMessageType.Error, $"Error occured with {device}. Reason: {error}");
             
-            DeviceInfo deviceInfo = GetDeviceInfo(device);
-            if (!deviceInfo.IsDeviceShouldBeStopped(error, MaxErrorInRow))
+            if (!IsDeviceShouldBeStopped(device, error))
                 return;
             
             switch (error)
@@ -84,45 +92,51 @@ namespace Nandaka.Core.Device
                     break;
             }
             
-            _log.AppendMessage(LogMessageType.Error, $"Device has reached the max number of errors. {device} will be disconnected");
+            log.AppendMessage(LogMessageType.Error, $"Device has reached the max number of errors. {device} will be disconnected");
         }
 
-        public void OnUnexpectedDeviceResponse(int expectedDeviceAddress, int responseDeviceAddress)
+        public void OnUnexpectedDeviceResponse(MasterDeviceManager manager, NandakaDevice expectedDevice, int responseDeviceAddress, ILog log)
         {
-            _log.AppendMessage(LogMessageType.Warning, $"Message from unexpected device {responseDeviceAddress} received");
-            
-            DeviceInfo responseDeviceInfo = FindDeviceInfo(responseDeviceAddress);
-            if (responseDeviceInfo != null && responseDeviceInfo.IsDeviceSkipPreviousMessage())
+            log.AppendMessage(LogMessageType.Warning, $"Message from unexpected device {responseDeviceAddress} received");
+
+            NandakaDevice responseDevice = manager.SlaveDevices.FirstOrDefault(device => device.Address == responseDeviceAddress);
+            if (responseDevice != null && IsDeviceSkipPreviousMessage(responseDevice))
             {
-                _log.AppendMessage(LogMessageType.Error,
-                    $"Device {responseDeviceAddress} is responding too long and will be disconnected");
-                responseDeviceInfo.Device.State = DeviceState.Corrupted;
+                log.AppendMessage(LogMessageType.Error,
+                    $"Device {responseDevice} is responding too long and will be disconnected");
+                responseDevice.State = DeviceState.Corrupted;
                 return;
             }
 
-            _log.AppendMessage(LogMessageType.Error, $"Device {expectedDeviceAddress}");
-            
-            NandakaDevice exceptedDevice = GetDeviceInfo(expectedDeviceAddress).Device;
-            exceptedDevice.State = DeviceState.Corrupted;
+            log.AppendMessage(LogMessageType.Error, $"Device {expectedDevice} response with wrong address");
+            expectedDevice.State = DeviceState.Corrupted;
+        }
+        
+        private bool IsDeviceShouldBeStopped(NandakaDevice device, DeviceError newError)
+        {
+            int errorCount = device.ErrorCounter[newError];
+            device.ErrorCounter[newError] = errorCount + 1;
+
+            return errorCount > _maxErrorInRowCount;
         }
 
-
-        private IEnumerator<DeviceInfo> GetNextEnumerator()
+        private void UpdateEnumerator(MasterDeviceManager manager)
         {
-            if (_devicesToUpdate.All(deviceInfo => deviceInfo.Device.State != DeviceState.Connected))
+            IEnumerable<NandakaDevice> devicesToUpdate = manager.SlaveDevices
+                .Where(device => device.State == DeviceState.Connected)
+                .ToArray();
+            
+            if (devicesToUpdate.All(device => device.State != DeviceState.Connected))
                 // todo: create a custom exception
                 throw new Exception("All devices is not connected");
 
-            return _devicesToUpdate.GetEnumerator();
+            _lastDeviceInCycle = devicesToUpdate.Last();
+            _enumerator = devicesToUpdate.GetEnumerator();
         }
-
-        private DeviceInfo GetDeviceInfo(NandakaDevice device)
-            => GetDeviceInfo(device.Address);
-
-        private DeviceInfo GetDeviceInfo(int deviceAddress)
-            => _devicesToUpdate.First(deviceInfo => deviceInfo.Device.Address == deviceAddress);
-
-        private DeviceInfo FindDeviceInfo(int deviceAddress)
-            => _devicesToUpdate.FirstOrDefault(deviceInfo => deviceInfo.Device.Address == deviceAddress);
+        
+        private static bool IsDeviceSkipPreviousMessage(NandakaDevice device)
+        {
+            return device.ErrorCounter.ContainsKey(DeviceError.NotResponding);
+        }
     }
 }

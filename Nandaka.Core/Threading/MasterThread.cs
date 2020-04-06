@@ -10,29 +10,28 @@ namespace Nandaka.Core.Threading
 {
     internal class MasterThread : IDisposable
     {
-        private readonly MasterDeviceManager _masterDeviceManager;
         private readonly Dictionary<int, MasterSession> _deviceSessions;
-        private readonly IDeviceUpdatePolicy _updatePolicy;
+        private readonly MasterDeviceDispatcher _dispatcher;
         private readonly ILog _log;
 
         private readonly Thread _thread;
         private bool _isStopped;
 
-        private MasterThread(MasterDeviceManager masterDeviceManager, IProtocol protocol, IDeviceUpdatePolicy updatePolicy)
+        private MasterThread(MasterDeviceManager manager, MasterDeviceDispatcher dispatcher, IProtocol protocol, ILog log)
         {
-            _masterDeviceManager = masterDeviceManager;
-            _updatePolicy = updatePolicy;
-            _log = new PrefixLog(Log.Instance, $"[{masterDeviceManager.Name}Thread]");
-            _deviceSessions = _masterDeviceManager.SlaveDevices
-                .ToDictionary(device => device.Address,
-                    device => new MasterSession(protocol, device, updatePolicy, _log));
-
-            _thread = new Thread(Routine) { IsBackground = true};
+            _dispatcher = dispatcher;
+            _log = log;
+            _deviceSessions = manager.SlaveDevices.ToDictionary(device => device.Address,
+                    device => new MasterSession(protocol, device, dispatcher, _log));
+            
+            _thread = new Thread(Routine) { IsBackground = true };
         }
 
-        public static MasterThread Create(MasterDeviceManager masterDeviceManager, IProtocol protocol)
+        public static MasterThread Create(MasterDeviceManager deviceManager, IProtocol protocol, IDeviceUpdatePolicy updatePolicy, ILog log)
         {
-            throw new NotImplementedException();
+            var threadLog = new PrefixLog(log, "[Thread]");
+            var dispatcher = MasterDeviceDispatcher.Create(deviceManager, updatePolicy, threadLog);
+            return new MasterThread(deviceManager, dispatcher, protocol, threadLog);
         }
 
         public void StartRoutine() => _thread.Start();
@@ -50,7 +49,7 @@ namespace Nandaka.Core.Threading
                     if (_isStopped)
                         break;
 
-                    NandakaDevice device = _updatePolicy.GetNextDevice();
+                    NandakaDevice device = _dispatcher.GetNextDevice();
 
                     _log.AppendMessage(LogMessageType.Info, $"Set current device: {device}");
 
@@ -77,12 +76,12 @@ namespace Nandaka.Core.Threading
                 else
                     session.SendNextMessage();
                 
-                _updatePolicy.OnMessageReceived(device);
+                _dispatcher.OnMessageReceived(device);
             }
             // todo: refactor with exception handling system.
             catch (ApplicationException expectedException)
             {
-                _updatePolicy.OnErrorOccured(device, DeviceError.NotResponding);
+                _dispatcher.OnErrorOccured(device, DeviceError.NotResponding);
                 // Back specific message in specific message queue.
                 if (specificMessage != null)
                     device.SendSpecific(specificMessage, false);

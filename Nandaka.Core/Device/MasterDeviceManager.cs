@@ -1,25 +1,29 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Linq;
+using Nandaka.Core.Protocol;
+using Nandaka.Core.Threading;
 
 namespace Nandaka.Core.Device
 {
-    public sealed class MasterDeviceManager
+    public abstract class MasterDeviceManager
     {
-        private readonly ObservableCollection<NandakaDevice> _slaveDevices;
+        private readonly ILog _log;
 
-        public IReadOnlyCollection<NandakaDevice> SlaveDevices => _slaveDevices;
-        public string Name { get; }
+        private MasterThread _thread;
 
-        private MasterDeviceManager(IEnumerable<NandakaDevice> slaveDevices, string name)
+        public IReadOnlyCollection<NandakaDevice> SlaveDevices { get; }
+
+        protected MasterDeviceManager(IEnumerable<NandakaDevice> slaveDevices, ILog log)
         {
-            Name = name;
-            _slaveDevices = new ObservableCollection<NandakaDevice>(slaveDevices);
+            _log = log;
+            SlaveDevices = slaveDevices.ToArray();
         }
 
-        public static MasterDeviceManager Start(IEnumerable<NandakaDevice> slaveDevices, string name)
+        public void Start(IProtocol protocol, IDeviceUpdatePolicy updatePolicy)
         {
-            // todo: start thread logic
-            return new MasterDeviceManager(slaveDevices, name);
+            _log.AppendMessage(LogMessageType.Info, "Starting thread");
+            _thread = MasterThread.Create(this, protocol, updatePolicy, _log);
+            _thread.StartRoutine();
         }
     }
 }

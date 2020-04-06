@@ -12,17 +12,17 @@ namespace Nandaka.Core.Session
     {
         private readonly ILog _log;
         private readonly IRegistersUpdatePolicy _registersUpdatePolicy;
-        private readonly IDeviceUpdatePolicy _deviceUpdatePolicy;
+        private readonly MasterDeviceDispatcher _dispatcher;
         private readonly IProtocol _protocol;
         private readonly NandakaDevice _slaveDevice;
 
-        public MasterSession(IProtocol protocol, NandakaDevice slaveDevice, IDeviceUpdatePolicy deviceUpdatePolicy, ILog log)
+        public MasterSession(IProtocol protocol, NandakaDevice slaveDevice, MasterDeviceDispatcher dispatcher, ILog log)
         {
-            _log = new PrefixLog(log, $"{slaveDevice.Name} Session");
+            _log = new PrefixLog(log, $"[{slaveDevice.Name} Session]");
             _protocol = protocol;
             _slaveDevice = slaveDevice;
             _registersUpdatePolicy = slaveDevice.UpdatePolicy;
-            _deviceUpdatePolicy = deviceUpdatePolicy;
+            _dispatcher = dispatcher;
         }
 
         public void SendNextMessage()
@@ -38,7 +38,7 @@ namespace Nandaka.Core.Session
 
                 while (true)
                 {
-                    if (!listener.WaitMessage(_deviceUpdatePolicy.WaitTimeout, out IMessage receivedMessage))
+                    if (!listener.WaitMessage(_dispatcher.RequestTimeout, out IMessage receivedMessage))
                         // todo: create a custom exception
                         throw new Exception("Device Not responding");
 
@@ -48,7 +48,7 @@ namespace Nandaka.Core.Session
 
                     if (receivedMessage.SlaveDeviceAddress != _slaveDevice.Address)
                     {
-                        _deviceUpdatePolicy.OnUnexpectedDeviceResponse(_slaveDevice.Address,
+                        _dispatcher.OnUnexpectedDeviceResponse(_slaveDevice,
                             receivedMessage.SlaveDeviceAddress);
                         continue;
                     }
@@ -76,7 +76,7 @@ namespace Nandaka.Core.Session
 
                 while (true)
                 {
-                    if (!listener.WaitMessage(_deviceUpdatePolicy.WaitTimeout, out IMessage receivedMessage))
+                    if (!listener.WaitMessage(_dispatcher.RequestTimeout, out IMessage receivedMessage))
                         // todo: create a custom exception
                         throw new Exception("Device not responding");
 
@@ -86,7 +86,7 @@ namespace Nandaka.Core.Session
 
                     if (receivedMessage.SlaveDeviceAddress != _slaveDevice.Address)
                     {
-                        _deviceUpdatePolicy.OnUnexpectedDeviceResponse(_slaveDevice.Address,
+                        _dispatcher.OnUnexpectedDeviceResponse(_slaveDevice,
                             receivedMessage.SlaveDeviceAddress);
                         continue;
                     }

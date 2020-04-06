@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -18,6 +19,7 @@ namespace Nandaka.Core.Device
         public int Address { get; }
         internal IRegistersUpdatePolicy UpdatePolicy { get; }
         public DeviceState State { get; set; }
+        public Dictionary<DeviceError, int> ErrorCounter { get; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -29,6 +31,7 @@ namespace Nandaka.Core.Device
             UpdatePolicy = updatePolicy;
             _specificMessageHandler = specificMessageHandler;
             _specificMessages = new ConcurrentQueue<ISpecificMessage>();
+            ErrorCounter = new Dictionary<DeviceError, int>();
             State = state;
         }
 
