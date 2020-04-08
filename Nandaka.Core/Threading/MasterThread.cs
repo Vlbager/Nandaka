@@ -72,9 +72,9 @@ namespace Nandaka.Core.Threading
             try
             {
                 if (device.TryGetSpecific(out specificMessage))
-                    session.SendSpecificMessage(specificMessage);
+                    session.ProcessSpecificMessage(specificMessage);
                 else
-                    session.SendNextMessage();
+                    session.ProcessNextMessage();
                 
                 _dispatcher.OnMessageReceived(device);
             }

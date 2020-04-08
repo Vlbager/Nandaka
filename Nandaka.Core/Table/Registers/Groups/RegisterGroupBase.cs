@@ -31,6 +31,8 @@ namespace Nandaka.Core.Table
 
         public abstract void Update(IReadOnlyCollection<IRegister> registersToUpdate);
 
+        public abstract void UpdateWithoutValues();
+
         public abstract IReadOnlyCollection<IRegister> GetRawRegisters();
     }
 }

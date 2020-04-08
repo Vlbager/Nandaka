@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Nandaka.Core.Device;
+using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Table;
 
@@ -27,16 +28,70 @@ namespace Nandaka.Core.Session
             return new SlaveSession(device, protocol, sessionLog);
         }
         
-        public void ListenNextMessage()
+        public void ProcessNextMessage()
         {
             _listener.WaitMessage(out IMessage receivedMessage);
             
             //todo: processing messages + logger
 
-            if (receivedMessage is IRawRegisterMessage registerMessage)
+            switch (receivedMessage)
             {
+                case IReceivedMessage registerMessage:
+                    ProcessRegisterMessage(registerMessage);
+                    break;
                 
+                case ISpecificMessage specificMessage:
+                    ProcessSpecificMessage(specificMessage);
+                    break;
             }
+        }
+
+        private void ProcessRegisterMessage(IReceivedMessage registerMessage)
+        {
+            try
+            {
+                ProcessRegisterMessageInternal(registerMessage);
+            }
+            // todo: exception handling system
+            catch (Exception exception)
+            {
+                var errorMessage = new CommonErrorMessage(_device.Address, MessageType.Response, ErrorType.InvalidRegisterAddress);
+                _protocol.SendMessage(errorMessage);
+            }
+        }
+
+        private void ProcessRegisterMessageInternal(IReceivedMessage registerMessage)
+        {
+            if (registerMessage.Type != MessageType.Request)
+                // todo: create a custom exception
+                throw new Exception("Wrong message type received");
+
+            IReadOnlyDictionary<IRegisterGroup, IRegister[]> requestMap =
+                _device.RegisterGroups.MapRegistersToPossibleGroups(registerMessage.Registers);
+
+            switch (registerMessage.OperationType)
+            {
+                case OperationType.Write:
+                    requestMap.Update();
+                    break;
+                
+                case OperationType.Read:
+                    requestMap.UpdateWithoutValues();
+                    break;
+                
+                default:
+                    // todo: create a custom exception
+                    throw new Exception("Wrong operation type");
+            }
+
+            var response = new CommonMessage(_device.Address, MessageType.Response, registerMessage.OperationType, requestMap.Keys);
+            _protocol.SendMessage(response);
+        }
+
+        private void ProcessSpecificMessage(ISpecificMessage specificMessage)
+        {
+            _device.OnSpecificMessageReceived(specificMessage);
+            // todo: response on specific message?
         }
 
         public void Dispose()

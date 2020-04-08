@@ -3,9 +3,9 @@ using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Session
 {
-    public interface IRawRegisterMessage : IMessage
+    public interface IReceivedMessage : IMessage
     {
-        IReadOnlyCollection<IRegister> Registers { get; }
+        IReadOnlyList<IRegister> Registers { get; }
         OperationType OperationType { get; }
     }
 }

@@ -69,18 +69,18 @@ namespace Nandaka.Tests.MilliGanjubus
             // Asserts
             Assert.Equal(1, _messageCount);
             Assert.Equal(messageType, _parsedMessage.Type);
-            var registerMessage = _parsedMessage as IRegisterMessage;
+            var registerMessage = _parsedMessage as IReceivedMessage;
             Assert.NotNull(registerMessage);
             Assert.Equal(registerMessage.OperationType, operationType);
             // Assert registers
             int byteIndex = 5;
-            foreach (IRegisterGroup registerGroup in registerMessage.RegisterGroups)
+            foreach (IRegister register in registerMessage.Registers)
             {
-                Assert.Equal(buffer[byteIndex++], registerGroup.Address);
+                Assert.Equal(buffer[byteIndex++], register.Address);
                 if (!withValues)
                     continue;
 
-                foreach (var byteInRegister in registerGroup.ToBytes())
+                foreach (var byteInRegister in register.ToBytes())
                     Assert.Equal(buffer[byteIndex++], byteInRegister);
             }
             // Assert all data bytes added to message.
@@ -124,20 +124,20 @@ namespace Nandaka.Tests.MilliGanjubus
             // Asserts
             Assert.Equal(1, _messageCount);
             Assert.Equal(messageType, _parsedMessage.Type);
-            var registerMessage = _parsedMessage as IRegisterMessage;
+            var registerMessage = _parsedMessage as IReceivedMessage;
             Assert.NotNull(registerMessage);
             Assert.Equal(registerMessage.OperationType, operationType);
             // Assert registers
             int byteIndex = 5;
             int currentAddress = buffer[byteIndex++];
             int lastAddress = buffer[byteIndex++];
-            foreach (IRegisterGroup registerGroup in registerMessage.RegisterGroups)
+            foreach (IRegister register in registerMessage.Registers)
             {
-                Assert.Equal(currentAddress++, registerGroup.Address);
+                Assert.Equal(currentAddress++, register.Address);
                 if (!withValues)
                     continue;
 
-                foreach (byte byteInRegister in registerGroup.ToBytes())
+                foreach (byte byteInRegister in register.ToBytes())
                     Assert.Equal(buffer[byteIndex++], byteInRegister);
             }
 

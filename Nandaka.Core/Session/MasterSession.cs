@@ -25,14 +25,14 @@ namespace Nandaka.Core.Session
             _dispatcher = dispatcher;
         }
 
-        public void SendNextMessage()
+        public void ProcessNextMessage()
         {
             using (var listener = new MessageListener(_protocol))
             {
                 IRegisterMessage message = _registersUpdatePolicy.GetNextMessage(_slaveDevice);
                 _log.AppendMessage(LogMessageType.Info, $"Sending {message.OperationType}-register message");
 
-                _protocol.SendMessage(message, out IReadOnlyCollection<IRegisterGroup> requestRegisters);
+                _protocol.SendAsPossible(message, out IReadOnlyCollection<IRegisterGroup> requestRegisters);
                 _log.AppendMessage(LogMessageType.Info, 
                     $"Register groups with addresses {requestRegisters.GetAllAddressesAsString()} was requested");
 
@@ -53,13 +53,17 @@ namespace Nandaka.Core.Session
                         continue;
                     }
 
-                    if (!(receivedMessage is IRawRegisterMessage response))
+                    if (!(receivedMessage is IReceivedMessage response))
                         // todo: create a custom exception
                         throw new Exception("Wrong response received");
 
+                    if (response.Type != MessageType.Response)
+                        // todo: create a custom exception
+                        throw new Exception("Wrong message type");
+
                     _log.AppendMessage(LogMessageType.Info, "Response received, updating registers");
 
-                    requestRegisters.UpdateAsMaster(response.Registers, message.OperationType);
+                    UpdateRegisters(requestRegisters, response.Registers, response.OperationType);
 
                     _log.AppendMessage(LogMessageType.Info, "Registers updated");
 
@@ -68,11 +72,11 @@ namespace Nandaka.Core.Session
             }
         }
 
-        public void SendSpecificMessage(ISpecificMessage message)
+        public void ProcessSpecificMessage(ISpecificMessage message)
         {
             using (var listener = new MessageListener(_protocol))
             {
-                _protocol.SendMessage(message, out _);
+                _protocol.SendMessage(message);
 
                 while (true)
                 {
@@ -99,6 +103,27 @@ namespace Nandaka.Core.Session
 
                     break;
                 }
+            }
+        }
+
+        private static void UpdateRegisters(IReadOnlyCollection<IRegisterGroup> groupsToUpdate, IReadOnlyCollection<IRegister> sourceRegisters,
+            OperationType operationType)
+        {
+            IReadOnlyDictionary<IRegisterGroup, IRegister[]> registerMap = groupsToUpdate.MapRegistersToAllGroups(sourceRegisters);
+
+            switch (operationType)
+            {
+                case OperationType.Read:
+                    registerMap.Update();
+                    break;
+                
+                case OperationType.Write:
+                    registerMap.UpdateWithoutValues();
+                    break;
+                
+                default:
+                    // todo: create a custom exception
+                    throw new Exception("Wrong operation type");
             }
         }
     }

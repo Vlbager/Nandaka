@@ -41,7 +41,7 @@ namespace Nandaka.Core.Threading
                     if (_isStopped)
                         break;
 
-                    _session.ListenNextMessage();
+                    _session.ProcessNextMessage();
                 }
             }
             catch (Exception exception)

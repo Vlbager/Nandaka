@@ -59,6 +59,15 @@ namespace Nandaka.Core.Table
             }
         }
 
+        public override void UpdateWithoutValues()
+        {
+            lock (_syncRoot)
+            {
+                Version++;
+                IsUpdated = true;
+            }
+        }
+
         private void SetValue(TValue value)
         {
             byte[] littleEndianBytes = ConvertValueToLittleEndianBytes(value);

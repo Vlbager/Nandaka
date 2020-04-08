@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Helpers
@@ -14,23 +13,20 @@ namespace Nandaka.Core.Helpers
             return String.Join(", ", addresses);
         }
 
-        public static void UpdateAsMaster(this IEnumerable<IRegisterGroup> targetGroups, IReadOnlyCollection<IRegister> sourceRegister,
-            OperationType operationType)
+        public static void Update(this IReadOnlyDictionary<IRegisterGroup, IRegister[]> registerMap)
         {
-            IReadOnlyDictionary<IRegisterGroup, IRegister[]> registerMap = MapRegisters(targetGroups, sourceRegister);
-
-            if (operationType == OperationType.Write)
-                return;
-            if (operationType != OperationType.Read)
-                // todo: create a custom exception
-                throw new Exception("Wrong Operation type");
-
             foreach (IRegisterGroup registerGroup in registerMap.Keys)
                 registerGroup.Update(registerMap[registerGroup]);
         }
+
+        public static void UpdateWithoutValues(this IReadOnlyDictionary<IRegisterGroup, IRegister[]> registerMap)
+        {
+            foreach (IRegisterGroup registerGroup in registerMap.Keys)
+                registerGroup.UpdateWithoutValues();
+        }
         
-        private static IReadOnlyDictionary<IRegisterGroup, IRegister[]> MapRegisters(IEnumerable<IRegisterGroup> mapAtGroups, 
-            IReadOnlyCollection<IRegister> mapRegisters)
+        public static IReadOnlyDictionary<IRegisterGroup, IRegister[]> MapRegistersToAllGroups(this IEnumerable<IRegisterGroup> mapAtGroups, 
+            IReadOnlyCollection<IRegister> registersToMap)
         {
             var result = new Dictionary<IRegisterGroup, IRegister[]>();
 
@@ -39,7 +35,7 @@ namespace Nandaka.Core.Helpers
                 foreach (IRegisterGroup group in mapAtGroups)
                 {
                     IEnumerable<IRegister> registers = Enumerable.Range(group.Address, group.Count)
-                        .Select(address => mapRegisters.Single(register => register.Address == address));
+                        .Select(address => registersToMap.Single(register => register.Address == address));
 
                     result.Add(group, registers.ToArray());
                 }
@@ -47,10 +43,50 @@ namespace Nandaka.Core.Helpers
             catch (InvalidOperationException exception)
             {
                 // todo: create a custom exception
-                throw new Exception("Wrong registers received", exception);
+                throw new Exception("Failed to map registers strictly", exception);
             }
 
             return result;
         }
+        
+        public static IReadOnlyDictionary<IRegisterGroup, IRegister[]> MapRegistersToPossibleGroups(
+            this IReadOnlyCollection<IRegisterGroup> matAtGroups,
+            IReadOnlyList<IRegister> registersToMap)
+        {
+            var result = new Dictionary<IRegisterGroup, IRegister[]>();
+
+            try
+            {
+                var registerIndex = 0;
+                while (registerIndex < registersToMap.Count)
+                {
+                    IRegister headRegister = registersToMap[registerIndex];
+
+                    IRegisterGroup deviceGroup = matAtGroups.FirstOrDefault(register => register.Address == headRegister.Address);
+                    if (deviceGroup == null)
+                        // todo: create a custom excepion
+                        throw new Exception($"Register group with address {headRegister.Address} was not found");
+
+                    IRegister[] requestRegistersInGroup = Enumerable.Range(deviceGroup.Address, deviceGroup.Count)
+                        .Select(address => registersToMap[registerIndex++].WithAddressAssert(address))
+                        .ToArray();
+
+                    result.Add(deviceGroup, requestRegistersInGroup);
+                }
+            }
+            catch (ApplicationException exception)
+            {
+                // todo: handle custom "register was not found" exception
+                throw;
+            }
+            catch (Exception exception)
+            {
+                // todo: create a custom exception
+                throw new Exception("Failed to map registers", exception);
+            }
+
+            return result;
+        }
+
     }
 }

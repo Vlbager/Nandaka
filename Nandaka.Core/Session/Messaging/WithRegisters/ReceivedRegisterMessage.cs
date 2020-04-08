@@ -3,14 +3,14 @@ using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Session
 {
-    public class ReceivedMessage : IRawRegisterMessage
+    public class ReceivedRegisterMessage : IReceivedMessage
     {
         public int SlaveDeviceAddress { get; }
         public MessageType Type { get; }
-        public IReadOnlyCollection<IRegister> Registers { get; }
+        public IReadOnlyList<IRegister> Registers { get; }
         public OperationType OperationType { get; }
 
-        public ReceivedMessage(int slaveDeviceAddress, MessageType type, OperationType operationType, IReadOnlyCollection<IRegister> registers)
+        public ReceivedRegisterMessage(int slaveDeviceAddress, MessageType type, OperationType operationType, IReadOnlyList<IRegister> registers)
         {
             SlaveDeviceAddress = slaveDeviceAddress;
             Type = type;

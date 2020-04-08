@@ -9,6 +9,7 @@ namespace Nandaka.Core.Table
         bool IsUpdated { get; set; }
         int Version { get; }
         void Update(IReadOnlyCollection<IRegister> registersToUpdate);
+        void UpdateWithoutValues();
         IReadOnlyCollection<IRegister> GetRawRegisters();
     }
 }

@@ -94,29 +94,29 @@ namespace Nandaka.MilliGanjubus.Components
                     throw new Exception("Wrong gByte");
             }
 
-            IReadOnlyCollection<IRegisterGroup> registers = isRange ? ParseAsRange(data, _info, withValues)
+            IReadOnlyList<IRegister> registers = isRange ? ParseAsRange(data, _info, withValues)
                 : ParseAsSeries(data, _info, withValues);
 
-            return new CommonMessage(deviceAddress, messageType, operationType, registers);
+            return new ReceivedRegisterMessage(deviceAddress, messageType, operationType, registers);
         }
 
-        private static IReadOnlyCollection<IRegisterGroup> ParseAsSeries(IReadOnlyList<byte> data, IProtocolInfo info, bool withValues)
+        private static IReadOnlyList<IRegister> ParseAsSeries(IReadOnlyList<byte> data, IProtocolInfo info, bool withValues)
         {
             // Look through all data bytes except CRC.
             byte packetSize = data[info.SizeOffset];
             int byteIndex = info.MinPacketLength;
 
-            var registers = new List<SingleRegisterGroup<byte>>();
+            var registers = new List<Register<byte>>();
 
             if (withValues)
             {
                 while (byteIndex < packetSize - 1)
-                    registers.Add(new SingleRegisterGroup<byte>(Register<byte>.CreateByte(data[byteIndex++], RegisterType.Raw, data[byteIndex++])));
+                    registers.Add(Register<byte>.CreateByte(data[byteIndex++], RegisterType.Raw, data[byteIndex++]));
             }
             else
             {
                 while (byteIndex < packetSize - 1)
-                    registers.Add(new SingleRegisterGroup<byte>(Register<byte>.CreateByte(data[byteIndex++], RegisterType.Raw)));
+                    registers.Add(Register<byte>.CreateByte(data[byteIndex++], RegisterType.Raw));
             }
 
             // Case of crc is register value.
@@ -126,7 +126,7 @@ namespace Nandaka.MilliGanjubus.Components
             return registers;
         }
 
-        private static IReadOnlyCollection<IRegisterGroup> ParseAsRange(IReadOnlyList<byte> data, IProtocolInfo info, bool withValues)
+        private static IReadOnlyList<IRegister> ParseAsRange(IReadOnlyList<byte> data, IProtocolInfo info, bool withValues)
         {
             // Ignore gByte.
             int currentByteIndex = info.DataOffset + 1;
@@ -146,13 +146,13 @@ namespace Nandaka.MilliGanjubus.Components
                 //todo: create a custom exception
                 throw new Exception("Wrong data amount");
 
-            var registers = new List<SingleRegisterGroup<byte>>(registersCount);
+            var registers = new List<Register<byte>>(registersCount);
 
             foreach (int address in Enumerable.Range(startAddress, registersCount))
             {
-                SingleRegisterGroup<byte> register = withValues
-                    ? new SingleRegisterGroup<byte>(Register<byte>.CreateByte(address, RegisterType.Raw, data[currentByteIndex++]))
-                    : new SingleRegisterGroup<byte>(Register<byte>.CreateByte(address, RegisterType.Raw));
+                Register<byte> register = withValues
+                    ? Register<byte>.CreateByte(address, RegisterType.Raw, data[currentByteIndex++])
+                    : Register<byte>.CreateByte(address, RegisterType.Raw);
 
                 registers.Add(register);
             }

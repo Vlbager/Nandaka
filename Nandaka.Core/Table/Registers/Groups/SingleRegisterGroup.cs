@@ -51,6 +51,15 @@ namespace Nandaka.Core.Table
             }
         }
 
+        public override void UpdateWithoutValues()
+        {
+            lock (_syncRoot)
+            {
+                Version++;
+                IsUpdated = true;
+            }
+        }
+
         public override IReadOnlyCollection<IRegister> GetRawRegisters()
         {
             return new[] {_register};
