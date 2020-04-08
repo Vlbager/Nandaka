@@ -1,67 +1,69 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Nandaka.Core.Helpers
 {
     public static class LittleEndianConverter
     {
-        public static short ToInt16(byte[] bytes)
+        public static short ToInt16(IEnumerable<byte> littleEndianBytes)
         {
-            throw new NotImplementedException();
+            return Convert.ToInt16(littleEndianBytes.OrderByDescending(b => b));
         }
 
-        public static ushort ToUInt16(byte[] bytes)
+        public static ushort ToUInt16(IEnumerable<byte> littleEndianBytes)
         {
-            throw new NotImplementedException();
+            return Convert.ToUInt16(littleEndianBytes.OrderByDescending(b => b));
         }
 
-        public static int ToInt32(byte[] bytes)
+        public static int ToInt32(IEnumerable<byte> littleEndianBytes)
         {
-            throw new NotImplementedException();
+            return Convert.ToInt32(littleEndianBytes.OrderByDescending(b => b));
         }
 
-        public static uint ToUInt32(byte[] bytes)
+        public static uint ToUInt32(IEnumerable<byte> littleEndianBytes)
         {
-            throw new NotImplementedException();
+            return Convert.ToUInt32(littleEndianBytes.OrderByDescending(b => b));
         }
 
-        public static long ToInt64(byte[] bytes)
+        public static long ToInt64(IEnumerable<byte> littleEndianBytes)
         {
-            throw new NotImplementedException();
+            return Convert.ToInt64(littleEndianBytes.OrderByDescending(b => b));
         }
 
-        public static ulong ToUInt64(byte[] bytes)
+        public static ulong ToUInt64(IEnumerable<byte> littleEndianBytes)
         {
-            throw new NotImplementedException();
+            return Convert.ToUInt64(littleEndianBytes.OrderByDescending(b => b));
         }
 
         public static byte[] GetBytes(ushort value)
         {
-            throw new NotImplementedException();
+            return BitConverter.GetBytes(value).OrderByDescending(b => b).ToArray();
         }
 
         public static byte[] GetBytes(short value)
         {
-            throw new NotImplementedException();
+            return BitConverter.GetBytes(value).OrderByDescending(b => b).ToArray();
         }
 
         public static byte[] GetBytes(uint value)
         {
-            throw new NotImplementedException();
+            return BitConverter.GetBytes(value).OrderByDescending(b => b).ToArray();
         }
 
         public static byte[] GetBytes(int value)
         {
-            throw new NotImplementedException();
+            return BitConverter.GetBytes(value).OrderByDescending(b => b).ToArray();
         }
 
         public static byte[] GetBytes(ulong value)
         {
-            throw new NotImplementedException();
+            return BitConverter.GetBytes(value).OrderByDescending(b => b).ToArray();
         }
 
         public static byte[] GetBytes(long value)
         {
-            throw new NotImplementedException();
+            return BitConverter.GetBytes(value).OrderByDescending(b => b).ToArray();
         }
 
         public static byte[] GetBytes(int value, int valueSizeInBytes)
