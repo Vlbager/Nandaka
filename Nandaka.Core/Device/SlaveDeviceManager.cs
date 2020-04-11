@@ -9,12 +9,11 @@ namespace Nandaka.Core.Device
 
         private SlaveThread _thread;
         
-        public NandakaDevice Device { get; }
+        public abstract NandakaDevice Device { get; }
 
-        protected SlaveDeviceManager(NandakaDevice device, ILog log)
+        protected SlaveDeviceManager()
         {
-            _log = log;
-            Device = device;
+            _log = Log.Instance;
         }
 
         public void Start(IProtocol protocol)

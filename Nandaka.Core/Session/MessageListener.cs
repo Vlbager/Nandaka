@@ -42,6 +42,9 @@ namespace Nandaka.Core.Session
                 return false;
 
             _receivedMessages.TryDequeue(out MessageReceivedEventArgs receivedEventArgs);
+            if (receivedEventArgs == null)
+                return false;
+            
             receivedMessage = receivedEventArgs.ReceivedMessage;
             
             return true;

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Nandaka.Core.Session;
@@ -13,9 +12,11 @@ namespace Nandaka.Core.Device
         private readonly ISpecificMessageHandler _specificMessageHandler;
         private readonly ConcurrentQueue<ISpecificMessage> _specificMessages;
 
-        public abstract ObservableCollection<IRegisterGroup> RegisterGroups { get; }
+        public abstract IReadOnlyCollection<IRegisterGroup> RegisterGroups { get; }
         public abstract string Name { get; }
-        public RegisterTable Table { get; }
+        // todo: check this.
+        // note: is really needed?
+        //public abstract RegisterTable Table { get; }
         public int Address { get; }
         internal IRegistersUpdatePolicy UpdatePolicy { get; }
         public DeviceState State { get; set; }
@@ -23,11 +24,9 @@ namespace Nandaka.Core.Device
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected NandakaDevice(int address, RegisterTable table, DeviceState state,
-            IRegistersUpdatePolicy updatePolicy, ISpecificMessageHandler specificMessageHandler)
+        protected NandakaDevice(int address, DeviceState state, IRegistersUpdatePolicy updatePolicy, ISpecificMessageHandler specificMessageHandler)
         {
             Address = address;
-            Table = table;
             UpdatePolicy = updatePolicy;
             _specificMessageHandler = specificMessageHandler;
             _specificMessages = new ConcurrentQueue<ISpecificMessage>();
@@ -35,8 +34,8 @@ namespace Nandaka.Core.Device
             State = state;
         }
 
-        protected NandakaDevice(int address, RegisterTable table, IRegistersUpdatePolicy updatePolicy, DeviceState state)
-            : this(address, table, state, updatePolicy, new NullSpecificMessageHandler()) { }
+        protected NandakaDevice(int address, IRegistersUpdatePolicy updatePolicy, DeviceState state)
+            : this(address, state, updatePolicy, new NullSpecificMessageHandler()) { }
 
         public void SendSpecific(ISpecificMessage message, bool isAsync)
         {

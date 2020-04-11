@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Threading;
 
@@ -11,12 +10,11 @@ namespace Nandaka.Core.Device
 
         private MasterThread _thread;
 
-        public IReadOnlyCollection<NandakaDevice> SlaveDevices { get; }
+        public abstract IReadOnlyCollection<NandakaDevice> SlaveDevices { get; }
 
-        protected MasterDeviceManager(IEnumerable<NandakaDevice> slaveDevices, ILog log)
+        protected MasterDeviceManager()
         {
-            _log = log;
-            SlaveDevices = slaveDevices.ToArray();
+            _log = Log.Instance;
         }
 
         public void Start(IProtocol protocol, IDeviceUpdatePolicy updatePolicy)

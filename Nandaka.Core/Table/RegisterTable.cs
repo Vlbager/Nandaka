@@ -14,9 +14,9 @@ namespace Nandaka.Core.Table
             _registers = new IRegister[tableSize];
         }
 
-        public static RegisterTable Create(int tableSize, IEnumerable<IRegister> registers)
+        public static RegisterTable Create(IReadOnlyCollection<IRegister> registers)
         {
-            var table = new RegisterTable(tableSize);
+            var table = new RegisterTable(registers.Count);
             table.SetRegisters(registers);
             return table;
         }

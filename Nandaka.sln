@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nandaka.Core", "Nandaka.Cor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nandaka.MilliGanjubus", "Nandaka.MilliGanjubus\Nandaka.MilliGanjubus.csproj", "{1AB4E83F-6FAD-4F42-8137-56CF7874BF25}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example", "Example\Example.csproj", "{0D8A88BE-B5DF-4194-A4D2-6389F31CC968}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{1AB4E83F-6FAD-4F42-8137-56CF7874BF25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1AB4E83F-6FAD-4F42-8137-56CF7874BF25}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1AB4E83F-6FAD-4F42-8137-56CF7874BF25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D8A88BE-B5DF-4194-A4D2-6389F31CC968}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D8A88BE-B5DF-4194-A4D2-6389F31CC968}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D8A88BE-B5DF-4194-A4D2-6389F31CC968}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D8A88BE-B5DF-4194-A4D2-6389F31CC968}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

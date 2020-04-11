@@ -30,9 +30,13 @@ namespace Nandaka.Core.Session
         
         public void ProcessNextMessage()
         {
-            _listener.WaitMessage(out IMessage receivedMessage);
+            // todo: fix sometimes returning null in received message.
+            if (!_listener.WaitMessage(out IMessage receivedMessage))
+                return;
             
-            //todo: processing messages + logger
+            // todo: logger
+            if (receivedMessage.Type != MessageType.Request || receivedMessage.SlaveDeviceAddress != _device.Address)
+                return;
 
             switch (receivedMessage)
             {
@@ -62,10 +66,6 @@ namespace Nandaka.Core.Session
 
         private void ProcessRegisterMessageInternal(IReceivedMessage registerMessage)
         {
-            if (registerMessage.Type != MessageType.Request)
-                // todo: create a custom exception
-                throw new Exception("Wrong message type received");
-
             IReadOnlyDictionary<IRegisterGroup, IRegister[]> requestMap =
                 _device.RegisterGroups.MapRegistersToPossibleGroups(registerMessage.Registers);
 

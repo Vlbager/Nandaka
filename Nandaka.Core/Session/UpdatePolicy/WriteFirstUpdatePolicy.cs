@@ -31,7 +31,17 @@ namespace Nandaka.Core.Session
                 .ThenBy(group => group.Address)
                 .ToArray();
 
-            return new CommonMessage(device.Address, MessageType.Request, OperationType.Read, readOnlyGroupsToUpdate);
+            if (!readOnlyGroupsToUpdate.IsEmpty())
+                return new CommonMessage(device.Address, MessageType.Request, OperationType.Read, readOnlyGroupsToUpdate);
+            
+            // todo: think and discuss about this.
+            // if there are not read only registers to update, force update write only registers.
+            IRegisterGroup[] dartWaderRegisterGroups = device.RegisterGroups
+                .Where(group => group.RegisterType == RegisterType.WriteOnly)
+                .OrderBy(group => group.Address)
+                .ToArray();
+
+            return new CommonMessage(device.Address, MessageType.Request, OperationType.Write, dartWaderRegisterGroups);
         }
     }
 }

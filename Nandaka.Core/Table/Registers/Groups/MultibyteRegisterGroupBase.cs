@@ -40,18 +40,18 @@ namespace Nandaka.Core.Table
 
         public override void Update(IReadOnlyCollection<IRegister> registersToUpdate)
         {
-            if (!(registersToUpdate is IReadOnlyCollection<Register<byte>> byteRegistersToUpdate))
-                // todo: create a custom exception
-                throw new Exception("Wrong registers type");
-
             lock (_syncRoot)
             {
                 foreach (Register<byte> storedRegister in _registers)
                 {
-                    Register<byte> registerToUpdate = byteRegistersToUpdate
+                    IRegister registerToUpdate = registersToUpdate
                             .Single(register => register.Address == storedRegister.Address);
+                    
+                    if (!(registerToUpdate is IValuedRegister<byte> byteRegisterToUpdate))
+                        // todo: create a custom exception
+                        throw new Exception("Wrong register type");
 
-                    storedRegister.Value = registerToUpdate.Value;
+                    storedRegister.Value = byteRegisterToUpdate.Value;
                 }
 
                 Version++;

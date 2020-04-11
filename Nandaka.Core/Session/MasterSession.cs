@@ -42,6 +42,9 @@ namespace Nandaka.Core.Session
                         // todo: create a custom exception
                         throw new Exception("Device Not responding");
 
+                    if (receivedMessage.Type != MessageType.Response)
+                        continue;
+                    
                     // All high priority messages should be handled in separate thread.
                     if (receivedMessage is HighPriorityMessage)
                         continue;
@@ -56,10 +59,6 @@ namespace Nandaka.Core.Session
                     if (!(receivedMessage is IReceivedMessage response))
                         // todo: create a custom exception
                         throw new Exception("Wrong response received");
-
-                    if (response.Type != MessageType.Response)
-                        // todo: create a custom exception
-                        throw new Exception("Wrong message type");
 
                     _log.AppendMessage(LogMessageType.Info, "Response received, updating registers");
 
@@ -83,6 +82,9 @@ namespace Nandaka.Core.Session
                     if (!listener.WaitMessage(_dispatcher.RequestTimeout, out IMessage receivedMessage))
                         // todo: create a custom exception
                         throw new Exception("Device not responding");
+                    
+                    if (receivedMessage.Type != MessageType.Response)
+                        continue;
 
                     // All high priority messages should be handled in separate thread.
                     if (receivedMessage is HighPriorityMessage)

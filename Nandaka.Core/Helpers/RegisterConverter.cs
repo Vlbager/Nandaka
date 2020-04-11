@@ -56,7 +56,7 @@ namespace Nandaka.Core.Helpers
 
             foreach (IRegisterGroup registerGroup in registerGroups)
             {
-                int groupSize = GetGroupSize(registerGroup, info);
+                int groupSize = GetGroupSizeAsSeries(registerGroup, info);
 
                 if (result.Count + groupSize > info.MaxDataLength)
                     break;
@@ -82,21 +82,24 @@ namespace Nandaka.Core.Helpers
         public static bool IsRange(IReadOnlyCollection<IRegisterGroup> registerGroups, IProtocolInfo info)
         {
             var registerInRangeCount = 0;
-            var dataSize = 0;
+            // Already includes first and last registers addresses.
+            int dataSize = 2 * info.AddressSize;
 
             int nextAddress = registerGroups.First().Address;
             foreach (IRegisterGroup registerGroup in registerGroups)
             {
-                if (registerGroup.Address != nextAddress)
-                    return false;
+                foreach (IRegister register in registerGroup.GetRawRegisters())
+                {
+                    if (register.Address != nextAddress)
+                        return false;
 
-                dataSize += GetGroupSize(registerGroup, info);
+                    nextAddress++;
+                    registerInRangeCount++;
+                }
+                
+                dataSize += registerGroup.DataSize;
                 if (dataSize > info.MaxDataLength)
                     break;
-
-                nextAddress += registerGroup.Count;
-
-                registerInRangeCount++;
             }
 
             if (registerInRangeCount < info.MinimumRangeRegisterCount)
@@ -105,9 +108,9 @@ namespace Nandaka.Core.Helpers
             return true;
         }
 
-        private static int GetGroupSize(IRegisterGroup registerGroup, IProtocolInfo info)
+        private static int GetGroupSizeAsSeries(IRegisterGroup registerGroup, IProtocolInfo info)
         {
-            return registerGroup.Count * (info.AddressSize + registerGroup.DataSize);
+            return info.AddressSize + registerGroup.DataSize;
         }
 
         private static byte[] GetRegisterAddress(int address, IProtocolInfo info)
