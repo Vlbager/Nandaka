@@ -8,32 +8,32 @@ namespace Nandaka.Core.Helpers
     {
         public static short ToInt16(IEnumerable<byte> littleEndianBytes)
         {
-            return Convert.ToInt16(littleEndianBytes.OrderByDescending(b => b));
+            return BitConverter.ToInt16(littleEndianBytes.RevertBytes(), 0);
         }
 
         public static ushort ToUInt16(IEnumerable<byte> littleEndianBytes)
         {
-            return Convert.ToUInt16(littleEndianBytes.OrderByDescending(b => b));
+            return BitConverter.ToUInt16(littleEndianBytes.RevertBytes(), 0);
         }
 
         public static int ToInt32(IEnumerable<byte> littleEndianBytes)
         {
-            return Convert.ToInt32(littleEndianBytes.OrderByDescending(b => b));
+            return BitConverter.ToInt32(littleEndianBytes.RevertBytes(), 0);
         }
 
         public static uint ToUInt32(IEnumerable<byte> littleEndianBytes)
         {
-            return Convert.ToUInt32(littleEndianBytes.OrderByDescending(b => b));
+            return BitConverter.ToUInt32(littleEndianBytes.RevertBytes(), 0);
         }
 
         public static long ToInt64(IEnumerable<byte> littleEndianBytes)
         {
-            return Convert.ToInt64(littleEndianBytes.OrderByDescending(b => b));
+            return BitConverter.ToInt64(littleEndianBytes.RevertBytes(), 0);
         }
 
         public static ulong ToUInt64(IEnumerable<byte> littleEndianBytes)
         {
-            return Convert.ToUInt64(littleEndianBytes.OrderByDescending(b => b));
+            return BitConverter.ToUInt64(littleEndianBytes.RevertBytes(), 0);
         }
 
         public static byte[] GetBytes(ushort value)

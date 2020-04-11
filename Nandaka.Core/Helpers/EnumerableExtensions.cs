@@ -18,8 +18,10 @@ namespace Nandaka.Core.Helpers
         }
 
         public static bool IsEmpty<TSource>(this IEnumerable<TSource> source)
-        {
-            return !source.Any();
-        }
+            => !source.Any();
+        
+
+        public static byte[] RevertBytes(this IEnumerable<byte> source)
+            => source.OrderByDescending(b => b).ToArray();
     }
 }
