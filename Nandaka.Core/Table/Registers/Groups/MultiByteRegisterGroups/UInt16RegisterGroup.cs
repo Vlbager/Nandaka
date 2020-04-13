@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Nandaka.Core.Helpers;
 
 namespace Nandaka.Core.Table
@@ -7,6 +8,13 @@ namespace Nandaka.Core.Table
     {
         public UInt16RegisterGroup(IReadOnlyCollection<Register<byte>> registers)
             : base(registers) { }
+        
+        public static UInt16RegisterGroup CreateNew(int groupAddress, RegisterType type)
+        {
+            return new UInt16RegisterGroup(Enumerable.Range(groupAddress, sizeof(ushort))
+                .Select(address => Register<byte>.CreateByte(address, type))
+                .ToArray());
+        }
 
         protected override byte[] ConvertValueToLittleEndianBytes(ushort value)
             => LittleEndianConverter.GetBytes(value);

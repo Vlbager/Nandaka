@@ -43,23 +43,14 @@ namespace Example
         private ConcreteDevice(int address, IRegistersUpdatePolicy updatePolicy, DeviceState state) 
             : base(address, updatePolicy, state)
         {
-            // todo: hide creation logic in group creation methods.
-            // Random unique addresses and values.
-            _byteGroup = new UInt8RegisterGroup(Register<byte>.CreateByte(1, RegisterType.WriteOnly));
-            
-            _intGroup = new Int32RegisterGroup(Enumerable.Range(2, 4)
-                .Select(register => Register<byte>.CreateByte(register, RegisterType.WriteOnly))
-                .ToArray());
-            
-            _shortGroup = new Int16RegisterGroup(Enumerable.Range(7, 2)
-                .Select(register => Register<byte>.CreateByte(register, RegisterType.ReadOnly))
-                .ToArray());
+            _byteGroup = UInt8RegisterGroup.CreateNew(1, RegisterType.WriteOnly);
+            _intGroup = Int32RegisterGroup.CreateNew(2, RegisterType.WriteOnly);
+            _shortGroup = Int16RegisterGroup.CreateNew(7, RegisterType.ReadOnly);
             
             _byteCollection = Enumerable.Range(13, 34)
-                .Select(registerAddress => new UInt8RegisterGroup(Register<byte>.CreateByte(registerAddress, RegisterType.ReadOnly)))
+                .Select(registerAddress => UInt8RegisterGroup.CreateNew(registerAddress, RegisterType.ReadOnly))
                 .ToArray();
             
-            // very dirty.
             RegisterGroups = new IRegisterGroup[]{_byteGroup, _intGroup, _shortGroup}.Concat(_byteCollection).ToArray();
         }
 

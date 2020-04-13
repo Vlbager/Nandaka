@@ -10,6 +10,9 @@
             _register = register;
         }
 
+        public static UInt8RegisterGroup CreateNew(int address, RegisterType type)
+            => new UInt8RegisterGroup(Register<byte>.CreateByte(address, type));
+
         protected override byte[] ConvertValueToLittleEndianBytes(byte value) 
             => new[] {value};
 
