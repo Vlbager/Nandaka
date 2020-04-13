@@ -23,7 +23,7 @@ namespace Nandaka.Core.Threading
         
         public static SlaveThread Create(NandakaDevice device, IProtocol protocol, ILog log)
         {
-            var threadLog = new PrefixLog(log, "[Thread]");
+            var threadLog = new PrefixLog(log, "[Slave]");
             var session = SlaveSession.Create(device, protocol, threadLog);
             return new SlaveThread(session, threadLog);
         }

@@ -29,7 +29,7 @@ namespace Nandaka.Core.Threading
 
         public static MasterThread Create(MasterDeviceManager deviceManager, IProtocol protocol, IDeviceUpdatePolicy updatePolicy, ILog log)
         {
-            var threadLog = new PrefixLog(log, "[Thread]");
+            var threadLog = new PrefixLog(log, "[Master]");
             var dispatcher = MasterDeviceDispatcher.Create(deviceManager, updatePolicy, threadLog);
             return new MasterThread(deviceManager, dispatcher, protocol, threadLog);
         }
