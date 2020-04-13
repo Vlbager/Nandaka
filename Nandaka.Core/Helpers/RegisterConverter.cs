@@ -8,41 +8,40 @@ namespace Nandaka.Core.Helpers
 {
     public static class RegisterConverter
     {
+        /// <summary>
+        /// Range represent sequence of registers ordered by address in row with structure:
+        /// first register address, last register address, register 1 value, register 2 value, ..., register n value. 
+        /// </summary>
         public static byte[] ComposeDataAsRange(IReadOnlyCollection<IRegisterGroup> registerGroups, IProtocolInfo info, IEnumerable<byte> dataHeader,
             bool withValues, out IReadOnlyCollection<IRegisterGroup> composedGroups)
         {
             var result = new List<byte>(dataHeader);
-
-            result.AddRange(GetRegisterAddress(registerGroups.First().Address, info));
-
-            if (!withValues)
-            {
-                result.AddRange(GetRegisterAddress(registerGroups.Last().Address, info));
-
-                composedGroups = Array.Empty<IRegisterGroup>();
-                return result.ToArray();
-            }
-
             var composedGroupList = new List<IRegisterGroup>();
 
-            int lastRegisterAddressResultIndex = result.Count;
+            result.AddRange(GetRegisterAddress(registerGroups.First().Address, info));
+            
+            int lastRegisterAddressIndex = result.Count;
+            // Temp address should be specified after the packet is formed.
+            result.AddRange(Enumerable.Repeat<byte>(0, info.AddressSize));
 
-            var lastAddedRegisterAddress = 0;
+            // Current packet size with last address.
+            int currentDataPacketSize = result.Count;
             foreach (IRegisterGroup registerGroup in registerGroups)
             {
-                byte[] groupData = registerGroup.ToBytes();
-
-                if (result.Count + groupData.Length + info.AddressSize > info.MaxDataLength)
+                if (currentDataPacketSize + registerGroup.DataSize > info.MaxDataLength)
                     break;
 
-                result.AddRange(groupData);
+                currentDataPacketSize += registerGroup.DataSize;
+
+                if (withValues)
+                    result.AddRange(registerGroup.ToBytes());
 
                 composedGroupList.Add(registerGroup);
-                lastAddedRegisterAddress = registerGroup.Address;
             }
 
-            byte[] endRangeAddress = GetRegisterAddress(lastAddedRegisterAddress, info);
-            result.InsertRange(lastRegisterAddressResultIndex, endRangeAddress);
+            byte[] endRangeAddress = GetRegisterAddress(composedGroupList.Last().GetLastRegisterAddress(), info);
+            foreach (int indexOffset in Enumerable.Range(0, info.AddressSize))
+                result[lastRegisterAddressIndex + indexOffset] = endRangeAddress[indexOffset];
 
             composedGroups = composedGroupList;
             return result.ToArray();
@@ -54,12 +53,15 @@ namespace Nandaka.Core.Helpers
             var result = new List<byte>(dataHeader);
             var composedGroupList = new List<IRegisterGroup>();
 
+            int currentDataPacketSize = result.Count;
             foreach (IRegisterGroup registerGroup in registerGroups)
             {
                 int groupSize = GetGroupSizeAsSeries(registerGroup, info);
 
-                if (result.Count + groupSize > info.MaxDataLength)
+                if (currentDataPacketSize + groupSize > info.MaxDataLength)
                     break;
+
+                currentDataPacketSize += groupSize;
 
                 foreach (IRegister register in registerGroup.GetRawRegisters())
                 {

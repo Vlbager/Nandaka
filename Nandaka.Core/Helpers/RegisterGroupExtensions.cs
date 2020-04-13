@@ -88,5 +88,7 @@ namespace Nandaka.Core.Helpers
             return result;
         }
 
+        public static int GetLastRegisterAddress(this IRegisterGroup registerGroup)
+            => registerGroup.GetRawRegisters().Last().Address;
     }
 }
