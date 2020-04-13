@@ -6,7 +6,7 @@ namespace Example
     {
         public ConcreteDevice ConcreteDevice { get; }
         
-        public override NandakaDevice Device => ConcreteDevice;
+        protected override NandakaDevice Device => ConcreteDevice;
         
         private ConcreteSlaveManager()
         {

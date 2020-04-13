@@ -6,7 +6,7 @@ using Nandaka.Core.Session;
 
 namespace Nandaka.Core.Threading
 {
-    internal class SlaveThread
+    internal class SlaveThread : IDisposable
     {
         private readonly SlaveSession _session;
         private readonly ILog _log;
@@ -14,7 +14,7 @@ namespace Nandaka.Core.Threading
         private readonly Thread _thread;
         private bool _isStopped;
         
-        public SlaveThread(SlaveSession session, ILog log)
+        private SlaveThread(SlaveSession session, ILog log)
         {
             _session = session;
             _log = log;
@@ -29,7 +29,6 @@ namespace Nandaka.Core.Threading
         }
 
         public void Start() => _thread.Start();
-        public void Stop() => _isStopped = true;
 
         // todo: logger
         private void Routine()
@@ -48,8 +47,14 @@ namespace Nandaka.Core.Threading
             {
                 _log.AppendMessage(LogMessageType.Error, "Unexpected error occured");
                 _log.AppendMessage(LogMessageType.Error, exception.ToString());
-                Stop();
+                Dispose();
             }
+        }
+
+        public void Dispose()
+        {
+            _session?.Dispose();
+            _isStopped = true;
         }
     }
 }

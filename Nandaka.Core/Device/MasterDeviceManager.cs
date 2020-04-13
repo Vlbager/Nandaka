@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Threading;
 
 namespace Nandaka.Core.Device
 {
-    public abstract class MasterDeviceManager
+    public abstract class MasterDeviceManager : IDisposable
     {
         private readonly ILog _log;
 
@@ -22,6 +23,11 @@ namespace Nandaka.Core.Device
             _log.AppendMessage(LogMessageType.Info, "Starting thread");
             _thread = MasterThread.Create(this, protocol, updatePolicy, _log);
             _thread.StartRoutine();
+        }
+
+        public void Dispose()
+        {
+            _thread?.Dispose();
         }
     }
 }

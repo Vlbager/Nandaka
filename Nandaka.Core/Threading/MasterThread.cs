@@ -36,10 +36,6 @@ namespace Nandaka.Core.Threading
 
         public void StartRoutine() => _thread.Start();
 
-        public void Join() => _thread.Join();
-
-        public void Stop() => _isStopped = true;
-
         private void Routine()
         {
             try
@@ -60,7 +56,7 @@ namespace Nandaka.Core.Threading
             {
                 _log.AppendMessage(LogMessageType.Error, "Unexpected error occured");
                 _log.AppendMessage(LogMessageType.Error, exception.ToString());
-                Stop();
+                Dispose();
             }
         }
 
@@ -90,7 +86,7 @@ namespace Nandaka.Core.Threading
 
         public void Dispose()
         {
-            Stop();
+            _isStopped = true;
         }
     }
 }
