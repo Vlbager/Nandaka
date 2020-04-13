@@ -23,7 +23,7 @@ namespace Nandaka.Core.Threading
         
         public static SlaveThread Create(NandakaDevice device, IProtocol protocol, ILog log)
         {
-            var threadLog = new PrefixLog(log, "[Slave]");
+            var threadLog = new PrefixLog(log, $"[{device.Name} Slave]");
             var session = SlaveSession.Create(device, protocol, threadLog);
             return new SlaveThread(session, threadLog);
         }
@@ -49,6 +49,8 @@ namespace Nandaka.Core.Threading
                 _log.AppendMessage(LogMessageType.Error, exception.ToString());
                 Dispose();
             }
+            
+            _log.AppendMessage(LogMessageType.Warning, $"Slave thread has been stopped");
         }
 
         public void Dispose()

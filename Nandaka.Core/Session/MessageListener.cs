@@ -42,6 +42,7 @@ namespace Nandaka.Core.Session
                 return false;
 
             _receivedMessages.TryDequeue(out MessageReceivedEventArgs receivedEventArgs);
+            // todo: debug this.
             if (receivedEventArgs == null)
                 return false;
             
@@ -58,6 +59,9 @@ namespace Nandaka.Core.Session
 
         private void OnMessageReceived(MessageReceivedEventArgs receivedMessageArgs)
         {
+            if (receivedMessageArgs == null)
+                return;
+            
             _receivedMessages.Enqueue(receivedMessageArgs);
             _resetEvent.Set();
         }

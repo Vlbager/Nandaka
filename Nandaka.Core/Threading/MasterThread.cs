@@ -58,6 +58,8 @@ namespace Nandaka.Core.Threading
                 _log.AppendMessage(LogMessageType.Error, exception.ToString());
                 Dispose();
             }
+            
+            _log.AppendMessage(LogMessageType.Warning, "Master thread has been stopped");
         }
 
         private void SendNextMessage(NandakaDevice device)

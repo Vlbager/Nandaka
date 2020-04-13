@@ -30,13 +30,13 @@ namespace Nandaka.Core.Session
         
         public void ProcessNextMessage()
         {
-            // todo: fix sometimes returning null in received message.
             if (!_listener.WaitMessage(out IMessage receivedMessage))
                 return;
             
-            // todo: logger
             if (receivedMessage.Type != MessageType.Request || receivedMessage.SlaveDeviceAddress != _device.Address)
                 return;
+            
+            _log.AppendMessage(LogMessageType.Info, $"Request message to device-{receivedMessage.SlaveDeviceAddress} received");
 
             switch (receivedMessage)
             {
@@ -54,11 +54,16 @@ namespace Nandaka.Core.Session
         {
             try
             {
+                _log.AppendMessage(LogMessageType.Info,$"Processing {registerMessage.OperationType}-request with {registerMessage.Registers.Count} registers");
+                
                 ProcessRegisterMessageInternal(registerMessage);
+                
+                _log.AppendMessage(LogMessageType.Info, "Message processed");
             }
             // todo: exception handling system
             catch (Exception exception)
             {
+                _log.AppendMessage(LogMessageType.Error, exception.ToString());
                 var errorMessage = new CommonErrorMessage(_device.Address, MessageType.Response, ErrorType.InvalidRegisterAddress);
                 _protocol.SendMessage(errorMessage);
             }
@@ -68,6 +73,8 @@ namespace Nandaka.Core.Session
         {
             IReadOnlyDictionary<IRegisterGroup, IRegister[]> requestMap =
                 _device.RegisterGroups.MapRegistersToPossibleGroups(registerMessage.Registers);
+            
+            _log.AppendMessage(LogMessageType.Info, "Updating registers...");
 
             switch (registerMessage.OperationType)
             {
@@ -84,14 +91,22 @@ namespace Nandaka.Core.Session
                     throw new Exception("Wrong operation type");
             }
 
+            _log.AppendMessage(LogMessageType.Info, "Registers updated. Sending response");
+            
             var response = new CommonMessage(_device.Address, MessageType.Response, registerMessage.OperationType, requestMap.Keys);
             _protocol.SendMessage(response);
+            
+            _log.AppendMessage(LogMessageType.Info, "Response has been successfully sent");
         }
 
         private void ProcessSpecificMessage(ISpecificMessage specificMessage)
         {
+            _log.AppendMessage(LogMessageType.Info,"Processing message as specific message");
+            
             _device.OnSpecificMessageReceived(specificMessage);
             // todo: response on specific message?
+            
+            _log.AppendMessage(LogMessageType.Warning, "Specific messages response has not been sent. Not Implemented");
         }
 
         public void Dispose()
