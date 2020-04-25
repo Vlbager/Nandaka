@@ -6,30 +6,31 @@ using Nandaka.Core.Session;
 
 namespace Nandaka.Core.Device
 {
-    public class MasterDeviceDispatcher
+    internal class MasterDeviceDispatcher
     {
-        private readonly MasterDeviceManager _manager;
         private readonly IDeviceUpdatePolicy _updatePolicy;
         private readonly ILog _log;
 
+        public IReadOnlyCollection<NandakaDevice> SlaveDevices { get; }
+
         public TimeSpan RequestTimeout => _updatePolicy.RequestTimeout;
         
-        private MasterDeviceDispatcher(MasterDeviceManager manager, IDeviceUpdatePolicy updatePolicy, ILog log)
+        private MasterDeviceDispatcher(IReadOnlyCollection<NandakaDevice> slaveDevices, IDeviceUpdatePolicy updatePolicy, ILog log)
         {
-            _manager = manager;
+            SlaveDevices = slaveDevices;
             _updatePolicy = updatePolicy;
             _log = log;
         }
 
-        public static MasterDeviceDispatcher Create(MasterDeviceManager manager, IDeviceUpdatePolicy updatePolicy, ILog log)
+        public static MasterDeviceDispatcher Create(IReadOnlyCollection<NandakaDevice> slaveDevices, IDeviceUpdatePolicy updatePolicy, ILog log)
         {
             var updaterLog = new PrefixLog(log, "[Dispatcher]");
-            return new MasterDeviceDispatcher(manager, updatePolicy, updaterLog);
+            return new MasterDeviceDispatcher(slaveDevices, updatePolicy, updaterLog);
         }
         
         public NandakaDevice GetNextDevice()
         {
-            NandakaDevice nextDevice = _updatePolicy.GetNextDevice(_manager, _log, out bool isUpdateCycleCompleted);
+            NandakaDevice nextDevice = _updatePolicy.GetNextDevice(SlaveDevices, _log, out bool isUpdateCycleCompleted);
             
             if (isUpdateCycleCompleted)
                 Thread.Sleep(_updatePolicy.UpdateTimeout);
@@ -49,7 +50,7 @@ namespace Nandaka.Core.Device
 
         public void OnUnexpectedDeviceResponse(NandakaDevice expectedDevice, int responseDeviceAddress)
         {
-            _updatePolicy.OnUnexpectedDeviceResponse(_manager, expectedDevice, responseDeviceAddress, _log);
+            _updatePolicy.OnUnexpectedDeviceResponse(SlaveDevices, expectedDevice, responseDeviceAddress, _log);
         }
     }
 }

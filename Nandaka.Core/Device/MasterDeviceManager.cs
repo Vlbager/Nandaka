@@ -21,7 +21,7 @@ namespace Nandaka.Core.Device
         public void Start(IProtocol protocol, IDeviceUpdatePolicy updatePolicy)
         {
             _log.AppendMessage(LogMessageType.Info, "Starting Master thread");
-            _thread = MasterThread.Create(this, protocol, updatePolicy, _log);
+            _thread = MasterThread.Create(SlaveDevices, protocol, updatePolicy, _log);
             _thread.StartRoutine();
         }
 

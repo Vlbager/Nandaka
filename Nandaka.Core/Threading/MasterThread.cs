@@ -17,21 +17,21 @@ namespace Nandaka.Core.Threading
         private readonly Thread _thread;
         private bool _isStopped;
 
-        private MasterThread(MasterDeviceManager manager, MasterDeviceDispatcher dispatcher, IProtocol protocol, ILog log)
+        private MasterThread(MasterDeviceDispatcher dispatcher, IProtocol protocol, ILog log)
         {
             _dispatcher = dispatcher;
             _log = log;
-            _deviceSessions = manager.SlaveDevices.ToDictionary(device => device.Address,
+            _deviceSessions = dispatcher.SlaveDevices.ToDictionary(device => device.Address,
                     device => new MasterSession(protocol, device, dispatcher, _log));
             
             _thread = new Thread(Routine) { IsBackground = true };
         }
 
-        public static MasterThread Create(MasterDeviceManager deviceManager, IProtocol protocol, IDeviceUpdatePolicy updatePolicy, ILog log)
+        public static MasterThread Create(IReadOnlyCollection<NandakaDevice> slaveDevices, IProtocol protocol, IDeviceUpdatePolicy updatePolicy, ILog log)
         {
             var threadLog = new PrefixLog(log, "[Master]");
-            var dispatcher = MasterDeviceDispatcher.Create(deviceManager, updatePolicy, threadLog);
-            return new MasterThread(deviceManager, dispatcher, protocol, threadLog);
+            var dispatcher = MasterDeviceDispatcher.Create(slaveDevices, updatePolicy, threadLog);
+            return new MasterThread(dispatcher, protocol, threadLog);
         }
 
         public void StartRoutine() => _thread.Start();

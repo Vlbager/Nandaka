@@ -7,7 +7,7 @@ using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Session
 {
-    public class SlaveSession : IDisposable
+    internal class SlaveSession : IDisposable
     {
         private readonly NandakaDevice _device;
         private readonly IProtocol _protocol;

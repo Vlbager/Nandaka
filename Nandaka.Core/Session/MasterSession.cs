@@ -8,7 +8,7 @@ using Nandaka.Core.Table;
 
 namespace Nandaka.Core.Session
 {
-    public class MasterSession
+    internal class MasterSession
     {
         private readonly ILog _log;
         private readonly IRegistersUpdatePolicy _registersUpdatePolicy;

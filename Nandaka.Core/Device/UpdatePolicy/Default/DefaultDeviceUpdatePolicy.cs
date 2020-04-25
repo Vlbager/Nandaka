@@ -40,13 +40,13 @@ namespace Nandaka.Core.Device
             TimeSpan.FromMilliseconds(updateTimoutMilliseconds), maxErrorInRowCount) { }
         
 
-        public NandakaDevice GetNextDevice(MasterDeviceManager manager, ILog log, out bool isUpdateCycleCompleted)
+        public NandakaDevice GetNextDevice(IReadOnlyCollection<NandakaDevice> slaveDevices, ILog log, out bool isUpdateCycleCompleted)
         {
             while (true)
             {
                 if (!_enumerator.MoveNext())
                 {
-                    UpdateEnumerator(manager);
+                    UpdateEnumerator(slaveDevices);
                     continue;
                 }
 
@@ -95,11 +95,11 @@ namespace Nandaka.Core.Device
             log.AppendMessage(LogMessageType.Error, $"Device has reached the max number of errors. {device} will be disconnected");
         }
 
-        public void OnUnexpectedDeviceResponse(MasterDeviceManager manager, NandakaDevice expectedDevice, int responseDeviceAddress, ILog log)
+        public void OnUnexpectedDeviceResponse(IReadOnlyCollection<NandakaDevice> slaveDevices, NandakaDevice expectedDevice, int responseDeviceAddress, ILog log)
         {
             log.AppendMessage(LogMessageType.Warning, $"Message from unexpected device {responseDeviceAddress} received");
 
-            NandakaDevice responseDevice = manager.SlaveDevices.FirstOrDefault(device => device.Address == responseDeviceAddress);
+            NandakaDevice responseDevice = slaveDevices.FirstOrDefault(device => device.Address == responseDeviceAddress);
             if (responseDevice != null && IsDeviceSkipPreviousMessage(responseDevice))
             {
                 log.AppendMessage(LogMessageType.Error,
@@ -120,9 +120,9 @@ namespace Nandaka.Core.Device
             return errorCount > _maxErrorInRowCount;
         }
 
-        private void UpdateEnumerator(MasterDeviceManager manager)
+        private void UpdateEnumerator(IReadOnlyCollection<NandakaDevice> slaveDevices)
         {
-            IEnumerable<NandakaDevice> devicesToUpdate = manager.SlaveDevices
+            IEnumerable<NandakaDevice> devicesToUpdate = slaveDevices
                 .Where(device => device.State == DeviceState.Connected)
                 .ToArray();
             
