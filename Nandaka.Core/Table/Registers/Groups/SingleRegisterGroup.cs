@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Nandaka.Core.Exceptions;
 
 namespace Nandaka.Core.Table
 {
@@ -40,8 +40,7 @@ namespace Nandaka.Core.Table
         {
             IRegister singleRegister = registersToUpdate.Single();
             if (!(singleRegister is Register<TValue> valuedRegister))
-                // todo: create a custom exception
-                throw new Exception("Wrong register type");
+                throw new InvalidRegistersException("Wrong register type");
 
             lock (_syncRoot)
             {

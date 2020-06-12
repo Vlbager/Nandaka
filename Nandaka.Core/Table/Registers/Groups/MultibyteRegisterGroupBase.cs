@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Nandaka.Core.Exceptions;
 
 namespace Nandaka.Core.Table
 {
@@ -48,8 +49,7 @@ namespace Nandaka.Core.Table
                             .Single(register => register.Address == storedRegister.Address);
                     
                     if (!(registerToUpdate is IValuedRegister<byte> byteRegisterToUpdate))
-                        // todo: create a custom exception
-                        throw new Exception("Wrong register type");
+                        throw new InvalidRegistersException("Wrong register type");
 
                     storedRegister.Value = byteRegisterToUpdate.Value;
                 }
@@ -99,8 +99,7 @@ namespace Nandaka.Core.Table
         {
             RegisterType type = registers.First().RegisterType;
             if (registers.Any(register => register.RegisterType != type))
-                // todo: create a custom exception.
-                throw new Exception("Registers in group must have same type");
+                throw new InvalidRegistersException("Registers in group must have same type");
         }
     }
 }

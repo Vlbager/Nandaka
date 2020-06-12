@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 
 namespace Nandaka.Core.Table
@@ -89,16 +89,14 @@ namespace Nandaka.Core.Table
                     break;
 
                 default:
-                    // todo: create custom exception;
-                    throw new Exception();
+                    throw new NandakaBaseException();
             }
         }
 
         private Register<T> GetRegisterChecked<T>(Register<T> register) where T : struct
         {
             if (!(_registers[register.Address] is Register<T> tableRegister))
-                // todo: create a custom exception
-                throw new InvalidCastException();
+                throw new NandakaBaseException();
 
             return tableRegister;
         }
@@ -106,8 +104,7 @@ namespace Nandaka.Core.Table
         private void SetRegisterChecked<T>(Register<T> register) where T : struct
         {
             if (!(_registers[register.Address] is Register<T>))
-                // todo: create a custom exception
-                throw new InvalidCastException();
+                throw new NandakaBaseException();
 
             _registers[register.Address] = register;
         }

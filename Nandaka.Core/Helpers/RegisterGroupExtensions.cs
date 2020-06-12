@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Nandaka.Core.Exceptions;
 using Nandaka.Core.Table;
+using InvalidOperationException = System.InvalidOperationException;
 
 namespace Nandaka.Core.Helpers
 {
@@ -42,8 +44,7 @@ namespace Nandaka.Core.Helpers
             }
             catch (InvalidOperationException exception)
             {
-                // todo: create a custom exception
-                throw new Exception("Failed to map registers strictly", exception);
+                throw new InvalidRegistersException("Failed to map registers strictly", exception);
             }
 
             return result;
@@ -54,37 +55,23 @@ namespace Nandaka.Core.Helpers
             IReadOnlyList<IRegister> registersToMap)
         {
             var result = new Dictionary<IRegisterGroup, IRegister[]>();
-
-            try
+            
+            var registerIndex = 0;
+            while (registerIndex < registersToMap.Count)
             {
-                var registerIndex = 0;
-                while (registerIndex < registersToMap.Count)
-                {
-                    IRegister headRegister = registersToMap[registerIndex];
+                IRegister headRegister = registersToMap[registerIndex];
 
-                    IRegisterGroup deviceGroup = matAtGroups.FirstOrDefault(register => register.Address == headRegister.Address);
-                    if (deviceGroup == null)
-                        // todo: create a custom excepion
-                        throw new Exception($"Register group with address {headRegister.Address} was not found");
+                IRegisterGroup deviceGroup = matAtGroups.FirstOrDefault(register => register.Address == headRegister.Address);
+                if (deviceGroup == null)
+                    throw new InvalidRegistersException($"Register group with address {headRegister.Address} was not found");
 
-                    IRegister[] requestRegistersInGroup = Enumerable.Range(deviceGroup.Address, deviceGroup.Count)
-                        .Select(address => registersToMap[registerIndex++].WithAddressAssert(address))
-                        .ToArray();
+                IRegister[] requestRegistersInGroup = Enumerable.Range(deviceGroup.Address, deviceGroup.Count)
+                    .Select(address => registersToMap[registerIndex++].WithAddressAssert(address))
+                    .ToArray();
 
-                    result.Add(deviceGroup, requestRegistersInGroup);
-                }
+                result.Add(deviceGroup, requestRegistersInGroup);
             }
-            catch (ApplicationException exception)
-            {
-                // todo: handle custom "register was not found" exception
-                throw;
-            }
-            catch (Exception exception)
-            {
-                // todo: create a custom exception
-                throw new Exception("Failed to map registers", exception);
-            }
-
+            
             return result;
         }
 

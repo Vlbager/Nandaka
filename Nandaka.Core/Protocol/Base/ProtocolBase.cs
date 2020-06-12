@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Nandaka.Core.Exceptions;
 using Nandaka.Core.Network;
 using Nandaka.Core.Session;
 using Nandaka.Core.Table;
@@ -36,8 +37,7 @@ namespace Nandaka.Core.Protocol
         {
             T packet = _composer.Compose(message, out IReadOnlyCollection<IRegisterGroup> sentGroups);
             if (message is IRegisterMessage registerMessage && registerMessage.RegisterGroups.Count != sentGroups.Count)
-                // todo: create a custom exception
-                throw new Exception("Can't send all registers");
+                throw new TooMuchDataRequestedException("Can't send all registers");
             
             _dataPortProvider.Write(packet);
         }

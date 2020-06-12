@@ -13,8 +13,7 @@ namespace Nandaka.Core
         private static readonly string s_appDataFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Nandaka");
 
-        private static volatile ILog s_instance;
-        private static readonly object s_syncRoot = new object();
+        private static Lazy<ILog> s_instance = new Lazy<ILog>(Create);
         private bool _isDisposed;
 
         private readonly StreamWriter _writer;
@@ -35,25 +34,8 @@ namespace Nandaka.Core
             Directory.CreateDirectory(s_appDataFolderPath);
             return new Log();
         }
-        
-        public static ILog Instance
-        {
-            get
-            {
-                if (s_instance != null)
-                    return s_instance;
 
-                lock (s_syncRoot)
-                {
-                    if (s_instance != null)
-                        return s_instance;
-
-                    s_instance = Create();
-                }
-
-                return s_instance;
-            }
-        }
+        public static ILog Instance => s_instance.Value;
 
         public void AppendMessage(LogMessageType type, string message)
         {
@@ -71,7 +53,7 @@ namespace Nandaka.Core
 
         private void Routine()
         {
-            while (true)
+            while (!_isDisposed)
             {
                 _writer.WriteLine(_buffer.Take());
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 
 namespace Nandaka.Core.Table
@@ -59,8 +60,7 @@ namespace Nandaka.Core.Table
                     return LittleEndianConverter.GetBytes(uint64Register.Value);
 
                 default:
-                    // todo: create custom exception;
-                    throw new Exception();
+                    throw new NandakaBaseException($"{typeof(T)} register cannot be converted to bytes");
             }
         }
     }

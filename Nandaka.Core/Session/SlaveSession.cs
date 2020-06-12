@@ -64,7 +64,7 @@ namespace Nandaka.Core.Session
             catch (Exception exception)
             {
                 _log.AppendMessage(LogMessageType.Error, exception.ToString());
-                var errorMessage = new CommonErrorMessage(_device.Address, MessageType.Response, ErrorType.InvalidRegisterAddress);
+                var errorMessage = new CommonErrorMessage(_device.Address, MessageType.Response, ErrorType.InvalidRegisters);
                 _protocol.SendMessage(errorMessage);
             }
         }

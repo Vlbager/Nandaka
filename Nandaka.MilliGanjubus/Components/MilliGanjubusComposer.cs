@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
@@ -29,8 +30,7 @@ namespace Nandaka.MilliGanjubus.Components
                     return Compose(errorMessage);
 
                 default:
-                    // todo: create a custom exception
-                    throw new Exception("Unexpected type of message");
+                    throw new NandakaBaseException("Unexpected type of message");
             }
         }
 
@@ -74,8 +74,7 @@ namespace Nandaka.MilliGanjubus.Components
                     break;
 
                 default:
-                    //todo: create a custom exception
-                    throw new Exception("Undefined message type");
+                    throw new NandakaBaseException("Undefined message type");
             }
 
             bool isRange = RegisterConverter.IsRange(message.RegisterGroups, _info);
@@ -101,8 +100,7 @@ namespace Nandaka.MilliGanjubus.Components
                     break;
 
                 default:
-                    // todo: create a custom exception;
-                    throw new Exception("Undefined operation type");
+                    throw new NandakaBaseException("Undefined operation type");
             }
 
             byte[] dataHeader = {gByte};
@@ -112,9 +110,5 @@ namespace Nandaka.MilliGanjubus.Components
 
             return RegisterConverter.ComposeDataAsSeries(message.RegisterGroups, _info, dataHeader, withValues, out composedGroups);
         }
-
-
-
-
     }
 }

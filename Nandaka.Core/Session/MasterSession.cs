@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Device;
+using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Table;
@@ -30,6 +31,13 @@ namespace Nandaka.Core.Session
             using (var listener = new MessageListener(_protocol))
             {
                 IRegisterMessage message = _registersUpdatePolicy.GetNextMessage(_slaveDevice);
+
+                if (message is EmptyMessage)
+                {
+                    _log.AppendMessage(LogMessageType.Info, $"Nothing to process. Skip {_slaveDevice.Name}");
+                    return;
+                }
+                
                 _log.AppendMessage(LogMessageType.Info, $"Sending {message.OperationType}-register message");
 
                 _protocol.SendAsPossible(message, out IReadOnlyCollection<IRegisterGroup> requestRegisters);
@@ -39,8 +47,7 @@ namespace Nandaka.Core.Session
                 while (true)
                 {
                     if (!listener.WaitMessage(_dispatcher.RequestTimeout, out IMessage receivedMessage))
-                        // todo: create a custom exception
-                        throw new Exception("Device Not responding");
+                        throw new DeviceNotRespondException("Device Not responding", _slaveDevice.Address);
 
                     if (receivedMessage.Type != MessageType.Response)
                         continue;
@@ -55,10 +62,12 @@ namespace Nandaka.Core.Session
                             receivedMessage.SlaveDeviceAddress);
                         continue;
                     }
+                    
+                    if (receivedMessage is IErrorMessage errorMessage)
+                        ProcessErrorMessage(errorMessage);
 
                     if (!(receivedMessage is IReceivedMessage response))
-                        // todo: create a custom exception
-                        throw new Exception("Wrong response received");
+                        throw new InvalidMetaDataException("Wrong response received");
 
                     _log.AppendMessage(LogMessageType.Info, "Response received, updating registers");
 
@@ -80,8 +89,7 @@ namespace Nandaka.Core.Session
                 while (true)
                 {
                     if (!listener.WaitMessage(_dispatcher.RequestTimeout, out IMessage receivedMessage))
-                        // todo: create a custom exception
-                        throw new Exception("Device not responding");
+                        throw new DeviceNotRespondException("Device Not responding", _slaveDevice.Address);
                     
                     if (receivedMessage.Type != MessageType.Response)
                         continue;
@@ -96,16 +104,23 @@ namespace Nandaka.Core.Session
                             receivedMessage.SlaveDeviceAddress);
                         continue;
                     }
+                    
+                    if (receivedMessage is IErrorMessage errorMessage)
+                        ProcessErrorMessage(errorMessage);
 
                     if (!(receivedMessage is ISpecificMessage response))
-                        // todo: create a custom excepiton
-                        throw new Exception("Wrong response received");
+                        throw new InvalidMetaDataException("Wrong response received");
 
                     _slaveDevice.OnSpecificMessageReceived(response);
 
                     break;
                 }
             }
+        }
+
+        private void ProcessErrorMessage(IErrorMessage errorMessage)
+        {
+            throw new NotImplementedException();
         }
 
         private static void UpdateRegisters(IReadOnlyCollection<IRegisterGroup> groupsToUpdate, IReadOnlyCollection<IRegister> sourceRegisters,
@@ -124,8 +139,7 @@ namespace Nandaka.Core.Session
                     break;
                 
                 default:
-                    // todo: create a custom exception
-                    throw new Exception("Wrong operation type");
+                    throw new NandakaBaseException("Wrong operation type");
             }
         }
     }

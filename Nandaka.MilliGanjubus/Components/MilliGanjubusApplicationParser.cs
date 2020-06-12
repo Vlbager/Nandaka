@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Nandaka.Core.Exceptions;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
 using Nandaka.Core.Table;
@@ -58,8 +59,7 @@ namespace Nandaka.MilliGanjubus.Components
                     return new MilliGanjubusErrorMessage(deviceAddress, MessageType.Response, (MilliGanjubusErrorType)errorCode);
 
                 default:
-                    // todo: create a custom exception 
-                    throw new Exception("Wrong gByte");
+                    throw new InvalidMetaDataException("Wrong gByte");
             }
 
             bool isRange = false;
@@ -90,8 +90,7 @@ namespace Nandaka.MilliGanjubus.Components
                     break;
 
                 default:
-                    // todo: create a custom exception
-                    throw new Exception("Wrong gByte");
+                    throw new InvalidMetaDataException("Wrong gByte");
             }
 
             IReadOnlyList<IRegister> registers = isRange ? ParseAsRange(data, _info, withValues)
@@ -138,13 +137,11 @@ namespace Nandaka.MilliGanjubus.Components
 
             // Check addresses validity.
             if (startAddress > endAddress)
-                //todo: create a custom exception
-                throw new Exception("Wrong register Address");
+                throw new InvalidRegistersException("Wrong register Address");
 
             // Check registers count is valid number (less than registerGroup values bytes count).
             if (withValues && registersCount > data[info.SizeOffset] - info.MinPacketLength - 2)
-                //todo: create a custom exception
-                throw new Exception("Wrong data amount");
+                throw new InvalidRegistersException("Wrong data amount");
 
             var registers = new List<Register<byte>>(registersCount);
 

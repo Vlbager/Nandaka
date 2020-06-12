@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Nandaka.Core.Exceptions;
 
 namespace Nandaka.Core.Device
 {
@@ -39,8 +40,7 @@ namespace Nandaka.Core.Device
 
                 NandakaDevice nextDevice = _enumerator.Current;
                 if (nextDevice == null)
-                    // todo: create a custom exception
-                    throw new Exception("Next device is null");
+                    throw new NandakaBaseException("Next device is null");
 
                 if (nextDevice.State != DeviceState.Connected)
                     continue;
@@ -73,8 +73,7 @@ namespace Nandaka.Core.Device
                 .ToArray();
             
             if (devicesToUpdate.All(device => device.State != DeviceState.Connected))
-                // todo: create a custom exception
-                throw new Exception("All devices is not connected");
+                throw new DeviceNotFoundException("All devices is not connected");
 
             _lastDeviceInCycle = devicesToUpdate.Last();
             _enumerator = devicesToUpdate.GetEnumerator();
