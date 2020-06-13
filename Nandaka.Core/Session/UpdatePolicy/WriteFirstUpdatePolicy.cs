@@ -18,7 +18,7 @@ namespace Nandaka.Core.Session
             IRegisterGroup[] writeOnlyGroupsToUpdate = device.RegisterGroups
                 .Where(group => group.RegisterType == RegisterType.WriteOnly)
                 .Where(group => !group.IsUpdated)
-                .OrderBy(group => group.Version)
+                .OrderBy(group => group.LastUpdateTime)
                 .ThenBy(group => group.Address)
                 .ToArray();
 
@@ -27,7 +27,7 @@ namespace Nandaka.Core.Session
 
             IRegisterGroup[] readOnlyGroupsToUpdate = device.RegisterGroups
                 .Where(group => group.RegisterType == RegisterType.ReadOnly)
-                .OrderBy(group => group.Version)
+                .OrderBy(group => group.LastUpdateTime)
                 .ThenBy(group => group.Address)
                 .ToArray();
 

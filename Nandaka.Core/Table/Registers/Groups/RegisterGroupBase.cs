@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Nandaka.Core.Table
@@ -9,7 +10,8 @@ namespace Nandaka.Core.Table
         public int Address { get; }
         public int Count { get; }
         public bool IsUpdated { get; set; }
-        public abstract int Version { get; protected set; }
+        public abstract DateTime LastUpdateTime { get; protected set; }
+        public TimeSpan UpdateInterval { get; set; }
         public RegisterType RegisterType { get; }
         public abstract int DataSize { get; }
         public abstract TValue Value { get; set; }

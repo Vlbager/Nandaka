@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Nandaka.Core.Table
 {
@@ -7,7 +8,8 @@ namespace Nandaka.Core.Table
         int Count { get; }
         int DataSize { get; }
         bool IsUpdated { get; set; }
-        int Version { get; }
+        DateTime LastUpdateTime { get; }
+        TimeSpan UpdateInterval { get; }
         void Update(IReadOnlyCollection<IRegister> registersToUpdate);
         void UpdateWithoutValues();
         IReadOnlyCollection<IRegister> GetRawRegisters();

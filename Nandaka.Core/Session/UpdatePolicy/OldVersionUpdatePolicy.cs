@@ -14,7 +14,7 @@ namespace Nandaka.Core.Session
         public IRegisterMessage GetNextMessage(NandakaDevice device)
         {
             IRegisterGroup[] orderedByVersionGroups = device.RegisterGroups
-                .OrderBy(group => group.Version)
+                .OrderBy(group => group.LastUpdateTime)
                 .ToArray();
 
             RegisterType firstGroupType = orderedByVersionGroups.First().RegisterType;

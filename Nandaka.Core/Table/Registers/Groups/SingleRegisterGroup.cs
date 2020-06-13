@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -14,7 +15,7 @@ namespace Nandaka.Core.Table
         private readonly Register<TValue> _register;
 
         public override int DataSize => Marshal.SizeOf<TValue>();
-        public override int Version { get; protected set; }
+        public override DateTime LastUpdateTime { get; protected set; }
 
         public override TValue Value
         {
@@ -24,7 +25,7 @@ namespace Nandaka.Core.Table
                 lock (_syncRoot)
                 {
                     _register.Value = value;
-                    Version++;
+                    LastUpdateTime = DateTime.Now;
                     IsUpdated = false;
                 }
             }
@@ -45,7 +46,7 @@ namespace Nandaka.Core.Table
             lock (_syncRoot)
             {
                 _register.Value = valuedRegister.Value;
-                Version++;
+                LastUpdateTime = DateTime.Now;
                 IsUpdated = true;
             }
         }
@@ -54,7 +55,7 @@ namespace Nandaka.Core.Table
         {
             lock (_syncRoot)
             {
-                Version++;
+                LastUpdateTime = DateTime.Now;
                 IsUpdated = true;
             }
         }

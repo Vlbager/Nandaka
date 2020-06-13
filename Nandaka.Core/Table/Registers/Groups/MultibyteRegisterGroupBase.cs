@@ -12,7 +12,7 @@ namespace Nandaka.Core.Table
         private readonly IReadOnlyCollection<Register<byte>> _registers;
 
         public override int DataSize => _registers.Count;
-        public override int Version { get; protected set; }
+        public override DateTime LastUpdateTime { get; protected set; }
         
         public override TValue Value
         {
@@ -54,7 +54,7 @@ namespace Nandaka.Core.Table
                     storedRegister.Value = byteRegisterToUpdate.Value;
                 }
 
-                Version++;
+                LastUpdateTime = DateTime.Now;
                 IsUpdated = true;
             }
         }
@@ -63,7 +63,7 @@ namespace Nandaka.Core.Table
         {
             lock (_syncRoot)
             {
-                Version++;
+                LastUpdateTime = DateTime.Now;
                 IsUpdated = true;
             }
         }
@@ -78,7 +78,7 @@ namespace Nandaka.Core.Table
                 foreach (Register<byte> register in _registers)
                     register.Value = littleEndianBytes[index++];
 
-                Version++;
+                LastUpdateTime = DateTime.Now;
                 IsUpdated = false;
             }
         }
