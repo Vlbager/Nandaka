@@ -141,7 +141,7 @@ namespace Nandaka.MilliGanjubus.Components
 
             // Check registers count is valid number (less than registerGroup values bytes count).
             if (withValues && registersCount > data[info.SizeOffset] - info.MinPacketLength - 2)
-                throw new InvalidRegistersException("Wrong data amount");
+                throw new TooMuchDataRequestedException("Wrong data amount");
 
             var registers = new List<Register<byte>>(registersCount);
 
