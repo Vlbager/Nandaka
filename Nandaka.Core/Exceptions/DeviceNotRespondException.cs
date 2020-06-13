@@ -6,21 +6,16 @@ namespace Nandaka.Core.Exceptions
     [Serializable]
     public class DeviceNotRespondException : NandakaException
     {
-        public int DeviceAddress { get; }
-        
-        public DeviceNotRespondException(int deviceAddress)
+        public DeviceNotRespondException()
         {
-            DeviceAddress = deviceAddress;
         }
 
-        public DeviceNotRespondException(string message, int deviceAddress) : base(message)
+        public DeviceNotRespondException(string message) : base(message)
         {
-            DeviceAddress = deviceAddress;
         }
 
-        public DeviceNotRespondException(string message, Exception innerException, int deviceAddress) : base(message, innerException)
+        public DeviceNotRespondException(string message, Exception innerException) : base(message, innerException)
         {
-            DeviceAddress = deviceAddress;
         }
 
         protected DeviceNotRespondException(SerializationInfo info, StreamingContext context) : base(info, context)

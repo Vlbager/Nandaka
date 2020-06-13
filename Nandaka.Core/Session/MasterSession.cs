@@ -47,7 +47,7 @@ namespace Nandaka.Core.Session
                 while (true)
                 {
                     if (!listener.WaitMessage(_dispatcher.RequestTimeout, out IMessage receivedMessage))
-                        throw new DeviceNotRespondException("Device Not responding", _slaveDevice.Address);
+                        throw new DeviceNotRespondException("Device Not responding");
 
                     if (receivedMessage.Type != MessageType.Response)
                         continue;
@@ -89,7 +89,7 @@ namespace Nandaka.Core.Session
                 while (true)
                 {
                     if (!listener.WaitMessage(_dispatcher.RequestTimeout, out IMessage receivedMessage))
-                        throw new DeviceNotRespondException("Device Not responding", _slaveDevice.Address);
+                        throw new DeviceNotRespondException("Device Not responding");
                     
                     if (receivedMessage.Type != MessageType.Response)
                         continue;

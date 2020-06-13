@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Nandaka.Core.Device;
+using Nandaka.Core.Exceptions;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
 
@@ -73,16 +74,23 @@ namespace Nandaka.Core.Threading
                     session.ProcessSpecificMessage(specificMessage);
                 else
                     session.ProcessNextMessage();
-                
+
                 _dispatcher.OnMessageReceived(device);
             }
-            // todo: refactor with exception handling system.
-            catch (ApplicationException expectedException)
+            catch (DeviceNotRespondException deviceNotRespondException)
             {
+                _log.AppendMessage(LogMessageType.Warning, deviceNotRespondException.Message);
                 _dispatcher.OnErrorOccured(device, DeviceError.NotResponding);
-                // Back specific message in specific message queue.
-                if (specificMessage != null)
-                    device.SendSpecific(specificMessage, false);
+            }
+            catch (InvalidAddressException invalidAddressException)
+            {
+                _log.AppendMessage(LogMessageType.Error, invalidAddressException.Message);
+                _dispatcher.OnUnexpectedDeviceResponse(device, invalidAddressException.ReceivedAddress);
+            }
+            catch (InvalidMessageException invalidMessageException)
+            {
+                _log.AppendMessage(LogMessageType.Error, invalidMessageException.ToString());
+                _dispatcher.OnErrorOccured(device, DeviceError.WrongPacketData);
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Nandaka.Core.Device;
+using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Table;
@@ -60,11 +61,10 @@ namespace Nandaka.Core.Session
                 
                 _log.AppendMessage(LogMessageType.Info, "Message processed");
             }
-            // todo: exception handling system
-            catch (Exception exception)
+            catch (InvalidMessageException exception)
             {
-                _log.AppendMessage(LogMessageType.Error, exception.ToString());
-                var errorMessage = new CommonErrorMessage(_device.Address, MessageType.Response, ErrorType.InvalidRegisters);
+                _log.AppendMessage(LogMessageType.Warning, exception.ToString());
+                var errorMessage = new CommonErrorMessage(_device.Address, MessageType.Response, exception.ErrorType);
                 _protocol.SendMessage(errorMessage);
             }
         }
