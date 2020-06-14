@@ -16,7 +16,7 @@ namespace Nandaka.Core.Session
         public IRegisterMessage GetNextMessage(NandakaDevice device)
         {
             IRegisterGroup[] writeOnlyGroupsToUpdate = device.RegisterGroups
-                .Where(group => group.RegisterType == RegisterType.WriteOnly)
+                .Where(group => group.RegisterType == RegisterType.ReadWrite)
                 .Where(group => !group.IsUpdated)
                 .OrderBy(group => group.LastUpdateTime)
                 .ThenBy(group => group.Address)
@@ -26,7 +26,7 @@ namespace Nandaka.Core.Session
                 return new CommonMessage(device.Address, MessageType.Request, OperationType.Write, writeOnlyGroupsToUpdate);
 
             IRegisterGroup[] readOnlyGroupsToUpdate = device.RegisterGroups
-                .Where(group => group.RegisterType == RegisterType.ReadOnly)
+                .Where(group => group.RegisterType == RegisterType.Read)
                 .OrderBy(group => group.LastUpdateTime)
                 .ThenBy(group => group.Address)
                 .ToArray();

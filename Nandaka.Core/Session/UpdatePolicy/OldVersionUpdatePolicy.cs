@@ -23,7 +23,7 @@ namespace Nandaka.Core.Session
                 .Where(group => group.RegisterType == firstGroupType)
                 .ToArray();
 
-            OperationType operationType = firstGroupType == RegisterType.WriteOnly
+            OperationType operationType = firstGroupType == RegisterType.ReadWrite
                 ? OperationType.Write
                 : OperationType.Read;
 

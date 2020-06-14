@@ -14,9 +14,6 @@ namespace Nandaka.Core.Device
 
         public abstract IReadOnlyCollection<IRegisterGroup> RegisterGroups { get; }
         public abstract string Name { get; }
-        // todo: check this.
-        // note: is really needed?
-        //public abstract RegisterTable Table { get; }
         public int Address { get; }
         internal IRegistersUpdatePolicy UpdatePolicy { get; }
         public DeviceState State { get; set; }
@@ -53,7 +50,17 @@ namespace Nandaka.Core.Device
         internal bool TryGetSpecific(out ISpecificMessage message)
             => _specificMessages.TryDequeue(out message);
 
-        protected virtual void RaisePropertyChanged([CallerMemberName] string propertyName = null)
+        protected void SetRegisterValue<T>(IValuedRegister<T> register, T newValue, [CallerMemberName]string propertyName = null) 
+            where T : struct
+        {
+            T oldValue = register.Value;
+            register.Value = newValue;
+            
+            if (!Equals(oldValue, newValue))
+                RaisePropertyChanged(propertyName);
+        }
+
+        protected virtual void RaisePropertyChanged([CallerMemberName]string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
