@@ -90,6 +90,9 @@ namespace Nandaka.Core.Helpers
             int nextAddress = registerGroups.First().Address;
             foreach (IRegisterGroup registerGroup in registerGroups)
             {
+                if (dataSize + registerGroup.DataSize > info.MaxDataLength)
+                    break;
+                
                 foreach (IRegister register in registerGroup.GetRawRegisters())
                 {
                     if (register.Address != nextAddress)
@@ -100,8 +103,6 @@ namespace Nandaka.Core.Helpers
                 }
                 
                 dataSize += registerGroup.DataSize;
-                if (dataSize > info.MaxDataLength)
-                    break;
             }
 
             if (registerInRangeCount < info.MinimumRangeRegisterCount)

@@ -6,8 +6,8 @@ using Nandaka.Core.Table;
 namespace Nandaka.Core.Session
 {
     /// <summary>
-    /// Returns write only groups ordered by version, then by address, if exists.
-    /// Else returns read only groups in same order.
+    /// Returns write only groups ordered by address, if exists.
+    /// Else returns read only groups.
     /// </summary>
     public class WriteFirstUpdatePolicy : IRegistersUpdatePolicy
     {
@@ -18,8 +18,7 @@ namespace Nandaka.Core.Session
             IRegisterGroup[] writeOnlyGroupsToUpdate = device.RegisterGroups
                 .Where(group => group.RegisterType == RegisterType.ReadWrite)
                 .Where(group => !group.IsUpdated)
-                .OrderBy(group => group.LastUpdateTime)
-                .ThenBy(group => group.Address)
+                .OrderBy(group => group.Address)
                 .ToArray();
 
             if (!writeOnlyGroupsToUpdate.IsEmpty())

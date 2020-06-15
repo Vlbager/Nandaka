@@ -18,7 +18,7 @@ namespace Nandaka.MilliGanjubus.Components
         private const byte _broadCastAddress = 0x00;
         private const byte _directCastAddress = 0xFF;
         private const int _maxPacketLength = 16;
-        private const int _maxDataLength = _maxPacketLength - _minPacketLength - 1;
+        private const int _maxDataLength = _maxPacketLength - _minPacketLength;
         private const int _minPacketLength = 5;
         private const bool _isSpecificMessageSupported = false;
         private const bool _isHighPriorityMessageSupported = false;
