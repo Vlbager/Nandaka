@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Device;
 using Nandaka.Core.Session;
@@ -44,12 +43,12 @@ namespace Example
         private ConcreteDevice(int address, IRegistersUpdatePolicy updatePolicy, DeviceState state) 
             : base(address, updatePolicy, state)
         {
-            _byteGroup = UInt8RegisterGroup.CreateNew(1, RegisterType.WriteOnly);
-            _intGroup = Int32RegisterGroup.CreateNew(2, RegisterType.WriteOnly);
-            _shortGroup = Int16RegisterGroup.CreateNew(7, RegisterType.ReadOnly);
+            _byteGroup = UInt8RegisterGroup.CreateNew(1, RegisterType.Read);
+            _intGroup = Int32RegisterGroup.CreateNew(2, RegisterType.ReadWrite);
+            _shortGroup = Int16RegisterGroup.CreateNew(7, RegisterType.Read);
             
             _byteCollection = Enumerable.Range(13, 34)
-                .Select(registerAddress => UInt8RegisterGroup.CreateNew(registerAddress, RegisterType.ReadOnly))
+                .Select(registerAddress => UInt8RegisterGroup.CreateNew(registerAddress, RegisterType.Read))
                 .ToArray();
             
             RegisterGroups = new IRegisterGroup[]{_byteGroup, _intGroup, _shortGroup}.Concat(_byteCollection).ToArray();
