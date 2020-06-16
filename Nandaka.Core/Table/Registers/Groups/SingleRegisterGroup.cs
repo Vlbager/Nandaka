@@ -31,10 +31,13 @@ namespace Nandaka.Core.Table
             }
         }
 
+        public override event EventHandler OnRegisterChanged;
+
         public SingleRegisterGroup(Register<TValue> register) : base(register.Address,1, register.RegisterType)
         {
             _register = register;
             _syncRoot = new object();
+            _register.OnRegisterChanged += (sender, value) => OnRegisterChanged?.Invoke(sender, value);
         }
 
         public override void Update(IReadOnlyCollection<IRegister> registersToUpdate)

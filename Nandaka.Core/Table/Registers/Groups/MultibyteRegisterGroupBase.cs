@@ -20,6 +20,8 @@ namespace Nandaka.Core.Table
             set => SetValue(value);
         }
 
+        public override event EventHandler OnRegisterChanged;
+
         protected MultiByteRegisterGroupBase(IReadOnlyCollection<Register<byte>> registers)
             : base(registers.First().Address, registers.Count, registers.First().RegisterType)
         {
@@ -48,7 +50,7 @@ namespace Nandaka.Core.Table
                     IRegister registerToUpdate = registersToUpdate
                             .Single(register => register.Address == storedRegister.Address);
                     
-                    if (!(registerToUpdate is IValuedRegister<byte> byteRegisterToUpdate))
+                    if (!(registerToUpdate is IRwRegister<byte> byteRegisterToUpdate))
                         throw new InvalidRegistersException("Wrong register type");
 
                     storedRegister.Value = byteRegisterToUpdate.Value;
@@ -72,15 +74,22 @@ namespace Nandaka.Core.Table
         {
             byte[] littleEndianBytes = ConvertValueToLittleEndianBytes(value);
 
+            var isChanged = true;
             lock (_syncRoot)
             {
                 var index = 0;
                 foreach (Register<byte> register in _registers)
+                {
+                    isChanged &= register.Value != littleEndianBytes[index];
                     register.Value = littleEndianBytes[index++];
+                }
 
                 LastUpdateTime = DateTime.Now;
                 IsUpdated = false;
             }
+
+            if (isChanged)
+                OnRegisterChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private TValue GetValue()

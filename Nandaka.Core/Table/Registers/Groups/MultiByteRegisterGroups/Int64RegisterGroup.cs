@@ -9,7 +9,7 @@ namespace Nandaka.Core.Table
         public Int64RegisterGroup(IReadOnlyCollection<Register<byte>> registers) 
             : base(registers) { }
         
-        public static Int64RegisterGroup CreateNew(int groupAddress, RegisterType type)
+        public static Int64RegisterGroup CreateNew(int groupAddress, RegisterType type = RegisterType.Raw)
         {
             return new Int64RegisterGroup(Enumerable.Range(groupAddress, sizeof(long))
                 .Select(address => Register<byte>.CreateByte(address, type))

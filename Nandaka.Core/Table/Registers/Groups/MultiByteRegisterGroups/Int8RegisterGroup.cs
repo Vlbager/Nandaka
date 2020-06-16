@@ -12,7 +12,7 @@ namespace Nandaka.Core.Table
             _register = register;
         }
         
-        public static Int8RegisterGroup CreateNew(int address, RegisterType type)
+        public static Int8RegisterGroup CreateNew(int address, RegisterType type = RegisterType.Raw)
             => new Int8RegisterGroup(Register<byte>.CreateByte(address, type));
 
         protected override byte[] ConvertValueToLittleEndianBytes(sbyte value) 
