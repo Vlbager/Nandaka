@@ -5,17 +5,26 @@ using Nandaka.Core.Threading;
 
 namespace Nandaka.Core.Device
 {
-    public abstract class MasterDeviceManager : IDisposable
+    public sealed class MasterDeviceManager : IDisposable
     {
         private readonly ILog _log;
 
         private MasterThread _thread;
+        private readonly List<NandakaDevice> _slaveDevices;
 
-        public abstract IReadOnlyCollection<NandakaDevice> SlaveDevices { get; }
+        public IReadOnlyCollection<NandakaDevice> SlaveDevices => _slaveDevices;
 
-        protected MasterDeviceManager()
+        public MasterDeviceManager()
         {
             _log = Log.Instance;
+            _slaveDevices = new List<NandakaDevice>();
+        }
+
+        public void AddSlaveDevice(NandakaDevice slaveDevice)
+        {
+            // bad design. Need to rework register logic.
+            slaveDevice.Reflect();
+            _slaveDevices.Add(slaveDevice);
         }
 
         public void Start(IProtocol protocol, IDeviceUpdatePolicy updatePolicy)

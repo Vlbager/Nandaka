@@ -1,7 +1,11 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using Nandaka.Core.Attributes;
+using Nandaka.Core.Helpers;
 using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 
@@ -11,8 +15,9 @@ namespace Nandaka.Core.Device
     {
         private readonly ISpecificMessageHandler _specificMessageHandler;
         private readonly ConcurrentQueue<ISpecificMessage> _specificMessages;
+        private bool _isReflected;
 
-        public abstract IReadOnlyCollection<IRegisterGroup> RegisterGroups { get; }
+        public IReadOnlyCollection<IRegisterGroup> RegisterGroups { get; private set; }
         public abstract string Name { get; }
         public int Address { get; }
         internal IRegistersUpdatePolicy UpdatePolicy { get; }
@@ -50,19 +55,51 @@ namespace Nandaka.Core.Device
         internal bool TryGetSpecific(out ISpecificMessage message)
             => _specificMessages.TryDequeue(out message);
 
-        protected void SetRegisterValue<T>(IValuedRegister<T> register, T newValue, [CallerMemberName]string propertyName = null) 
-            where T : struct
-        {
-            T oldValue = register.Value;
-            register.Value = newValue;
-            
-            if (!Equals(oldValue, newValue))
-                RaisePropertyChanged(propertyName);
-        }
-
         protected virtual void RaisePropertyChanged([CallerMemberName]string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        internal void Reflect()
+        {
+            if (_isReflected)
+                return;
+            
+            Type type = GetType();
+
+            var validator = new RegisterTableValidator();
+            
+            foreach (PropertyInfo propertyInfo in type.GetProperties())
+            {
+                Type propertyType = propertyInfo.PropertyType;
+                
+                if (!propertyInfo.PropertyType.IsInheritedFromInterface(nameof(IRegister)))
+                    continue;
+
+                if (!(propertyInfo.GetValue(this) is IRegisterGroup registerGroup))
+                    continue;
+
+                if (propertyType == typeof(IRwRegister<>))
+                    registerGroup.SetRegisterTypeViaReflection(RegisterType.ReadWrite);
+                else if (propertyType == typeof(IRoRegister<>))
+                    registerGroup.SetRegisterTypeViaReflection(RegisterType.Read);
+                else
+                    continue;
+
+                registerGroup.OnRegisterChanged += (sender, args) => RaisePropertyChanged(propertyInfo.Name);
+
+                IEnumerable<RegisterModifyAttribute> attributes = propertyInfo.CustomAttributes
+                    .SafeCast<CustomAttributeData, RegisterModifyAttribute>();
+
+                foreach (RegisterModifyAttribute attribute in attributes)
+                    attribute.Modify(registerGroup);
+
+                validator.AddGroup(registerGroup);
+            }
+
+            RegisterGroups = validator.GetGroups();
+
+            _isReflected = true;
         }
     }
 }

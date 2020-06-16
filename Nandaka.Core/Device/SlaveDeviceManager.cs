@@ -4,17 +4,18 @@ using Nandaka.Core.Threading;
 
 namespace Nandaka.Core.Device
 {
-    public abstract class SlaveDeviceManager : IDisposable
+    public sealed class SlaveDeviceManager : IDisposable
     {
         private readonly ILog _log;
 
         private SlaveThread _thread;
         
-        protected abstract NandakaDevice Device { get; }
+        public NandakaDevice Device { get; }
 
-        protected SlaveDeviceManager()
+        public SlaveDeviceManager(NandakaDevice device)
         {
             _log = Log.Instance;
+            Device = device;
         }
 
         public void Start(IProtocol protocol)
