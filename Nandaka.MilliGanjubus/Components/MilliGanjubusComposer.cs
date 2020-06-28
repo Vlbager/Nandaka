@@ -36,6 +36,22 @@ namespace Nandaka.MilliGanjubus.Components
 
         private byte[] Compose(IErrorMessage message)
         {
+            byte[] packet = PreparePacketWithHeader(_info.MinPacketLength + 1, message.SlaveDeviceAddress);
+
+            if (message is ProtocolSpecifiedErrorMessage mgError)
+                packet[_info.DataOffset] = (byte) mgError.ErrorCode;
+            else
+                packet[_info.DataOffset] = ConvertCommonErrorMessageCode(message);
+            
+            
+            packet[packet.Length - 1] =
+                CheckSum.Crc8(packet.Take(packet.Length - _info.PacketCheckSumSize).ToArray());
+
+            return packet;
+        }
+
+        private byte ConvertCommonErrorMessageCode(IErrorMessage message)
+        {
             throw new NotImplementedException();
         }
 
@@ -43,19 +59,26 @@ namespace Nandaka.MilliGanjubus.Components
         {
             byte[] data = GetDataBytes(message, out composedGroups);
 
-            var packet = new byte[_info.MinPacketLength + data.Length];
-
-            packet[_info.StartByteOffset] = _info.StartByte;
-            packet[_info.AddressOffset] = (byte)message.SlaveDeviceAddress;
-            packet[_info.SizeOffset] = (byte)packet.Length;
-            packet[_info.HeaderCheckSumOffset] =
-                CheckSum.Crc8(packet.Take(_info.HeaderCheckSumOffset).ToArray());
+            byte[] packet = PreparePacketWithHeader(_info.MinPacketLength + data.Length, message.SlaveDeviceAddress);
 
             Array.Copy(data, 0, packet, _info.DataOffset, data.Length);
             packet[packet.Length - 1] =
                 CheckSum.Crc8(packet.Take(packet.Length - _info.PacketCheckSumSize).ToArray());
 
             return packet;
+        }
+
+        private byte[] PreparePacketWithHeader(int packetLength, int deviceAddress)
+        {
+            var packetBlank = new byte[packetLength];
+
+            packetBlank[_info.StartByteOffset] = _info.StartByte;
+            packetBlank[_info.AddressOffset] = (byte)deviceAddress;
+            packetBlank[_info.SizeOffset] = (byte)packetBlank.Length;
+            packetBlank[_info.HeaderCheckSumOffset] =
+                CheckSum.Crc8(packetBlank.Take(_info.HeaderCheckSumOffset).ToArray());
+
+            return packetBlank;
         }
 
         private byte[] GetDataBytes(IRegisterMessage message, out IReadOnlyCollection<IRegisterGroup> composedGroups)
