@@ -20,6 +20,7 @@ namespace Nandaka.Core.Device
 
         public void Start(IProtocol protocol)
         {
+            Device.Reflect(isManagedByMaster: false);
             _log.AppendMessage(LogMessageType.Info, $"Starting {Device.Name} slave thread");
             _thread = SlaveThread.Create(Device, protocol, _log);
             _thread.Start();

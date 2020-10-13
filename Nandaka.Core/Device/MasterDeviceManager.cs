@@ -22,8 +22,7 @@ namespace Nandaka.Core.Device
 
         public void AddSlaveDevice(NandakaDevice slaveDevice)
         {
-            // bad design. Need to rework register logic.
-            slaveDevice.Reflect();
+            slaveDevice.Reflect(isManagedByMaster: true);
             _slaveDevices.Add(slaveDevice);
         }
 

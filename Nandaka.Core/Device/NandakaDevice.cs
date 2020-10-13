@@ -60,7 +60,7 @@ namespace Nandaka.Core.Device
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        internal void Reflect()
+        internal void Reflect(bool isManagedByMaster)
         {
             if (_isReflected)
                 return;
@@ -80,11 +80,21 @@ namespace Nandaka.Core.Device
                     continue;
 
                 if (propertyType == typeof(IRwRegister<>))
-                    registerGroup.SetRegisterTypeViaReflection(RegisterType.ReadWrite);
+                {
+                    registerGroup.SetRegisterTypeViaReflection(isManagedByMaster
+                        ? RegisterType.ReadWrite
+                        : RegisterType.Read);
+                }
                 else if (propertyType == typeof(IRoRegister<>))
-                    registerGroup.SetRegisterTypeViaReflection(RegisterType.Read);
+                {
+                    registerGroup.SetRegisterTypeViaReflection(isManagedByMaster
+                        ? RegisterType.Read
+                        : RegisterType.ReadWrite);
+                }
                 else
+                {
                     continue;
+                }
 
                 registerGroup.OnRegisterChanged += (sender, args) => RaisePropertyChanged(propertyInfo.Name);
 
