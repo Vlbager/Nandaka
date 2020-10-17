@@ -24,8 +24,7 @@ namespace Nandaka.Core.Helpers
             return source.Where(element => element != null);
         }
 
-        public static bool IsEmpty<TSource>(this IEnumerable<TSource> source)
-            => !source.Any();
+        public static bool IsEmpty<TSource>(this IEnumerable<TSource> source) => !source.Any();
 
         public static IEnumerable<TResult> SafeCast<TSource, TResult>(this IEnumerable<TSource> source)
             where TResult : class
@@ -36,6 +35,13 @@ namespace Nandaka.Core.Helpers
         
 
         public static byte[] RevertBytes(this IEnumerable<byte> source)
-            => source.OrderByDescending(b => b).ToArray();
+        { 
+            return source.OrderByDescending(b => b).ToArray();
+        } 
+        
+        public static IEnumerable<T> ToEnumerable<T>(this T obj)
+        {
+            yield return obj;
+        }
     }
 }

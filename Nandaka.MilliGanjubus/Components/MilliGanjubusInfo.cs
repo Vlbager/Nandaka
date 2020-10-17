@@ -54,6 +54,10 @@ namespace Nandaka.MilliGanjubus.Components
         public int HeaderCheckSumSize => _headerCheckSumSize;
 
         public int PacketCheckSumSize => _packetCheckSumSize;
+        
+        //todo: check with doc
+        public int MinRegisterAddress => 1;
+        public int MaxRegisterAddress => 254;
 
         public int MinimumRangeRegisterCount => _minimumRangeRegisterCount;
         public bool IsSpecificMessageSupported => _isSpecificMessageSupported;
