@@ -12,12 +12,11 @@ namespace Nandaka.Tests.Common
 
             while (true)
             {
-                if (count == 0)
-                    yield break;
-
                 foreach (T item in source)
                 {
-                    count--;
+                    if (count-- == 0)
+                        yield break;
+                    
                     yield return item;
                 }
             }

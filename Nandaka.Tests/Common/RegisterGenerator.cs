@@ -10,37 +10,33 @@ namespace Nandaka.Tests.Common
     {
         private readonly Func<int, RegisterType, IRegisterGroup> _registerFactory;
         
-        public int RegisterSize { get; }
+        public static readonly IEnumerable<RegisterType> Types = new[] { RegisterType.Read, RegisterType.ReadWrite };
+        
+        public int RegisterValueSize { get; }
 
-        private static readonly IEnumerable<RegisterType> Types = new[] { RegisterType.Read, RegisterType.ReadWrite };
-
-        public RegisterGenerator(Func<int, RegisterType, IRegisterGroup> registerFactory, int registerSize)
+        public RegisterGenerator(Func<int, RegisterType, IRegisterGroup> registerFactory, int registerValueSize)
         {
             _registerFactory = registerFactory;
-            RegisterSize = registerSize;
-        }
-
-        public IEnumerable<IRegisterGroup> Generate(int address)
-        {
-            return Generate(address.ToEnumerable());
+            RegisterValueSize = registerValueSize;
         }
 
         public IEnumerable<IRegisterGroup> Generate(IEnumerable<int> addresses)
         {
-            return from address in addresses
-                   from type in Types
+            return from type in Types 
+                   from address in addresses
                    select _registerFactory(address, type);
         }
 
-        public IEnumerable<IRegisterGroup> GenerateRange(int startAddress, int count)
+        public IEnumerable<IRegisterGroup> Generate(IEnumerable<int> addresses, RegisterType type)
         {
-            return Generate(Enumerable.Range(startAddress, count));
+            return addresses.Select(address => _registerFactory(address, type));
         }
 
         public IEnumerable<IRegisterGroup[]> GenerateBatches(IEnumerable<int> batchSizes, IReadOnlyCollection<int> addressList)
         {
-            return batchSizes.Select(addressList.GetCircular)
-                             .Select(addressesBatch => Generate(addressesBatch).ToArray());
+            return from batch in batchSizes.Select(addressList.GetCircular)
+                   from registerType in Types
+                   select Generate(batch, registerType).ToArray();
         }
     }
 }

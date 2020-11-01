@@ -13,7 +13,7 @@ namespace Nandaka.Tests.Common
         
         private readonly RegisterGenerator _registerGenerator;
 
-        public int RegisterSize => _registerGenerator.RegisterSize;
+        public int RegisterValueSize => _registerGenerator.RegisterValueSize;
         
         public MessageGenerator(RegisterGenerator registerGenerator)
         {
