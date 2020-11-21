@@ -50,6 +50,7 @@ namespace Nandaka.MilliGanjubus.Components
         public int DataOffset => _dataOffset;
 
         public int AddressSize => _addressSize;
+        public int DataHeaderSize => 1;
 
         public int HeaderCheckSumSize => _headerCheckSumSize;
 

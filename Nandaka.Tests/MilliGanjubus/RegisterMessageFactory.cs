@@ -3,6 +3,7 @@ using System.Linq;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Session;
 using Nandaka.Core.Table;
+using Nandaka.Tests.Common;
 
 namespace Nandaka.Tests.MilliGanjubus
 {

@@ -12,6 +12,7 @@
         int HeaderCheckSumOffset { get; }
         int DataOffset { get; }
         int AddressSize { get; }
+        int DataHeaderSize { get; }
         int HeaderCheckSumSize { get; }
         int PacketCheckSumSize { get; }
         

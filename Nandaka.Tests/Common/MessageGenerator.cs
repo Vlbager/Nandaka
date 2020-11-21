@@ -33,11 +33,27 @@ namespace Nandaka.Tests.Common
             return Generate(registerBatches, deviceAddresses);
         }
 
-        public IEnumerable<IRegisterMessage> Generate(IEnumerable<int> messageSizes, IReadOnlyCollection<int> registerAddressesRange,
+        public IEnumerable<IRegisterMessage> Generate(IEnumerable<int> messageSizes, IReadOnlyCollection<int> addressPool,
                                                       IEnumerable<int> deviceAddresses)
         {
-            IEnumerable<IRegisterGroup[]> registerBatches = _registerGenerator.GenerateBatches(messageSizes, registerAddressesRange);
+            IEnumerable<IRegisterGroup[]> registerBatches = _registerGenerator.GenerateBatches(messageSizes, addressPool);
             return Generate(registerBatches, deviceAddresses);
+        }
+
+        public IEnumerable<IErrorMessage> GenerateCommonErrorMessages(IEnumerable<ErrorType> errorTypes, IEnumerable<int> deviceAddresses, bool responseOnly)
+        {
+            return from deviceAddress in deviceAddresses
+                   from errorType in errorTypes
+                   from messageType in responseOnly ? MessageType.Response.ToEnumerable() : MessageTypes
+                   select new CommonErrorMessage(deviceAddress, messageType, errorType);
+        }
+
+        public IEnumerable<IErrorMessage> GenerateProtocolErrorMessages(IEnumerable<int> errorCodes, IEnumerable<int> deviceAddresses, bool responseOnly)
+        {
+            return from deviceAddress in deviceAddresses
+                   from errorCode in errorCodes
+                   from messageType in responseOnly ? MessageType.Response.ToEnumerable() : MessageTypes
+                   select new ProtocolSpecifiedErrorMessage(deviceAddress, messageType, errorCode);
         }
 
         private IEnumerable<IRegisterMessage> Generate(IEnumerable<IRegisterGroup[]> registerBatches, IEnumerable<int> deviceAddresses)

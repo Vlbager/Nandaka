@@ -57,6 +57,9 @@ namespace Nandaka.MilliGanjubus.Components
 
         private byte[] Compose(IRegisterMessage message, out IReadOnlyCollection<IRegisterGroup> composedGroups)
         {
+            if (message.RegisterGroups.IsEmpty())
+                throw new InvalidRegistersException("Specified message does not contains any registers");
+            
             byte[] data = GetDataBytes(message, out composedGroups);
 
             byte[] packet = PreparePacketWithHeader(_info.MinPacketLength + data.Length, message.SlaveDeviceAddress);

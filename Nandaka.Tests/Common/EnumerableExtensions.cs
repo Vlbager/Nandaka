@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Nandaka.Tests.MilliGanjubus
+namespace Nandaka.Tests.Common
 {
     public static class EnumerableExtensions
     {

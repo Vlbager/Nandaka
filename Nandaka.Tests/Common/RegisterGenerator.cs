@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Nandaka.Core.Helpers;
 using Nandaka.Core.Table;
 
 namespace Nandaka.Tests.Common
@@ -32,9 +31,9 @@ namespace Nandaka.Tests.Common
             return addresses.Select(address => _registerFactory(address, type));
         }
 
-        public IEnumerable<IRegisterGroup[]> GenerateBatches(IEnumerable<int> batchSizes, IReadOnlyCollection<int> addressList)
+        public IEnumerable<IRegisterGroup[]> GenerateBatches(IEnumerable<int> batchSizes, IReadOnlyCollection<int> addressPool)
         {
-            return from batch in batchSizes.Select(addressList.GetCircular)
+            return from batch in batchSizes.Select(addressPool.GetCircular)
                    from registerType in Types
                    select Generate(batch, registerType).ToArray();
         }
