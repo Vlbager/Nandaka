@@ -6,6 +6,8 @@ using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
 using Nandaka.Core.Table;
+using Nandaka.MilliGanjubus.Models;
+using Nandaka.MilliGanjubus.Utils;
 
 namespace Nandaka.MilliGanjubus.Components
 {
@@ -36,29 +38,37 @@ namespace Nandaka.MilliGanjubus.Components
 
         private byte[] Compose(IErrorMessage message)
         {
-            byte[] packet = PreparePacketWithHeader(_info.MinPacketLength + 1, message.SlaveDeviceAddress);
+            byte[] packet = PreparePacketWithHeader(_info.MinPacketLength + 2, message.SlaveDeviceAddress);
 
-            if (message is ProtocolSpecifiedErrorMessage mgError)
-                packet[_info.DataOffset] = (byte) mgError.ErrorCode;
-            else
-                packet[_info.DataOffset] = ConvertCommonErrorMessageCode(message);
-            
-            
+            packet[_info.DataOffset] = MilliGanjubusInfo.GError.ToFirstNibble();
+            packet[_info.DataOffset + 1] = GetReturnCode(message);
+
             packet[packet.Length - 1] =
                 CheckSum.Crc8(packet.Take(packet.Length - _info.PacketCheckSumSize).ToArray());
 
             return packet;
         }
 
-        private byte ConvertCommonErrorMessageCode(IErrorMessage message)
+        private byte GetReturnCode(IErrorMessage message)
         {
-            throw new NotImplementedException();
+            MilliGanjubusErrorType? mgErrorType = message.ErrorType.Convert();
+            if (mgErrorType.HasValue)
+                return (byte) mgErrorType.Value;
+
+            if (message.ErrorType == ErrorType.InternalProtocolError &&
+                message is ProtocolSpecifiedErrorMessage mgErrorMessage &&
+                Enum.IsDefined(typeof(MilliGanjubusErrorType), mgErrorMessage.ErrorCode))
+            {
+                return (byte) mgErrorMessage.ErrorCode;
+            }
+
+            throw new InvalidMessageToComposeException("Specified error message does not contains any compatible error type");
         }
 
         private byte[] Compose(IRegisterMessage message, out IReadOnlyCollection<IRegisterGroup> composedGroups)
         {
             if (message.RegisterGroups.IsEmpty())
-                throw new InvalidRegistersException("Specified message does not contains any registers");
+                throw new InvalidMessageToComposeException("Specified message does not contains any registers");
             
             byte[] data = GetDataBytes(message, out composedGroups);
 
@@ -95,7 +105,7 @@ namespace Nandaka.MilliGanjubus.Components
                     break;
 
                 case MessageType.Response:
-                    gByte = (byte)(MilliGanjubusInfo.GReply << 4);
+                    gByte = MilliGanjubusInfo.GReply.ToFirstNibble();
                     withValues = true;
                     break;
 

@@ -61,7 +61,7 @@ namespace Nandaka.Core.Session
                 
                 _log.AppendMessage(LogMessageType.Info, "Message processed");
             }
-            catch (InvalidMessageException exception)
+            catch (InvalidMessageReceivedException exception)
             {
                 _log.AppendMessage(LogMessageType.Warning, exception.ToString());
                 var errorMessage = new CommonErrorMessage(_device.Address, MessageType.Response, exception.ErrorType);

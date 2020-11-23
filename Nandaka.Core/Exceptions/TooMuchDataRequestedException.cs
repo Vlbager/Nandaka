@@ -5,7 +5,7 @@ using Nandaka.Core.Session;
 namespace Nandaka.Core.Exceptions
 {
     [Serializable]
-    public class TooMuchDataRequestedException : InvalidMessageException
+    public class TooMuchDataRequestedException : InvalidMessageReceivedException
     {
         public TooMuchDataRequestedException() : base(ErrorType.TooMuchDataRequested)
         {

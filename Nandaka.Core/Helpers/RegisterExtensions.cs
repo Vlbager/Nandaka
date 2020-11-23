@@ -9,7 +9,7 @@ namespace Nandaka.Core.Helpers
         public static IRegister WithAddressAssert(this IRegister register, int address)
         {
             if (register.Address != address)
-                throw new InvalidRegistersException("Assert on register address was failed");
+                throw new InvalidRegistersReceivedException("Assert on register address was failed");
             return register;
         }
     }

@@ -44,7 +44,7 @@ namespace Nandaka.Core.Table
         {
             IRegister singleRegister = registersToUpdate.Single();
             if (!(singleRegister is Register<TValue> valuedRegister))
-                throw new InvalidRegistersException("Wrong register type");
+                throw new InvalidRegistersReceivedException("Wrong register type");
 
             lock (_syncRoot)
             {

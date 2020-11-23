@@ -5,6 +5,7 @@ using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 using Nandaka.MilliGanjubus;
 using Nandaka.MilliGanjubus.Components;
+using Nandaka.MilliGanjubus.Models;
 using Nandaka.Tests.Common;
 using Xunit;
 
@@ -20,15 +21,14 @@ namespace Nandaka.Tests.MilliGanjubus
         private static readonly ErrorType[] ValidErrorTypes =
         {
             ErrorType.InvalidAddress,
-            ErrorType.InvalidRegisters,
-            ErrorType.InternalProtocolError,
             ErrorType.InvalidMetaData,
             ErrorType.TooMuchDataRequested
         };
 
-        private static readonly int[] ValidSpecificErrorCodes = Enum.GetValues(typeof(MilliGanjubusErrorType))
-                                                                    .Cast<int>()
-                                                                    .ToArray();
+        private static readonly int[] ValidSpecificErrorCodes =
+        {
+            (int) MilliGanjubusErrorType.UnableToExecuteCommand
+        };
 
         static ParserComposerMilliGanjubusTests()
         {
@@ -101,7 +101,7 @@ namespace Nandaka.Tests.MilliGanjubus
 
         private static int[] GetInvalidErrorCodes()
         {
-            int minCornerCaseErrorCode = ValidSpecificErrorCodes.Min() - 1;
+            const int minCornerCaseErrorCode = 0;
             int maxCornerCaseErrorCode = ValidSpecificErrorCodes.Max() + 1;
 
             return new[] { minCornerCaseErrorCode, maxCornerCaseErrorCode };

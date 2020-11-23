@@ -112,7 +112,7 @@ namespace Nandaka.Tests.Common
         public void ZeroSizeMessage()
         {
             var message = new CommonMessage(1, MessageType.Request, OperationType.Read, Array.Empty<IRegisterGroup>());
-            Assert.Throws<InvalidRegistersException>(() => _composer.Compose(message, out IReadOnlyCollection<IRegisterGroup> _));
+            Assert.ThrowsAny<NandakaBaseException>(() => _composer.Compose(message, out IReadOnlyCollection<IRegisterGroup> _));
         }
 
         public void ValidErrorMessages(IEnumerable<ErrorType> validErrorTypes, IEnumerable<int> validErrorCodes)
@@ -132,7 +132,7 @@ namespace Nandaka.Tests.Common
             messages = messages.Concat(_messageGenerator.GenerateProtocolErrorMessages(invalidErrorCodes, 1.ToEnumerable(), true));
 
             foreach (IErrorMessage message in messages)
-                Assert.ThrowsAny<Exception>(() => _composer.Compose(message, out _));
+                Assert.ThrowsAny<NandakaBaseException>(() => _composer.Compose(message, out _));
             
         }
 
@@ -151,13 +151,17 @@ namespace Nandaka.Tests.Common
             Assert.NotNull(parsedMessage);
             
             Assert.Equal(message.Type, parsedMessage.Type);
-            Assert.Equal(message.ErrorType, parsedMessage.ErrorType);
 
             if (message is ProtocolSpecifiedErrorMessage protocolSpecificMessage)
             {
                 var parsedProtocolSpecificMessage = parsedMessage as ProtocolSpecifiedErrorMessage;
                 Assert.NotNull(parsedProtocolSpecificMessage);
+                Assert.Equal(ErrorType.InternalProtocolError, parsedProtocolSpecificMessage.ErrorType);
                 Assert.Equal(protocolSpecificMessage.ErrorCode, parsedProtocolSpecificMessage.ErrorCode);
+            }
+            else
+            {
+                Assert.Equal(message.ErrorType, parsedMessage.ErrorType);
             }
         }
 

@@ -51,7 +51,7 @@ namespace Nandaka.Core.Table
                             .Single(register => register.Address == storedRegister.Address);
                     
                     if (!(registerToUpdate is IRwRegister<byte> byteRegisterToUpdate))
-                        throw new InvalidRegistersException("Wrong register type");
+                        throw new InvalidRegistersReceivedException("Wrong register type");
 
                     storedRegister.Value = byteRegisterToUpdate.Value;
                 }
@@ -108,7 +108,7 @@ namespace Nandaka.Core.Table
         {
             RegisterType type = registers.First().RegisterType;
             if (registers.Any(register => register.RegisterType != type))
-                throw new InvalidRegistersException("Registers in group must have same type");
+                throw new InvalidRegistersReceivedException("Registers in group must have same type");
         }
     }
 }

@@ -67,7 +67,7 @@ namespace Nandaka.Core.Session
                         ProcessErrorMessage(errorMessage);
 
                     if (!(receivedMessage is IReceivedMessage response))
-                        throw new InvalidMetaDataException("Wrong response received");
+                        throw new InvalidMetaDataReceivedException("Wrong response received");
 
                     _log.AppendMessage(LogMessageType.Info, "Response received, updating registers");
 
@@ -109,7 +109,7 @@ namespace Nandaka.Core.Session
                         ProcessErrorMessage(errorMessage);
 
                     if (!(receivedMessage is ISpecificMessage response))
-                        throw new InvalidMetaDataException("Wrong response received");
+                        throw new InvalidMetaDataReceivedException("Wrong response received");
 
                     _slaveDevice.OnSpecificMessageReceived(response);
 

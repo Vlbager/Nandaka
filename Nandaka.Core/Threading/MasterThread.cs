@@ -82,12 +82,12 @@ namespace Nandaka.Core.Threading
                 _log.AppendMessage(LogMessageType.Warning, deviceNotRespondException.Message);
                 _dispatcher.OnErrorOccured(device, DeviceError.NotResponding);
             }
-            catch (InvalidAddressException invalidAddressException)
+            catch (InvalidAddressReceivedException invalidAddressException)
             {
                 _log.AppendMessage(LogMessageType.Error, invalidAddressException.Message);
                 _dispatcher.OnUnexpectedDeviceResponse(device, invalidAddressException.ReceivedAddress);
             }
-            catch (InvalidMessageException invalidMessageException)
+            catch (InvalidMessageReceivedException invalidMessageException)
             {
                 _log.AppendMessage(LogMessageType.Error, invalidMessageException.ToString());
                 _dispatcher.OnErrorOccured(device, DeviceError.WrongPacketData);

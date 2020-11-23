@@ -44,7 +44,7 @@ namespace Nandaka.Core.Helpers
             }
             catch (InvalidOperationException exception)
             {
-                throw new InvalidRegistersException("Failed to map registers strictly", exception);
+                throw new InvalidRegistersReceivedException("Failed to map registers strictly", exception);
             }
 
             return result;
@@ -63,7 +63,7 @@ namespace Nandaka.Core.Helpers
 
                 IRegisterGroup deviceGroup = matAtGroups.FirstOrDefault(register => register.Address == headRegister.Address);
                 if (deviceGroup == null)
-                    throw new InvalidRegistersException($"Register group with address {headRegister.Address} was not found");
+                    throw new InvalidRegistersReceivedException($"Register group with address {headRegister.Address} was not found");
 
                 IRegister[] requestRegistersInGroup = Enumerable.Range(deviceGroup.Address, deviceGroup.Count)
                     .Select(address => registersToMap[registerIndex++].WithAddressAssert(address))

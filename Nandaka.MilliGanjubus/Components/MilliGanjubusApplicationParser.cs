@@ -6,6 +6,7 @@ using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 using Nandaka.MilliGanjubus.Models;
+using Nandaka.MilliGanjubus.Utils;
 
 namespace Nandaka.MilliGanjubus.Components
 {
@@ -55,11 +56,10 @@ namespace Nandaka.MilliGanjubus.Components
                     break;
 
                 case MilliGanjubusInfo.GError:
-                    byte errorCode = data[_info.DataOffset + 1];
-                    return new MilliGanjubusErrorMessage(deviceAddress, MessageType.Response, (MilliGanjubusErrorType)errorCode);
+                    return ParseErrorMessage(data, deviceAddress);
 
                 default:
-                    throw new InvalidMetaDataException("Wrong gByte");
+                    throw new InvalidMetaDataReceivedException("Wrong gByte");
             }
 
             bool isRange = false;
@@ -90,13 +90,24 @@ namespace Nandaka.MilliGanjubus.Components
                     break;
 
                 default:
-                    throw new InvalidMetaDataException("Wrong gByte");
+                    throw new InvalidMetaDataReceivedException("Wrong gByte");
             }
 
             IReadOnlyList<IRegister> registers = isRange ? ParseAsRange(data, _info, withValues)
                 : ParseAsSeries(data, _info, withValues);
 
             return new ReceivedRegisterMessage(deviceAddress, messageType, operationType, registers);
+        }
+
+        private IErrorMessage ParseErrorMessage(byte[] data, byte deviceAddress)
+        {
+            var mgErrorType = (MilliGanjubusErrorType) data[_info.DataOffset + 1];
+            
+            ErrorType? commonErrorType = mgErrorType.Convert();
+            if (commonErrorType.HasValue)
+                return new CommonErrorMessage(deviceAddress, MessageType.Response, commonErrorType.Value);
+            
+            return new MilliGanjubusErrorMessage(deviceAddress, MessageType.Response, mgErrorType);
         }
 
         private static IReadOnlyList<IRegister> ParseAsSeries(IReadOnlyList<byte> data, IProtocolInfo info, bool withValues)
@@ -137,7 +148,7 @@ namespace Nandaka.MilliGanjubus.Components
 
             // Check addresses validity.
             if (startAddress > endAddress)
-                throw new InvalidRegistersException("Wrong register Address");
+                throw new InvalidRegistersReceivedException("Wrong register Address");
 
             // Check registers count is valid number (less than registerGroup values bytes count).
             if (withValues && registersCount > data[info.SizeOffset] - info.MinPacketLength - 2)
