@@ -20,7 +20,7 @@ namespace Nandaka.Core.Table
             set => SetValue(value);
         }
 
-        public override event EventHandler OnRegisterChanged;
+        public override event EventHandler? OnRegisterChanged;
 
         protected MultiByteRegisterGroupBase(IReadOnlyCollection<Register<byte>> registers)
             : base(registers.First().Address, registers.Count, registers.First().RegisterType)

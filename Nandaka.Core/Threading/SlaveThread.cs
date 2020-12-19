@@ -55,7 +55,7 @@ namespace Nandaka.Core.Threading
 
         public void Dispose()
         {
-            _session?.Dispose();
+            _session.Dispose();
             _isStopped = true;
         }
     }

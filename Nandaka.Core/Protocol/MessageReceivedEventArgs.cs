@@ -5,8 +5,8 @@ namespace Nandaka.Core.Protocol
 {
     public class MessageReceivedEventArgs : EventArgs
     {
-        private readonly Exception _exception;
-        private readonly IMessage _receivedMessage;
+        private readonly Exception? _exception;
+        private readonly IMessage? _receivedMessage;
 
         public IMessage ReceivedMessage 
         {
@@ -15,7 +15,7 @@ namespace Nandaka.Core.Protocol
                 if (_exception != null)
                     throw _exception;
 
-                return _receivedMessage;
+                return _receivedMessage!;
             }
         }
 

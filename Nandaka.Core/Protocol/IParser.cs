@@ -2,7 +2,7 @@
 
 namespace Nandaka.Core.Protocol
 {
-    public interface IParser<in TIn, TOut>
+    public interface IParser<in TIn, TOut> where TOut: notnull
     {
         void Parse(TIn data);
 

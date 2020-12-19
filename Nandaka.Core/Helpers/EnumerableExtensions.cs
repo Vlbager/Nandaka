@@ -18,10 +18,11 @@ namespace Nandaka.Core.Helpers
             }
         }
 
-        public static IEnumerable<TSource> SkipNull<TSource>(this IEnumerable<TSource> source)
+        public static IEnumerable<TSource> SkipNull<TSource>(this IEnumerable<TSource?> source)
             where TSource : class
         {
-            return source.Where(element => element != null);
+            return source.Where(element => element != null)
+                         .Select(element => element!);
         }
 
         public static bool IsEmpty<TSource>(this IEnumerable<TSource> source) => !source.Any();

@@ -9,7 +9,7 @@ namespace Nandaka.Core.Device
     {
         private readonly ILog _log;
 
-        private MasterThread _thread;
+        private MasterThread? _thread;
         private readonly List<NandakaDevice> _slaveDevices;
 
         public IReadOnlyCollection<NandakaDevice> SlaveDevices => _slaveDevices;

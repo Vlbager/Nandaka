@@ -61,7 +61,7 @@ namespace Nandaka.Core.Helpers
             {
                 IRegister headRegister = registersToMap[registerIndex];
 
-                IRegisterGroup deviceGroup = matAtGroups.FirstOrDefault(register => register.Address == headRegister.Address);
+                IRegisterGroup? deviceGroup = matAtGroups.FirstOrDefault(register => register.Address == headRegister.Address);
                 if (deviceGroup == null)
                     throw new InvalidRegistersReceivedException($"Register group with address {headRegister.Address} was not found");
 

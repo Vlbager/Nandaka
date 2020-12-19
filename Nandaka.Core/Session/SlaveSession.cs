@@ -31,10 +31,10 @@ namespace Nandaka.Core.Session
         
         public void ProcessNextMessage()
         {
-            if (!_listener.WaitMessage(out IMessage receivedMessage))
+            if (!_listener.WaitMessage(out IMessage? receivedMessage))
                 return;
             
-            if (receivedMessage.Type != MessageType.Request || receivedMessage.SlaveDeviceAddress != _device.Address)
+            if (receivedMessage!.Type != MessageType.Request || receivedMessage.SlaveDeviceAddress != _device.Address)
                 return;
             
             _log.AppendMessage(LogMessageType.Info, $"Request message to device-{receivedMessage.SlaveDeviceAddress} received");

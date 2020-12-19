@@ -15,7 +15,7 @@ namespace Nandaka.Core.Device
         private readonly int _maxErrorInRowCount;
         
         private IEnumerator<NandakaDevice> _enumerator;
-        private NandakaDevice _lastDeviceInCycle;
+        private NandakaDevice? _lastDeviceInCycle;
 
         /// <summary>
         /// Timeout between request and response.
@@ -58,7 +58,7 @@ namespace Nandaka.Core.Device
                 if (nextDevice.State != DeviceState.Connected)
                     continue;
 
-                isUpdateCycleCompleted = nextDevice.Address == _lastDeviceInCycle.Address;
+                isUpdateCycleCompleted = nextDevice.Address == _lastDeviceInCycle?.Address;
 
                 return _enumerator.Current;
             }
@@ -99,7 +99,7 @@ namespace Nandaka.Core.Device
         {
             log.AppendMessage(LogMessageType.Warning, $"Message from unexpected device {responseDeviceAddress} received");
 
-            NandakaDevice responseDevice = slaveDevices.FirstOrDefault(device => device.Address == responseDeviceAddress);
+            NandakaDevice? responseDevice = slaveDevices.FirstOrDefault(device => device.Address == responseDeviceAddress);
             if (responseDevice != null && IsDeviceSkipPreviousMessage(responseDevice))
             {
                 log.AppendMessage(LogMessageType.Error,

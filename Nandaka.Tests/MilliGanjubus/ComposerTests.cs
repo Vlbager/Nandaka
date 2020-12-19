@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
-using Nandaka.Core.Table;
 using Nandaka.MilliGanjubus.Components;
 using Xunit;
 
@@ -53,12 +51,12 @@ namespace Nandaka.Tests.MilliGanjubus
             // Arrange
             // fill checkSums
             expected[3] = CheckSum.Crc8(expected.AsSpan().Slice(0, 3).ToArray());
-            expected[expected.Length - 1] = CheckSum.Crc8(expected.AsSpan().Slice(0, expected.Length - 1).ToArray());
+            expected[^1] = CheckSum.Crc8(expected.AsSpan().Slice(0, expected.Length - 1).ToArray());
 
             IRegisterMessage message = _messageFactory.CreateSeries(firstRegisterAddress, registerCount, operationType, messageType);
             
             // Act
-            byte[] actual = _composer.Compose(message, out IReadOnlyCollection<IRegisterGroup> composedGroups);
+            byte[] actual = _composer.Compose(message, out _);
             
             // Assert
             Assert.Equal(expected, actual);
@@ -84,12 +82,12 @@ namespace Nandaka.Tests.MilliGanjubus
             // Arrange
             // fill checkSums
             expected[3] = CheckSum.Crc8(expected.AsSpan().Slice(0, 3).ToArray());
-            expected[expected.Length - 1] = CheckSum.Crc8(expected.AsSpan().Slice(0, expected.Length - 1).ToArray());
+            expected[^1] = CheckSum.Crc8(expected.AsSpan().Slice(0, expected.Length - 1).ToArray());
 
             IRegisterMessage message = _messageFactory.CreateRange(firstRegisterAddress, registerCount, operationType, messageType);
             
             // Act
-            byte[] actual = _composer.Compose(message, out IReadOnlyCollection<IRegisterGroup> composedGroups);
+            byte[] actual = _composer.Compose(message, out _);
             
             // Assert
             Assert.Equal(expected, actual);

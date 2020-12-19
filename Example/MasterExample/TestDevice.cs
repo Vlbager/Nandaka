@@ -1,5 +1,4 @@
-﻿using System;
-using Nandaka.Core.Attributes;
+﻿using Nandaka.Core.Attributes;
 using Nandaka.Core.Device;
 using Nandaka.Core.Session;
 using Nandaka.Core.Table;

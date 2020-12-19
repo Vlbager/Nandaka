@@ -67,11 +67,10 @@ namespace Nandaka.Core.Threading
         {
             MasterSession session = _deviceSessions[device.Address];
 
-            ISpecificMessage specificMessage = default;
             try
             {
-                if (device.TryGetSpecific(out specificMessage))
-                    session.ProcessSpecificMessage(specificMessage);
+                if (device.TryGetSpecific(out ISpecificMessage? specificMessage))
+                    session.ProcessSpecificMessage(specificMessage!);
                 else
                     session.ProcessNextMessage();
 

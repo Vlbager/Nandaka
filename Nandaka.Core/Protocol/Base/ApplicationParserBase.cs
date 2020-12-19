@@ -13,7 +13,7 @@ namespace Nandaka.Core.Protocol
                 (sender, checkedMessage) => MessageParsed?.Invoke(sender, ApplicationParse(checkedMessage));
         }
 
-        public event EventHandler<MessageReceivedEventArgs> MessageParsed;
+        public event EventHandler<MessageReceivedEventArgs>? MessageParsed;
 
         public void Parse(TIn data)
         {

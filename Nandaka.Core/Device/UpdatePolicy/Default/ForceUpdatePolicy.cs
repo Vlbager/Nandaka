@@ -11,7 +11,7 @@ namespace Nandaka.Core.Device
         private const int DefaultUpdateTimeoutMilliseconds = 300;
         
         private IEnumerator<NandakaDevice> _enumerator;
-        private NandakaDevice _lastDeviceInCycle;
+        private NandakaDevice? _lastDeviceInCycle;
         
         public TimeSpan RequestTimeout { get; }
         public TimeSpan UpdateTimeout { get; }
@@ -45,7 +45,7 @@ namespace Nandaka.Core.Device
                 if (nextDevice.State != DeviceState.Connected)
                     continue;
 
-                isUpdateCycleCompleted = nextDevice.Address == _lastDeviceInCycle.Address;
+                isUpdateCycleCompleted = nextDevice.Address == _lastDeviceInCycle?.Address;
 
                 return _enumerator.Current;
             }

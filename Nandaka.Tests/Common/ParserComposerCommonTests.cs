@@ -8,6 +8,7 @@ using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 using Xunit;
+using Xunit.Sdk;
 
 namespace Nandaka.Tests.Common
 {
@@ -20,7 +21,7 @@ namespace Nandaka.Tests.Common
         private readonly AutoResetEvent _messageParsedResetEvent;
         
         private int _messageCounter;
-        private IMessage _parsedMessage;
+        private IMessage? _parsedMessage;
 
         public ParserComposerCommonTests(IParser<byte[], MessageReceivedEventArgs> parser, IComposer<IMessage, byte[]> composer,
                                          RegisterGenerator standardRegisterGenerator, IProtocolInfo protocolInfo)
@@ -146,18 +147,19 @@ namespace Nandaka.Tests.Common
             _parser.Parse(composed);
             Assert.True(_messageParsedResetEvent.WaitOne(TimeSpan.FromSeconds(1)));
             Assert.True(_messageCounter - currentCounterValue == 1);
-
-            var parsedMessage = _parsedMessage as IErrorMessage;
-            Assert.NotNull(parsedMessage);
+            
+            if (_parsedMessage is not IErrorMessage parsedMessage)
+                throw new NotNullException();
             
             Assert.Equal(message.Type, parsedMessage.Type);
 
             if (message is ProtocolSpecifiedErrorMessage protocolSpecificMessage)
             {
-                var parsedProtocolSpecificMessage = parsedMessage as ProtocolSpecifiedErrorMessage;
-                Assert.NotNull(parsedProtocolSpecificMessage);
-                Assert.Equal(ErrorType.InternalProtocolError, parsedProtocolSpecificMessage.ErrorType);
-                Assert.Equal(protocolSpecificMessage.ErrorCode, parsedProtocolSpecificMessage.ErrorCode);
+                if (parsedMessage is not ProtocolSpecifiedErrorMessage parsedProtocolSpecifiedErrorMessage)
+                    throw new NotNullException();
+                
+                Assert.Equal(ErrorType.InternalProtocolError, parsedProtocolSpecifiedErrorMessage.ErrorType);
+                Assert.Equal(protocolSpecificMessage.ErrorCode, parsedProtocolSpecifiedErrorMessage.ErrorCode);
             }
             else
             {
@@ -181,8 +183,9 @@ namespace Nandaka.Tests.Common
 
             Assert.True(_messageCounter - currentCounterValue == 1);
             
-            var parsedMessage = _parsedMessage as IReceivedMessage;
-            Assert.NotNull(parsedMessage);
+            if (_parsedMessage is not IReceivedMessage parsedMessage)
+                throw new NotNullException();
+            
             Assert.Equal(message.OperationType, parsedMessage.OperationType);
             Assert.Equal(message.Type, parsedMessage.Type);
             Assert.Equal(message.SlaveDeviceAddress, parsedMessage.SlaveDeviceAddress);

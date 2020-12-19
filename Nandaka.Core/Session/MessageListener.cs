@@ -17,31 +17,34 @@ namespace Nandaka.Core.Session
             _protocol = protocol;
             _resetEvent = new AutoResetEvent(initialState: false);
             _receivedMessages = new ConcurrentQueue<MessageReceivedEventArgs>();
-            _messageReceivedHandler = (sender, args) => OnMessageReceived(args);
+            _messageReceivedHandler = (_, args) => OnMessageReceived(args);
             _protocol.MessageReceived += _messageReceivedHandler;
         }
 
-        public bool WaitMessage(TimeSpan waitTimeout, out IMessage receivedMessage)
+        public bool WaitMessage(TimeSpan waitTimeout, out IMessage? receivedMessage)
         {
             receivedMessage = default;
 
             if (_receivedMessages.IsEmpty && !_resetEvent.WaitOne(waitTimeout))
                 return false;
 
-            _receivedMessages.TryDequeue(out MessageReceivedEventArgs receivedEventArgs);
+            _receivedMessages.TryDequeue(out MessageReceivedEventArgs? receivedEventArgs);
+            if (receivedEventArgs == null)
+                return false;
+            
             receivedMessage = receivedEventArgs.ReceivedMessage;
             
             return true;
         }
 
-        public bool WaitMessage(out IMessage receivedMessage)
+        public bool WaitMessage(out IMessage? receivedMessage)
         {
             receivedMessage = default;
 
             if (_receivedMessages.IsEmpty && !_resetEvent.WaitOne())
                 return false;
 
-            _receivedMessages.TryDequeue(out MessageReceivedEventArgs receivedEventArgs);
+            _receivedMessages.TryDequeue(out MessageReceivedEventArgs? receivedEventArgs);
             // todo: debug this.
             if (receivedEventArgs == null)
                 return false;
@@ -59,9 +62,6 @@ namespace Nandaka.Core.Session
 
         private void OnMessageReceived(MessageReceivedEventArgs receivedMessageArgs)
         {
-            if (receivedMessageArgs == null)
-                return;
-            
             _receivedMessages.Enqueue(receivedMessageArgs);
             _resetEvent.Set();
         }

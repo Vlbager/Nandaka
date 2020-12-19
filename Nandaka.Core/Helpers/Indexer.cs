@@ -2,7 +2,7 @@
 
 namespace Nandaka.Core.Helpers
 {
-    public class Indexer<TIn, TOut>
+    public class Indexer<TIn, TOut> where TIn: notnull
     {
         private readonly Dictionary<TIn, TOut> _dictionary;
             

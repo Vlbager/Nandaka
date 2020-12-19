@@ -24,7 +24,7 @@ namespace Nandaka.Core.Device
         public DeviceState State { get; set; }
         public Dictionary<DeviceError, int> ErrorCounter { get; }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected NandakaDevice(int address, DeviceState state, IRegistersUpdatePolicy updatePolicy, ISpecificMessageHandler specificMessageHandler)
         {
@@ -34,6 +34,7 @@ namespace Nandaka.Core.Device
             _specificMessages = new ConcurrentQueue<ISpecificMessage>();
             ErrorCounter = new Dictionary<DeviceError, int>();
             State = state;
+            RegisterGroups = Array.Empty<IRegisterGroup>();
         }
 
         protected NandakaDevice(int address, IRegistersUpdatePolicy updatePolicy, DeviceState state)
@@ -52,10 +53,10 @@ namespace Nandaka.Core.Device
         internal void OnSpecificMessageReceived(ISpecificMessage message)
             => _specificMessageHandler.OnSpecificMessageReceived(message);
 
-        internal bool TryGetSpecific(out ISpecificMessage message)
+        internal bool TryGetSpecific(out ISpecificMessage? message)
             => _specificMessages.TryDequeue(out message);
 
-        protected virtual void RaisePropertyChanged([CallerMemberName]string propertyName = null)
+        protected virtual void RaisePropertyChanged([CallerMemberName]string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
@@ -96,7 +97,7 @@ namespace Nandaka.Core.Device
                     continue;
                 }
 
-                registerGroup.OnRegisterChanged += (sender, args) => RaisePropertyChanged(propertyInfo.Name);
+                registerGroup.OnRegisterChanged += (_, _) => RaisePropertyChanged(propertyInfo.Name);
 
                 IEnumerable<RegisterModifyAttribute> attributes = propertyInfo.CustomAttributes
                     .SafeCast<CustomAttributeData, RegisterModifyAttribute>();

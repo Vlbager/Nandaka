@@ -4,7 +4,7 @@ namespace Nandaka.Core.Protocol
 {
     public abstract class DataLinkParserBase<TIn> : IParser<TIn, byte[]>
     {
-        public event EventHandler<byte[]> MessageParsed;
+        public event EventHandler<byte[]>? MessageParsed;
 
         protected virtual void OnMessageParsed(byte[] checkedMessage)
         {

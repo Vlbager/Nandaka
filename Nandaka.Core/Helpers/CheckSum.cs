@@ -1,6 +1,6 @@
 namespace Nandaka.Core.Helpers
 {
-    public class CheckSum
+    public static class CheckSum
     {
         public static byte Crc8(byte[] pcBlock)
         {

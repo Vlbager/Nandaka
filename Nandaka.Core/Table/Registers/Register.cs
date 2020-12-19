@@ -23,7 +23,7 @@ namespace Nandaka.Core.Table
             }
         }
 
-        public event EventHandler OnRegisterChanged;
+        public event EventHandler? OnRegisterChanged;
 
         private Register(int address, RegisterType registerType, TValue value)
         {

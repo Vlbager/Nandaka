@@ -7,6 +7,7 @@ using Nandaka.Core.Table;
 using Nandaka.MilliGanjubus.Components;
 using Nandaka.MilliGanjubus.Models;
 using Xunit;
+using Xunit.Sdk;
 
 namespace Nandaka.Tests.MilliGanjubus
 {
@@ -14,7 +15,7 @@ namespace Nandaka.Tests.MilliGanjubus
     {
         private readonly IParser<byte[], MessageReceivedEventArgs> _parser;
         private int _messageCount;
-        private IMessage _parsedMessage;
+        private IMessage? _parsedMessage;
 
 
         public ParserTests()
@@ -64,14 +65,17 @@ namespace Nandaka.Tests.MilliGanjubus
             // Arrange
             // fill checkSums
             buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            buffer[^1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             _parser.Parse(buffer);
             // Asserts
             Assert.Equal(1, _messageCount);
-            Assert.Equal(messageType, _parsedMessage.Type);
-            var registerMessage = _parsedMessage as IReceivedMessage;
-            Assert.NotNull(registerMessage);
+            
+            if (_parsedMessage is not IReceivedMessage registerMessage)
+                throw new NotNullException();
+            
+            Assert.Equal(messageType, registerMessage.Type);
+            
             Assert.Equal(registerMessage.OperationType, operationType);
             // Assert registers
             int byteIndex = 5;
@@ -119,13 +123,17 @@ namespace Nandaka.Tests.MilliGanjubus
             // Arrange
             // fill checkSums
             buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            buffer[^1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             _parser.Parse(buffer);
             // Asserts
             Assert.Equal(1, _messageCount);
-            Assert.Equal(messageType, _parsedMessage.Type);
-            var registerMessage = _parsedMessage as IReceivedMessage;
+            
+            if (_parsedMessage is not IReceivedMessage registerMessage)
+                throw new NotNullException();
+            
+            Assert.Equal(messageType, registerMessage.Type);
+            
             Assert.NotNull(registerMessage);
             Assert.Equal(registerMessage.OperationType, operationType);
             // Assert registers
@@ -159,12 +167,15 @@ namespace Nandaka.Tests.MilliGanjubus
             // Arrange
             // fill checkSums
             buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            buffer[^1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             _parser.Parse(buffer);
             // Asserts
             Assert.Equal(1, _messageCount);
-            var milliGanjubusMessage = _parsedMessage as MilliGanjubusErrorMessage;
+
+            if (_parsedMessage is not MilliGanjubusErrorMessage milliGanjubusMessage)
+                throw new NotNullException();
+            
             Assert.NotNull(milliGanjubusMessage);
             Assert.Equal(_parsedMessage.SlaveDeviceAddress, buffer[1]);
             // Assert errorType

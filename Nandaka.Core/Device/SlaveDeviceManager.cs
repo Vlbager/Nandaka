@@ -8,7 +8,7 @@ namespace Nandaka.Core.Device
     {
         private readonly ILog _log;
 
-        private SlaveThread _thread;
+        private SlaveThread? _thread;
         
         public NandakaDevice Device { get; }
 

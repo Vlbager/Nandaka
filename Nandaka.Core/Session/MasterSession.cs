@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
@@ -46,10 +45,10 @@ namespace Nandaka.Core.Session
 
                 while (true)
                 {
-                    if (!listener.WaitMessage(_dispatcher.RequestTimeout, out IMessage receivedMessage))
+                    if (!listener.WaitMessage(_dispatcher.RequestTimeout, out IMessage? receivedMessage))
                         throw new DeviceNotRespondException("Device Not responding");
 
-                    if (receivedMessage.Type != MessageType.Response)
+                    if (receivedMessage!.Type != MessageType.Response)
                         continue;
                     
                     // All high priority messages should be handled in separate thread.
@@ -82,39 +81,38 @@ namespace Nandaka.Core.Session
 
         public void ProcessSpecificMessage(ISpecificMessage message)
         {
-            using (var listener = new MessageListener(_protocol))
+            using var listener = new MessageListener(_protocol);
+            
+            _protocol.SendMessage(message);
+
+            while (true)
             {
-                _protocol.SendMessage(message);
+                if (!listener.WaitMessage(_dispatcher.RequestTimeout, out IMessage? receivedMessage))
+                    throw new DeviceNotRespondException("Device Not responding");
+                    
+                if (receivedMessage!.Type != MessageType.Response)
+                    continue;
 
-                while (true)
+                // All high priority messages should be handled in separate thread.
+                if (receivedMessage is HighPriorityMessage)
+                    continue;
+
+                if (receivedMessage.SlaveDeviceAddress != _slaveDevice.Address)
                 {
-                    if (!listener.WaitMessage(_dispatcher.RequestTimeout, out IMessage receivedMessage))
-                        throw new DeviceNotRespondException("Device Not responding");
-                    
-                    if (receivedMessage.Type != MessageType.Response)
-                        continue;
-
-                    // All high priority messages should be handled in separate thread.
-                    if (receivedMessage is HighPriorityMessage)
-                        continue;
-
-                    if (receivedMessage.SlaveDeviceAddress != _slaveDevice.Address)
-                    {
-                        _dispatcher.OnUnexpectedDeviceResponse(_slaveDevice,
-                            receivedMessage.SlaveDeviceAddress);
-                        continue;
-                    }
-                    
-                    if (receivedMessage is IErrorMessage errorMessage)
-                        ProcessErrorMessage(errorMessage);
-
-                    if (!(receivedMessage is ISpecificMessage response))
-                        throw new InvalidMetaDataReceivedException("Wrong response received");
-
-                    _slaveDevice.OnSpecificMessageReceived(response);
-
-                    break;
+                    _dispatcher.OnUnexpectedDeviceResponse(_slaveDevice,
+                                                           receivedMessage.SlaveDeviceAddress);
+                    continue;
                 }
+                    
+                if (receivedMessage is IErrorMessage errorMessage)
+                    ProcessErrorMessage(errorMessage);
+
+                if (!(receivedMessage is ISpecificMessage response))
+                    throw new InvalidMetaDataReceivedException("Wrong response received");
+
+                _slaveDevice.OnSpecificMessageReceived(response);
+
+                break;
             }
         }
 

@@ -63,8 +63,7 @@ namespace Nandaka.MilliGanjubus.Components
                     case ParsingStage.WaitingHeaderCrc:
                         CheckByteValue(byteValue == CheckSum.Crc8(_buffer.GetRange(0, _parserCounter).ToArray()));
                         break;
-
-                    case ParsingStage.WaitingData:
+                    
                     default:
                         if (_parserCounter < _buffer[_info.SizeOffset] - 1)
                         {

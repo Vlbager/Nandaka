@@ -31,7 +31,7 @@ namespace Nandaka.Core.Table
             }
         }
 
-        public override event EventHandler OnRegisterChanged;
+        public override event EventHandler? OnRegisterChanged;
 
         public SingleRegisterGroup(Register<TValue> register) : base(register.Address,1, register.RegisterType)
         {

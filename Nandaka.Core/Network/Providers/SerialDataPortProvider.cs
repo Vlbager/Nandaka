@@ -9,7 +9,7 @@ namespace Nandaka.Core.Network
 {
     public class SerialDataPortProvider : IDataPortProvider<byte[]>, IDisposable
     {
-        public event EventHandler<byte[]> OnDataReceived;
+        public event EventHandler<byte[]>? OnDataReceived;
 
         private readonly SerialPort _serialPort;
 
@@ -17,7 +17,7 @@ namespace Nandaka.Core.Network
         {
             _serialPort = new SerialPort(portName, baudRate);
             _serialPort.Open();
-            _serialPort.DataReceived += (sender, args) => OnDataReceived?.Invoke(sender, Read());
+            _serialPort.DataReceived += (sender, _) => OnDataReceived?.Invoke(sender, Read());
         }
 
         public byte[] Read()
@@ -74,30 +74,30 @@ namespace Nandaka.Core.Network
         {
             try
             {
-                FieldInfo eventRunnerField = internalSerialStream.GetType()
+                FieldInfo? eventRunnerField = internalSerialStream.GetType()
                     .GetField("eventRunner", BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if (eventRunnerField != null)
                 {
-                    object eventRunner = eventRunnerField.GetValue(internalSerialStream);
-                    Type eventRunnerType = eventRunner.GetType();
+                    object? eventRunner = eventRunnerField.GetValue(internalSerialStream);
+                    Type? eventRunnerType = eventRunner?.GetType();
 
-                    FieldInfo endEventLoopFieldInfo = eventRunnerType.GetField(
+                    FieldInfo? endEventLoopFieldInfo = eventRunnerType?.GetField(
                         "endEventLoop", BindingFlags.Instance | BindingFlags.NonPublic);
 
-                    FieldInfo eventLoopEndedSignalFieldInfo = eventRunnerType.GetField(
+                    FieldInfo? eventLoopEndedSignalFieldInfo = eventRunnerType?.GetField(
                         "eventLoopEndedSignal", BindingFlags.Instance | BindingFlags.NonPublic);
 
-                    FieldInfo waitCommEventWaitHandleFieldInfo = eventRunnerType.GetField(
+                    FieldInfo? waitCommEventWaitHandleFieldInfo = eventRunnerType?.GetField(
                         "waitCommEventWaitHandle", BindingFlags.Instance | BindingFlags.NonPublic);
 
                     if (endEventLoopFieldInfo != null && eventLoopEndedSignalFieldInfo != null &&
                         waitCommEventWaitHandleFieldInfo != null)
                     {
                         var eventLoopEndedWaitHandle =
-                            (WaitHandle)eventLoopEndedSignalFieldInfo.GetValue(eventRunner);
+                            (WaitHandle)eventLoopEndedSignalFieldInfo.GetValue(eventRunner)!;
                         var waitCommEventWaitHandle =
-                            (ManualResetEvent)waitCommEventWaitHandleFieldInfo.GetValue(eventRunner);
+                            (ManualResetEvent)waitCommEventWaitHandleFieldInfo.GetValue(eventRunner)!;
 
                         endEventLoopFieldInfo.SetValue(eventRunner, true);
 
