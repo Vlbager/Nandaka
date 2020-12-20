@@ -4,7 +4,7 @@
     {
         public IMessage InnerMessage { get; }
         public int SlaveDeviceAddress => InnerMessage.SlaveDeviceAddress;
-        public MessageType Type => InnerMessage.Type;
+        public MessageType MessageType => InnerMessage.MessageType;
 
         public HighPriorityMessage(IMessage innerMessage)
         {

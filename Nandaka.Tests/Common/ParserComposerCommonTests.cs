@@ -9,6 +9,7 @@ using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 using Xunit;
 using Xunit.Sdk;
+using ErrorMessage = Nandaka.Core.Session.ErrorMessage;
 
 namespace Nandaka.Tests.Common
 {
@@ -116,28 +117,26 @@ namespace Nandaka.Tests.Common
             Assert.ThrowsAny<NandakaBaseException>(() => _composer.Compose(message, out IReadOnlyCollection<IRegisterGroup> _));
         }
 
-        public void ValidErrorMessages(IEnumerable<ErrorType> validErrorTypes, IEnumerable<int> validErrorCodes)
+        public void ValidCommonErrorMessages(IEnumerable<ErrorType> validErrorTypes)
         {
-            IEnumerable<IErrorMessage> messages = _messageGenerator.GenerateCommonErrorMessages(validErrorTypes, 1.ToEnumerable(), true);
+            IEnumerable<ErrorMessage> messages = _messageGenerator.GenerateCommonErrorMessages(validErrorTypes, 1.ToEnumerable(), true);
 
-            messages = messages.Concat(_messageGenerator.GenerateProtocolErrorMessages(validErrorCodes, 1.ToEnumerable(), true));
-
-            foreach (IErrorMessage message in messages)
+            foreach (ErrorMessage message in messages)
                 AssertErrorMessage(message);
         }
 
-        public void InvalidErrorMessages(IEnumerable<ErrorType> invalidErrorTypes, IEnumerable<int> invalidErrorCodes)
+        public void InvalidCommonErrorMessages(IEnumerable<ErrorType> invalidErrorTypes)
         {
-            IEnumerable<IErrorMessage> messages = _messageGenerator.GenerateCommonErrorMessages(invalidErrorTypes, 1.ToEnumerable(), true);
+            IEnumerable<ErrorMessage> messages = _messageGenerator.GenerateCommonErrorMessages(invalidErrorTypes, 1.ToEnumerable(), true);
 
-            messages = messages.Concat(_messageGenerator.GenerateProtocolErrorMessages(invalidErrorCodes, 1.ToEnumerable(), true));
+            //messages = messages.Concat(_messageGenerator.GenerateProtocolErrorMessages(invalidErrorCodes, 1.ToEnumerable(), true));
 
-            foreach (IErrorMessage message in messages)
+            foreach (ErrorMessage message in messages)
                 Assert.ThrowsAny<NandakaBaseException>(() => _composer.Compose(message, out _));
             
         }
 
-        private void AssertErrorMessage(IErrorMessage message)
+        internal void AssertErrorMessage(ErrorMessage message)
         {
             byte[] composed = _composer.Compose(message, out _);
             
@@ -148,26 +147,25 @@ namespace Nandaka.Tests.Common
             Assert.True(_messageParsedResetEvent.WaitOne(TimeSpan.FromSeconds(1)));
             Assert.True(_messageCounter - currentCounterValue == 1);
             
-            if (_parsedMessage is not IErrorMessage parsedMessage)
+            if (_parsedMessage is not ErrorMessage parsedMessage)
                 throw new NotNullException();
             
-            Assert.Equal(message.Type, parsedMessage.Type);
+            Assert.Equal(message.MessageType, parsedMessage.MessageType);
 
-            if (message is ProtocolSpecifiedErrorMessage protocolSpecificMessage)
-            {
-                if (parsedMessage is not ProtocolSpecifiedErrorMessage parsedProtocolSpecifiedErrorMessage)
-                    throw new NotNullException();
-                
-                Assert.Equal(ErrorType.InternalProtocolError, parsedProtocolSpecifiedErrorMessage.ErrorType);
-                Assert.Equal(protocolSpecificMessage.ErrorCode, parsedProtocolSpecifiedErrorMessage.ErrorCode);
-            }
-            else
+            if (message.ProtocolSpecifiedErrorMessage == null)
             {
                 Assert.Equal(message.ErrorType, parsedMessage.ErrorType);
+                return;
             }
+
+            ProtocolSpecifiedErrorMessage? parsedProtocolSpecifiedErrorMessage = parsedMessage.ProtocolSpecifiedErrorMessage;
+            if (parsedProtocolSpecifiedErrorMessage == null)
+                throw new NotNullException();
+            
+            Assert.Equal(message.ProtocolSpecifiedErrorMessage.ErrorCode, parsedProtocolSpecifiedErrorMessage.ErrorCode);
         }
 
-        private void AssertRegisterMessage(IRegisterMessage message)
+        internal void AssertRegisterMessage(IRegisterMessage message)
         {
             byte[] composed = _composer.Compose(message, out IReadOnlyCollection<IRegisterGroup> composedGroups);
                 
@@ -187,7 +185,7 @@ namespace Nandaka.Tests.Common
                 throw new NotNullException();
             
             Assert.Equal(message.OperationType, parsedMessage.OperationType);
-            Assert.Equal(message.Type, parsedMessage.Type);
+            Assert.Equal(message.MessageType, parsedMessage.MessageType);
             Assert.Equal(message.SlaveDeviceAddress, parsedMessage.SlaveDeviceAddress);
 
             IRegister[] expectedRawRegisters = message.RegisterGroups

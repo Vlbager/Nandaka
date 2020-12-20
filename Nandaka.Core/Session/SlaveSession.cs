@@ -34,7 +34,7 @@ namespace Nandaka.Core.Session
             if (!_listener.WaitMessage(out IMessage? receivedMessage))
                 return;
             
-            if (receivedMessage!.Type != MessageType.Request || receivedMessage.SlaveDeviceAddress != _device.Address)
+            if (receivedMessage!.MessageType != MessageType.Request || receivedMessage.SlaveDeviceAddress != _device.Address)
                 return;
             
             _log.AppendMessage(LogMessageType.Info, $"Request message to device-{receivedMessage.SlaveDeviceAddress} received");
@@ -64,7 +64,7 @@ namespace Nandaka.Core.Session
             catch (InvalidMessageReceivedException exception)
             {
                 _log.AppendMessage(LogMessageType.Warning, exception.ToString());
-                var errorMessage = new CommonErrorMessage(_device.Address, MessageType.Response, exception.ErrorType);
+                var errorMessage = ErrorMessage.CreateCommon(_device.Address, MessageType.Response, exception.ErrorType);
                 _protocol.SendMessage(errorMessage);
             }
         }

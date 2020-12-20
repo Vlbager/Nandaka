@@ -11,7 +11,7 @@ namespace Nandaka.Tests.Common
         void InvalidSizedSeriesMessages();
         void InvalidSizedRangeMessages();
         void ZeroSizeMessage();
-        void ValidErrorMessages(IEnumerable<ErrorType> validErrorTypes, IEnumerable<int> validErrorCodes);
-        void InvalidErrorMessages(IEnumerable<ErrorType> invalidErrorTypes, IEnumerable<int> invalidErrorCodes);
+        void ValidCommonErrorMessages(IEnumerable<ErrorType> validErrorTypes);
+        void InvalidCommonErrorMessages(IEnumerable<ErrorType> invalidErrorTypes);
     }
 }

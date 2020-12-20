@@ -3,6 +3,6 @@
     public interface IMessage
     {
         int SlaveDeviceAddress { get; }
-        MessageType Type { get; }
+        MessageType MessageType { get; }
     }
 }

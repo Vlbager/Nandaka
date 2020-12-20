@@ -5,9 +5,9 @@ using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 using Nandaka.MilliGanjubus.Components;
-using Nandaka.MilliGanjubus.Models;
 using Xunit;
 using Xunit.Sdk;
+using ErrorMessage = Nandaka.Core.Session.ErrorMessage;
 
 namespace Nandaka.Tests.MilliGanjubus
 {
@@ -74,7 +74,7 @@ namespace Nandaka.Tests.MilliGanjubus
             if (_parsedMessage is not IReceivedMessage registerMessage)
                 throw new NotNullException();
             
-            Assert.Equal(messageType, registerMessage.Type);
+            Assert.Equal(messageType, registerMessage.MessageType);
             
             Assert.Equal(registerMessage.OperationType, operationType);
             // Assert registers
@@ -132,7 +132,7 @@ namespace Nandaka.Tests.MilliGanjubus
             if (_parsedMessage is not IReceivedMessage registerMessage)
                 throw new NotNullException();
             
-            Assert.Equal(messageType, registerMessage.Type);
+            Assert.Equal(messageType, registerMessage.MessageType);
             
             Assert.NotNull(registerMessage);
             Assert.Equal(registerMessage.OperationType, operationType);
@@ -173,14 +173,14 @@ namespace Nandaka.Tests.MilliGanjubus
             // Asserts
             Assert.Equal(1, _messageCount);
 
-            if (_parsedMessage is not MilliGanjubusErrorMessage milliGanjubusMessage)
+            if (_parsedMessage is not ErrorMessage errorMessage)
                 throw new NotNullException();
             
-            Assert.NotNull(milliGanjubusMessage);
+            Assert.NotNull(errorMessage);
             Assert.Equal(_parsedMessage.SlaveDeviceAddress, buffer[1]);
             // Assert errorType
-            Assert.NotNull(milliGanjubusMessage);
-            Assert.Equal(buffer[5], milliGanjubusMessage.ErrorCode);
+            Assert.NotNull(errorMessage);
+            Assert.Equal(buffer[5], errorMessage.ProtocolSpecifiedErrorMessage!.ErrorCode);
         }
 
         [Fact]

@@ -6,6 +6,6 @@ namespace Nandaka.Core.Protocol
     {
         void Parse(TIn data);
 
-        event EventHandler<TOut> MessageParsed;
+        event EventHandler<TOut>? MessageParsed;
     }
 }

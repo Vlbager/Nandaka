@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Nandaka.Core.Helpers;
 using Nandaka.Core.Session;
 using Nandaka.Core.Table;
 using Nandaka.MilliGanjubus.Components;
@@ -12,7 +13,6 @@ namespace Nandaka.Tests.MilliGanjubus
 {
     public class ParserComposerMilliGanjubusTests : IParserComposerTests
     {
-        private static readonly MilliGanjubusInfo ProtocolInfo;
         private static readonly ParserComposerCommonTests CommonTests;
 
         private static readonly RegisterGenerator ByteRegisterGenerator;
@@ -24,17 +24,16 @@ namespace Nandaka.Tests.MilliGanjubus
             ErrorType.TooMuchDataRequested
         };
 
-        private static readonly int[] ValidSpecificErrorCodes =
-        {
-            (int) MilliGanjubusErrorType.UnableToExecuteCommand
-        };
+        private static readonly int[] ValidErrorCodes = Enum.GetValues<MilliGanjubusErrorType>()
+                                                            .Cast<int>()
+                                                            .ToArray();
 
         static ParserComposerMilliGanjubusTests()
         {
-            ProtocolInfo = new MilliGanjubusInfo();
+            MilliGanjubusInfo protocolInfo = new();
             ByteRegisterGenerator = new RegisterGenerator(UInt8RegisterGroup.CreateNew, sizeof(byte));
-            CommonTests = new ParserComposerCommonTests(new MilliGanjubusApplicationParser(ProtocolInfo), new MilliGanjubusComposer(ProtocolInfo),
-                                                        ByteRegisterGenerator, ProtocolInfo);
+            CommonTests = new ParserComposerCommonTests(new MilliGanjubusApplicationParser(protocolInfo), new MilliGanjubusComposer(protocolInfo),
+                                                        ByteRegisterGenerator, protocolInfo);
         }
 
         [Fact]
@@ -79,39 +78,63 @@ namespace Nandaka.Tests.MilliGanjubus
             CommonTests.ZeroSizeMessage();
         }
         
-        public static readonly IEnumerable<object[]> ValidErrorMessagesParams = new[] { new object[] { ValidErrorTypes, ValidSpecificErrorCodes } };
+        public static readonly IEnumerable<object[]> ValidErrorMessagesParams = new[] { new object[] { ValidErrorTypes } };
 
         [Theory]
         [MemberData(nameof(ValidErrorMessagesParams))]
         [Trait("ShouldParseCompose", "All")]
-        public void ValidErrorMessages(IEnumerable<ErrorType> validErrorTypes, IEnumerable<int> validErrorCodes)
+        public void ValidCommonErrorMessages(IEnumerable<ErrorType> validErrorTypes)
         {
-            CommonTests.ValidErrorMessages(validErrorTypes, validErrorCodes);
+            CommonTests.ValidCommonErrorMessages(validErrorTypes);
         }
 
         public static readonly IEnumerable<object[]> InvalidErrorMessagesParams = new[]
         {
-            new object[]
-            {
-                Enum.GetValues(typeof(ErrorType)).Cast<ErrorType>().Except(ValidErrorTypes).ToArray(),
-                GetInvalidErrorCodes()
-            }
+            new object[] { Enum.GetValues<ErrorType>().Except(ValidErrorTypes).ToArray() }
         };
-
-        private static int[] GetInvalidErrorCodes()
-        {
-            const int minCornerCaseErrorCode = 0;
-            int maxCornerCaseErrorCode = ValidSpecificErrorCodes.Max() + 1;
-
-            return new[] { minCornerCaseErrorCode, maxCornerCaseErrorCode };
-        }
 
         [Theory]
         [MemberData(nameof(InvalidErrorMessagesParams))]
         [Trait("ShouldFail", "All")]
-        public void InvalidErrorMessages(IEnumerable<ErrorType> invalidErrorTypes, IEnumerable<int> invalidErrorCodes)
+        public void InvalidCommonErrorMessages(IEnumerable<ErrorType> invalidErrorTypes)
         {
-            CommonTests.InvalidErrorMessages(invalidErrorTypes, invalidErrorCodes);
+            CommonTests.InvalidCommonErrorMessages(invalidErrorTypes);
+        }
+
+        [Fact]
+        [Trait("ShouldParseCompose", "All")]
+        public void ValidProtocolErrorMessages()
+        {
+            var messageGenerator = new MessageGenerator(ByteRegisterGenerator);
+            var errorMessageFactory = new ProtocolErrorMessageFactory();
+
+            IEnumerable<ErrorMessage> messages = messageGenerator.GenerateProtocolErrorMessages(errorMessageFactory, ValidErrorCodes, 
+                                                                                                1.ToEnumerable(), true);
+
+            foreach (ErrorMessage errorMessage in messages)
+                CommonTests.AssertErrorMessage(errorMessage);
+        }
+        
+        [Fact]
+        [Trait("ShouldFail", "All")]
+        public void InvalidProtocolErrorMessages()
+        {
+            var messageGenerator = new MessageGenerator(ByteRegisterGenerator);
+            var errorMessageFactory = new ProtocolErrorMessageFactory();
+
+            IEnumerable<ErrorMessage> messages = messageGenerator.GenerateProtocolErrorMessages(errorMessageFactory, GetInvalidErrorCodes(), 
+                                                                                                1.ToEnumerable(), true);
+
+            foreach (ErrorMessage errorMessage in messages)
+                CommonTests.AssertErrorMessage(errorMessage);
+        }
+        
+        private static int[] GetInvalidErrorCodes()
+        {
+            const int minCornerCaseErrorCode = 0;
+            int maxCornerCaseErrorCode = ValidErrorCodes.Max() + 1;
+
+            return new[] { minCornerCaseErrorCode, maxCornerCaseErrorCode };
         }
     }
 }

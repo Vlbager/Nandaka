@@ -48,7 +48,7 @@ namespace Nandaka.Core.Session
                     if (!listener.WaitMessage(_dispatcher.RequestTimeout, out IMessage? receivedMessage))
                         throw new DeviceNotRespondException("Device Not responding");
 
-                    if (receivedMessage!.Type != MessageType.Response)
+                    if (receivedMessage!.MessageType != MessageType.Response)
                         continue;
                     
                     // All high priority messages should be handled in separate thread.
@@ -62,7 +62,7 @@ namespace Nandaka.Core.Session
                         continue;
                     }
                     
-                    if (receivedMessage is IErrorMessage errorMessage)
+                    if (receivedMessage is ErrorMessage errorMessage)
                         ProcessErrorMessage(errorMessage);
 
                     if (!(receivedMessage is IReceivedMessage response))
@@ -90,7 +90,7 @@ namespace Nandaka.Core.Session
                 if (!listener.WaitMessage(_dispatcher.RequestTimeout, out IMessage? receivedMessage))
                     throw new DeviceNotRespondException("Device Not responding");
                     
-                if (receivedMessage!.Type != MessageType.Response)
+                if (receivedMessage!.MessageType != MessageType.Response)
                     continue;
 
                 // All high priority messages should be handled in separate thread.
@@ -104,7 +104,7 @@ namespace Nandaka.Core.Session
                     continue;
                 }
                     
-                if (receivedMessage is IErrorMessage errorMessage)
+                if (receivedMessage is ErrorMessage errorMessage)
                     ProcessErrorMessage(errorMessage);
 
                 if (!(receivedMessage is ISpecificMessage response))
@@ -116,7 +116,7 @@ namespace Nandaka.Core.Session
             }
         }
 
-        private void ProcessErrorMessage(IErrorMessage errorMessage)
+        private void ProcessErrorMessage(ErrorMessage errorMessage)
         {
             throw new NotImplementedException();
         }

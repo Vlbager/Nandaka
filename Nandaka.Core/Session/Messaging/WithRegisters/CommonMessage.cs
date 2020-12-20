@@ -7,7 +7,7 @@ namespace Nandaka.Core.Session
     public class CommonMessage : IRegisterMessage
     {
         public int SlaveDeviceAddress { get; }
-        public MessageType Type { get; }
+        public MessageType MessageType { get; }
         public OperationType OperationType { get; }
         public IReadOnlyCollection<IRegisterGroup> RegisterGroups { get; }
 
@@ -15,7 +15,7 @@ namespace Nandaka.Core.Session
             IEnumerable<IRegisterGroup> registerGroups)
         {
             SlaveDeviceAddress = slaveDeviceAddress;
-            Type = type;
+            MessageType = type;
             OperationType = operationType;
             RegisterGroups = registerGroups.ToArray();
         }

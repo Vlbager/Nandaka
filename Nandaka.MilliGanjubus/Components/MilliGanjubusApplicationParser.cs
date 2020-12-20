@@ -99,15 +99,10 @@ namespace Nandaka.MilliGanjubus.Components
             return new ReceivedRegisterMessage(deviceAddress, messageType, operationType, registers);
         }
 
-        private IErrorMessage ParseErrorMessage(byte[] data, byte deviceAddress)
+        private ErrorMessage ParseErrorMessage(IReadOnlyList<byte> data, byte deviceAddress)
         {
             var mgErrorType = (MilliGanjubusErrorType) data[_info.DataOffset + 1];
-            
-            ErrorType? commonErrorType = mgErrorType.Convert();
-            if (commonErrorType.HasValue)
-                return new CommonErrorMessage(deviceAddress, MessageType.Response, commonErrorType.Value);
-            
-            return new MilliGanjubusErrorMessage(deviceAddress, MessageType.Response, mgErrorType);
+            return MilliGanjubusErrorMessage.Create(deviceAddress, MessageType.Response, mgErrorType);
         }
 
         private static IReadOnlyList<IRegister> ParseAsSeries(IReadOnlyList<byte> data, IProtocolInfo info, bool withValues)

@@ -27,7 +27,7 @@ namespace Nandaka.MilliGanjubus.Components
                 case IRegisterMessage registerMessage:
                     return Compose(registerMessage, out composedGroups);
 
-                case IErrorMessage errorMessage:
+                case ErrorMessage errorMessage:
                     composedGroups = Array.Empty<IRegisterGroup>();
                     return Compose(errorMessage);
 
@@ -36,7 +36,7 @@ namespace Nandaka.MilliGanjubus.Components
             }
         }
 
-        private byte[] Compose(IErrorMessage message)
+        private byte[] Compose(ErrorMessage message)
         {
             byte[] packet = PreparePacketWithHeader(_info.MinPacketLength + 2, message.SlaveDeviceAddress);
 
@@ -49,15 +49,14 @@ namespace Nandaka.MilliGanjubus.Components
             return packet;
         }
 
-        private byte GetReturnCode(IErrorMessage message)
+        private byte GetReturnCode(ErrorMessage message)
         {
             MilliGanjubusErrorType? mgErrorType = message.ErrorType.Convert();
             if (mgErrorType.HasValue)
                 return (byte) mgErrorType.Value;
 
             if (message.ErrorType == ErrorType.InternalProtocolError &&
-                message is ProtocolSpecifiedErrorMessage mgErrorMessage &&
-                Enum.IsDefined(typeof(MilliGanjubusErrorType), mgErrorMessage.ErrorCode))
+                message.ProtocolSpecifiedErrorMessage is MilliGanjubusErrorMessage mgErrorMessage)
             {
                 return (byte) mgErrorMessage.ErrorCode;
             }
@@ -98,7 +97,7 @@ namespace Nandaka.MilliGanjubus.Components
         {
             byte gByte;
             bool withValues = false;
-            switch (message.Type)
+            switch (message.MessageType)
             {
                 case MessageType.Request:
                     gByte = MilliGanjubusInfo.GRequest;

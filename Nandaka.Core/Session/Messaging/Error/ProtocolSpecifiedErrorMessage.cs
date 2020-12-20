@@ -1,11 +1,10 @@
 ﻿namespace Nandaka.Core.Session
 {
-    public class ProtocolSpecifiedErrorMessage : CommonErrorMessage
+    public abstract class ProtocolSpecifiedErrorMessage
     {
         public int ErrorCode { get; }
 
-        public ProtocolSpecifiedErrorMessage(int slaveDeviceAddress, MessageType type, int protocolErrorCode) 
-            : base(slaveDeviceAddress, type, ErrorType.InternalProtocolError)
+        protected ProtocolSpecifiedErrorMessage(int protocolErrorCode)
         {
             ErrorCode = protocolErrorCode;
         }
