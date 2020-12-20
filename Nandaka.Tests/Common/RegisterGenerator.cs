@@ -9,7 +9,7 @@ namespace Nandaka.Tests.Common
     {
         private readonly Func<int, RegisterType, IRegisterGroup> _registerFactory;
         
-        public static readonly IEnumerable<RegisterType> Types = new[] { RegisterType.Read, RegisterType.ReadWrite };
+        public static readonly IEnumerable<RegisterType> Types = new[] { RegisterType.ReadRequest, RegisterType.WriteRequest };
         
         public int RegisterValueSize { get; }
 

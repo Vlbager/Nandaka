@@ -83,14 +83,14 @@ namespace Nandaka.Core.Device
                 if (propertyType == typeof(IRwRegister<>))
                 {
                     registerGroup.SetRegisterTypeViaReflection(isManagedByMaster
-                        ? RegisterType.ReadWrite
-                        : RegisterType.Read);
+                        ? RegisterType.WriteRequest
+                        : RegisterType.ReadRequest);
                 }
                 else if (propertyType == typeof(IRoRegister<>))
                 {
                     registerGroup.SetRegisterTypeViaReflection(isManagedByMaster
-                        ? RegisterType.Read
-                        : RegisterType.ReadWrite);
+                        ? RegisterType.ReadRequest
+                        : RegisterType.WriteRequest);
                 }
                 else
                 {

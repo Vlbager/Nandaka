@@ -51,9 +51,9 @@ namespace Nandaka.Tests.MilliGanjubus
             switch (operationType)
             {
                 case OperationType.Read:
-                    return RegisterType.Read;
+                    return RegisterType.ReadRequest;
                 case OperationType.Write:
-                    return RegisterType.ReadWrite;
+                    return RegisterType.WriteRequest;
                 default:
                     throw new NandakaBaseException("Wrong operation type");
             }

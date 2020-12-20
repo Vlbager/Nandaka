@@ -2,8 +2,8 @@
 {
     public enum RegisterType
     {
-        Read,
-        ReadWrite,
+        ReadRequest,
+        WriteRequest,
         Raw
     }
 }
