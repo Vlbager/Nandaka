@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Nandaka.Core.Table;
+using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Session
 {
@@ -8,7 +8,7 @@ namespace Nandaka.Core.Session
     {
         public int SlaveDeviceAddress => 0;
         public MessageType MessageType => MessageType.None;
-        public IReadOnlyCollection<IRegisterGroup> RegisterGroups => Array.Empty<IRegisterGroup>();
+        public IReadOnlyList<IRegister> Registers => Array.Empty<IRegister>();
         public OperationType OperationType => OperationType.None;
         
         public EmptyMessage() { }

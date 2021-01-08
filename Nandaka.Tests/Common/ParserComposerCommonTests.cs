@@ -5,8 +5,8 @@ using System.Threading;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
+using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
-using Nandaka.Core.Table;
 using Xunit;
 using Xunit.Sdk;
 using ErrorMessage = Nandaka.Core.Session.ErrorMessage;
@@ -46,7 +46,7 @@ namespace Nandaka.Tests.Common
         public void AllValidSizedSeriesRegisterMessages()
         {
             int maxRegisterSize = _messageGenerator.RegisterValueSize + _protocolInfo.AddressSize;
-            int maxRegistersInMessage = (_protocolInfo.MaxDataLength - _protocolInfo.DataHeaderSize) / maxRegisterSize;
+            int maxRegistersInMessage = (_protocolInfo.MaxDataLength) / maxRegisterSize;
 
             // Registers should not be in range.
             int[] addressPool = GetAllValidAddresses().SkipEvery(1)
@@ -61,7 +61,7 @@ namespace Nandaka.Tests.Common
 
         public void AllValidSizedRangeRegisterMessages()
         {
-            int headerSize = 2 * _protocolInfo.AddressSize + _protocolInfo.DataHeaderSize;
+            int headerSize = 2 * _protocolInfo.AddressSize;
             int maxRegisterInMessage = (_protocolInfo.MaxDataLength - headerSize) / _messageGenerator.RegisterValueSize;
 
             int[] addressPool = GetAllValidAddresses().Take(maxRegisterInMessage)
@@ -88,8 +88,8 @@ namespace Nandaka.Tests.Common
 
             foreach (IRegisterMessage message in messages)
             {
-                _composer.Compose(message, out IReadOnlyCollection<IRegisterGroup> composedGroups);
-                Assert.True(composedGroups.Count < message.RegisterGroups.Count);
+                _composer.Compose(message, out IReadOnlyList<IRegister> composedRegisters);
+                Assert.True(composedRegisters.Count < message.Registers.Count);
             }
         }
 
@@ -106,15 +106,15 @@ namespace Nandaka.Tests.Common
 
             foreach (IRegisterMessage message in messages)
             {
-                _composer.Compose(message, out IReadOnlyCollection<IRegisterGroup> composedGroups);
-                Assert.True(composedGroups.Count < message.RegisterGroups.Count);
+                _composer.Compose(message, out IReadOnlyList<IRegister> composedRegisters);
+                Assert.True(composedRegisters.Count < message.Registers.Count);
             }
         }
         
         public void ZeroSizeMessage()
         {
-            var message = new CommonMessage(1, MessageType.Request, OperationType.Read, Array.Empty<IRegisterGroup>());
-            Assert.ThrowsAny<NandakaBaseException>(() => _composer.Compose(message, out IReadOnlyCollection<IRegisterGroup> _));
+            var message = new CommonMessage(1, MessageType.Request, OperationType.Read, Array.Empty<IRegister>());
+            Assert.ThrowsAny<NandakaBaseException>(() => _composer.Compose(message, out IReadOnlyList<IRegister> _));
         }
 
         public void ValidCommonErrorMessages(IEnumerable<ErrorType> validErrorTypes)
@@ -128,8 +128,6 @@ namespace Nandaka.Tests.Common
         public void InvalidCommonErrorMessages(IEnumerable<ErrorType> invalidErrorTypes)
         {
             IEnumerable<ErrorMessage> messages = _messageGenerator.GenerateCommonErrorMessages(invalidErrorTypes, 1.ToEnumerable(), true);
-
-            //messages = messages.Concat(_messageGenerator.GenerateProtocolErrorMessages(invalidErrorCodes, 1.ToEnumerable(), true));
 
             foreach (ErrorMessage message in messages)
                 Assert.ThrowsAny<NandakaBaseException>(() => _composer.Compose(message, out _));
@@ -167,9 +165,9 @@ namespace Nandaka.Tests.Common
 
         internal void AssertRegisterMessage(IRegisterMessage message)
         {
-            byte[] composed = _composer.Compose(message, out IReadOnlyCollection<IRegisterGroup> composedGroups);
+            byte[] composed = _composer.Compose(message, out IReadOnlyList<IRegister> composedRegisters);
                 
-            Assert.Equal(message.RegisterGroups.Count, composedGroups.Count);
+            Assert.Equal(message.Registers.Count, composedRegisters.Count);
 
             Assert.InRange(composed.Length, _protocolInfo.MinPacketLength, _protocolInfo.MaxPacketLength);
 
@@ -181,22 +179,18 @@ namespace Nandaka.Tests.Common
 
             Assert.True(_messageCounter - currentCounterValue == 1);
             
-            if (_parsedMessage is not IReceivedMessage parsedMessage)
+            if (_parsedMessage is not IRegisterMessage parsedMessage)
                 throw new NotNullException();
             
             Assert.Equal(message.OperationType, parsedMessage.OperationType);
             Assert.Equal(message.MessageType, parsedMessage.MessageType);
             Assert.Equal(message.SlaveDeviceAddress, parsedMessage.SlaveDeviceAddress);
 
-            IRegister[] expectedRawRegisters = message.RegisterGroups
-                                                      .SelectMany(group => group.GetRawRegisters())
-                                                      .ToArray();
+            Assert.Equal(message.Registers.Count, parsedMessage.Registers.Count);
 
-            Assert.Equal(expectedRawRegisters.Length, parsedMessage.Registers.Count);
-
-            for (int i = 0; i < expectedRawRegisters.Length; i++)
+            for (var i = 0; i < message.Registers.Count; i++)
             {
-                IRegister expectedRegister = expectedRawRegisters[i];
+                IRegister expectedRegister = message.Registers[i];
                 IRegister actualRegister = parsedMessage.Registers[i];
                 
                 Assert.Equal(expectedRegister.Address, actualRegister.Address);
@@ -211,7 +205,7 @@ namespace Nandaka.Tests.Common
             return Enumerable.Range(_protocolInfo.MinRegisterAddress, messagesCount);
         }
         
-        private void OnMessageParsed(object sender, MessageReceivedEventArgs e)
+        private void OnMessageParsed(object? sender, MessageReceivedEventArgs e)
         {
             _messageCounter++;
             _parsedMessage = e.ReceivedMessage;

@@ -10,19 +10,18 @@ namespace Nandaka.Core.Device
 
         private SlaveThread? _thread;
         
-        public NandakaDevice Device { get; }
+        public ForeignDeviceCtx DeviceCtx { get; }
 
-        public SlaveDeviceManager(NandakaDevice device)
+        public SlaveDeviceManager(ForeignDeviceCtx deviceCtx)
         {
             _log = Log.Instance;
-            Device = device;
+            DeviceCtx = deviceCtx;
         }
 
         public void Start(IProtocol protocol)
         {
-            Device.Reflect(isManagedByMaster: false);
-            _log.AppendMessage(LogMessageType.Info, $"Starting {Device.Name} slave thread");
-            _thread = SlaveThread.Create(Device, protocol, _log);
+            _log.AppendMessage(LogMessageType.Info, $"Starting {DeviceCtx.Name} slave thread");
+            _thread = SlaveThread.Create(DeviceCtx, protocol, _log);
             _thread.Start();
         }
 

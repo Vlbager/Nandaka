@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Protocol;
-using Nandaka.Core.Table;
+using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Helpers
 {
@@ -11,97 +11,91 @@ namespace Nandaka.Core.Helpers
         /// Range represent sequence of registers ordered by address in row with structure:
         /// first register address, last register address, register 1 value, register 2 value, ..., register n value. 
         /// </summary>
-        public static byte[] ComposeDataAsRange(IReadOnlyCollection<IRegisterGroup> registerGroups, IProtocolInfo info, IEnumerable<byte> dataHeader,
-            bool withValues, out IReadOnlyCollection<IRegisterGroup> composedGroups)
+        public static byte[] ComposeDataAsRange(IReadOnlyCollection<IRegister> registers, IProtocolInfo info, IEnumerable<byte> dataHeader,
+            bool withValues, out IReadOnlyList<IRegister> composedRegisters)
         {
             var result = new List<byte>(dataHeader);
-            var composedGroupList = new List<IRegisterGroup>();
+            var composedRegistersList = new List<IRegister>();
 
-            result.AddRange(GetRegisterAddress(registerGroups.First().Address, info));
+            result.AddRange(GetRegisterAddress(registers.First().Address, info));
             
             int lastRegisterAddressIndex = result.Count;
             // Temp address should be specified after the packet is formed.
             result.AddRange(Enumerable.Repeat<byte>(0, info.AddressSize));
 
             // Current packet size with last address.
-            int currentDataPacketSize = result.Count;
-            foreach (IRegisterGroup registerGroup in registerGroups)
+            int currentDataPacketSize = 2 * info.AddressSize;
+            foreach (IRegister register in registers)
             {
-                if (currentDataPacketSize + registerGroup.DataSize > info.MaxDataLength)
+                if (currentDataPacketSize + register.DataSize > info.MaxDataLength)
                     break;
 
-                currentDataPacketSize += registerGroup.DataSize;
+                currentDataPacketSize += register.DataSize;
 
                 if (withValues)
-                    result.AddRange(registerGroup.ToBytes());
+                    result.AddRange(register.ToBytes());
 
-                composedGroupList.Add(registerGroup);
+                composedRegistersList.Add(register);
             }
 
-            byte[] endRangeAddress = GetRegisterAddress(composedGroupList.Last().GetLastRegisterAddress(), info);
+            byte[] endRangeAddress = GetRegisterAddress(composedRegistersList[^1].Address, info);
             foreach (int indexOffset in Enumerable.Range(0, info.AddressSize))
                 result[lastRegisterAddressIndex + indexOffset] = endRangeAddress[indexOffset];
 
-            composedGroups = composedGroupList;
+            composedRegisters = composedRegistersList;
             return result.ToArray();
         }
 
-        public static byte[] ComposeDataAsSeries(IReadOnlyCollection<IRegisterGroup> registerGroups, IProtocolInfo info, IEnumerable<byte> dataHeader,
-            bool withValues, out IReadOnlyCollection<IRegisterGroup> composedGroups)
+        public static byte[] ComposeDataAsSeries(IReadOnlyCollection<IRegister> registers, IProtocolInfo info, IEnumerable<byte> dataHeader,
+            bool withValues, out IReadOnlyList<IRegister> composedRegisters)
         {
             var result = new List<byte>(dataHeader);
-            var composedGroupList = new List<IRegisterGroup>();
+            var composedRegistersList = new List<IRegister>();
 
-            int currentDataPacketSize = result.Count;
-            foreach (IRegisterGroup registerGroup in registerGroups)
+            int currentDataPacketSize = 0;
+            foreach (IRegister register in registers)
             {
-                int groupSize = GetGroupSizeAsSeries(registerGroup, info);
+                int registerSize = GetRegisterSizeAsSeries(register, info);
 
-                if (currentDataPacketSize + groupSize > info.MaxDataLength)
+                if (currentDataPacketSize + registerSize > info.MaxDataLength)
                     break;
 
-                currentDataPacketSize += groupSize;
-
-                foreach (IRegister register in registerGroup.GetRawRegisters())
-                {
-                    result.AddRange(GetRegisterAddress(register.Address, info));
-
-                    if (withValues)
-                        result.AddRange(register.ToBytes());
-                }
-
-                composedGroupList.Add(registerGroup);
+                currentDataPacketSize += registerSize;
+                
+                result.AddRange(GetRegisterAddress(register.Address, info));
+                
+                if (withValues)
+                    result.AddRange(register.ToBytes());
+                
+                composedRegistersList.Add(register);
             }
 
-            composedGroups = composedGroupList;
+            composedRegisters = composedRegistersList;
             return result.ToArray();
         }
 
         /// <summary>
         /// Check for addresses ordering.
         /// </summary>
-        public static bool IsRange(IReadOnlyCollection<IRegisterGroup> registerGroups, IProtocolInfo info)
+        public static bool IsRange(IReadOnlyCollection<IRegister> registers, IProtocolInfo info)
         {
             var registerInRangeCount = 0;
             // Already includes first and last registers addresses.
             int dataSize = 2 * info.AddressSize;
 
-            int nextAddress = registerGroups.First().Address;
-            foreach (IRegisterGroup registerGroup in registerGroups)
+            int nextAddress = registers.First().Address;
+            foreach (IRegister register in registers)
             {
-                if (dataSize + registerGroup.DataSize > info.MaxDataLength)
+                if (dataSize + register.DataSize > info.MaxDataLength)
                     break;
-                
-                foreach (IRegister register in registerGroup.GetRawRegisters())
-                {
-                    if (register.Address != nextAddress)
-                        return false;
 
-                    nextAddress++;
-                    registerInRangeCount++;
-                }
-                
-                dataSize += registerGroup.DataSize;
+                if (register.Address != nextAddress)
+                    return false;
+
+                nextAddress++;
+                registerInRangeCount++;
+
+                dataSize += register.DataSize;
             }
 
             if (registerInRangeCount < info.MinimumRangeRegisterCount)
@@ -110,11 +104,12 @@ namespace Nandaka.Core.Helpers
             return true;
         }
 
-        private static int GetGroupSizeAsSeries(IRegisterGroup registerGroup, IProtocolInfo info)
+        private static int GetRegisterSizeAsSeries(IRegister register, IProtocolInfo info)
         {
-            return info.AddressSize + registerGroup.DataSize;
+            return info.AddressSize + register.DataSize;
         }
 
+        //todo: check endian
         private static byte[] GetRegisterAddress(int address, IProtocolInfo info)
         {
             return LittleEndianConverter.GetBytes(address, info.AddressSize);

@@ -21,10 +21,10 @@ namespace Nandaka.Core.Threading
             _thread = new Thread(Routine) { IsBackground = true };
         }
         
-        public static SlaveThread Create(NandakaDevice device, IProtocol protocol, ILog log)
+        public static SlaveThread Create(ForeignDeviceCtx deviceCtx, IProtocol protocol, ILog log)
         {
-            var threadLog = new PrefixLog(log, $"[{device.Name} Slave]");
-            var session = SlaveSession.Create(device, protocol, threadLog);
+            var threadLog = new PrefixLog(log, $"[{deviceCtx.Name} Slave]");
+            var session = SlaveSession.Create(deviceCtx, protocol, threadLog);
             return new SlaveThread(session, threadLog);
         }
 

@@ -10,20 +10,19 @@ namespace Nandaka.Core.Device
         private readonly ILog _log;
 
         private MasterThread? _thread;
-        private readonly List<NandakaDevice> _slaveDevices;
+        private readonly List<ForeignDeviceCtx> _slaveDevices;
 
-        public IReadOnlyCollection<NandakaDevice> SlaveDevices => _slaveDevices;
+        public IReadOnlyCollection<ForeignDeviceCtx> SlaveDevices => _slaveDevices;
 
         public MasterDeviceManager()
         {
             _log = Log.Instance;
-            _slaveDevices = new List<NandakaDevice>();
+            _slaveDevices = new List<ForeignDeviceCtx>();
         }
 
-        public void AddSlaveDevice(NandakaDevice slaveDevice)
+        public void AddSlaveDevice(ForeignDeviceCtx foreignDeviceCtx)
         {
-            slaveDevice.Reflect(isManagedByMaster: true);
-            _slaveDevices.Add(slaveDevice);
+            _slaveDevices.Add(foreignDeviceCtx);
         }
 
         public void Start(IProtocol protocol, IDeviceUpdatePolicy updatePolicy)

@@ -4,6 +4,6 @@ namespace Nandaka.Core.Session
 {
     public interface IRegistersUpdatePolicy
     {
-        IRegisterMessage GetNextMessage(NandakaDevice device);
+        IRegisterMessage GetNextMessage(ForeignDeviceCtx deviceCtx);
     }
 }

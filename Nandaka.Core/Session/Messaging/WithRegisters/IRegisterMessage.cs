@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using Nandaka.Core.Table;
+using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Session
 {
     public interface IRegisterMessage : IMessage
     {
-        IReadOnlyCollection<IRegisterGroup> RegisterGroups { get; }
+        IReadOnlyList<IRegister> Registers { get; }
         OperationType OperationType { get; }
     }
 }

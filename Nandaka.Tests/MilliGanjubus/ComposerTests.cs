@@ -16,7 +16,7 @@ namespace Nandaka.Tests.MilliGanjubus
 
         public ComposerTests()
         {
-            _composer = new MilliGanjubusComposer(new MilliGanjubusInfo());
+            _composer = new MgComposer();
             _messageFactory = new RegisterMessageFactory(TestDeviceAddress);
         }
 

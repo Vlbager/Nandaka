@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using Nandaka.Core.Device;
-using Nandaka.Core.Table;
+using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Session
 {
@@ -11,23 +11,23 @@ namespace Nandaka.Core.Session
     {
         public OldVersionUpdatePolicy() { }
         
-        public IRegisterMessage GetNextMessage(NandakaDevice device)
+        public IRegisterMessage GetNextMessage(ForeignDeviceCtx deviceCtx)
         {
-            IRegisterGroup[] orderedByVersionGroups = device.RegisterGroups
-                .OrderBy(group => group.LastUpdateTime)
+            IRegister[] orderedByVersionRegisters = deviceCtx.Registers
+                .OrderBy(register => register.LastUpdateTime)
                 .ToArray();
 
-            RegisterType firstGroupType = orderedByVersionGroups.First().RegisterType;
+            RegisterType firstRegisterType = orderedByVersionRegisters.First().RegisterType;
 
-            IRegisterGroup[] groupsToUpdate = orderedByVersionGroups
-                .Where(group => group.RegisterType == firstGroupType)
+            IRegister[] registersToUpdate = orderedByVersionRegisters
+                .Where(register => register.RegisterType == firstRegisterType)
                 .ToArray();
 
-            OperationType operationType = firstGroupType == RegisterType.WriteRequest
+            OperationType operationType = firstRegisterType == RegisterType.WriteRequest
                 ? OperationType.Write
                 : OperationType.Read;
 
-            return new CommonMessage(device.Address, MessageType.Request, operationType, groupsToUpdate);
+            return new CommonMessage(deviceCtx.Address, MessageType.Request, operationType, registersToUpdate);
         }
     }
 }

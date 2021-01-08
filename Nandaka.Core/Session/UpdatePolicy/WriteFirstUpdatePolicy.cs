@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using Nandaka.Core.Device;
 using Nandaka.Core.Helpers;
-using Nandaka.Core.Table;
+using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Session
 {
@@ -13,25 +13,25 @@ namespace Nandaka.Core.Session
     {
         public WriteFirstUpdatePolicy() { }
         
-        public IRegisterMessage GetNextMessage(NandakaDevice device)
+        public IRegisterMessage GetNextMessage(ForeignDeviceCtx deviceCtx)
         {
-            IRegisterGroup[] writeOnlyGroupsToUpdate = device.RegisterGroups
-                .Where(group => group.RegisterType == RegisterType.WriteRequest)
-                .Where(group => !group.IsUpdated)
-                .OrderBy(group => group.Address)
-                .ToArray();
+            IRegister[] writeRegistersToUpdate = deviceCtx.Registers
+                                                          .Where(register => register.RegisterType == RegisterType.WriteRequest)
+                                                          .Where(register => !register.IsUpdated)
+                                                          .OrderBy(register => register.Address)
+                                                          .ToArray();
 
-            if (!writeOnlyGroupsToUpdate.IsEmpty())
-                return new CommonMessage(device.Address, MessageType.Request, OperationType.Write, writeOnlyGroupsToUpdate);
+            if (!writeRegistersToUpdate.IsEmpty())
+                return new CommonMessage(deviceCtx.Address, MessageType.Request, OperationType.Write, writeRegistersToUpdate);
 
-            IRegisterGroup[] readOnlyGroupsToUpdate = device.RegisterGroups
-                .Where(group => group.RegisterType == RegisterType.ReadRequest)
-                .OrderBy(group => group.LastUpdateTime)
-                .ThenBy(group => group.Address)
-                .ToArray();
+            IRegister[] readRegistersToUpdate = deviceCtx.Registers
+                                                         .Where(register => register.RegisterType == RegisterType.ReadRequest)
+                                                         .OrderBy(register => register.LastUpdateTime)
+                                                         .ThenBy(register => register.Address)
+                                                         .ToArray();
 
-            if (!readOnlyGroupsToUpdate.IsEmpty())
-                return new CommonMessage(device.Address, MessageType.Request, OperationType.Read, readOnlyGroupsToUpdate);
+            if (!readRegistersToUpdate.IsEmpty())
+                return new CommonMessage(deviceCtx.Address, MessageType.Request, OperationType.Read, readRegistersToUpdate);
 
             return new EmptyMessage();
         }

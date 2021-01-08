@@ -1,11 +1,11 @@
 ﻿using System;
-using Nandaka.Core.Table;
+using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
     public abstract class RegisterModifyAttribute : Attribute
     {
-        public abstract void Modify(IRegisterGroup registerGroup);
+        public abstract void Modify(IRegister register);
     }
 }

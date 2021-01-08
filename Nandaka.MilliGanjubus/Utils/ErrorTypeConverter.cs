@@ -6,19 +6,19 @@ namespace Nandaka.MilliGanjubus.Utils
 {
     public static class ErrorTypeConverter
     {
-        private static readonly Map<ErrorType, MilliGanjubusErrorType> Map;
+        private static readonly Map<ErrorType, MgErrorType> Map;
         
         static ErrorTypeConverter()
         {
-            Map = new Map<ErrorType, MilliGanjubusErrorType>
+            Map = new Map<ErrorType, MgErrorType>
             {
-                { ErrorType.InvalidMetaData, MilliGanjubusErrorType.WrongGByte },
-                { ErrorType.InvalidAddress, MilliGanjubusErrorType.WrongRegisterAddress },
-                { ErrorType.TooMuchDataRequested, MilliGanjubusErrorType.WrongDataAmount }
+                { ErrorType.InvalidMetaData, MgErrorType.WrongGByte },
+                { ErrorType.InvalidAddress, MgErrorType.WrongRegisterAddress },
+                { ErrorType.TooMuchDataRequested, MgErrorType.WrongDataAmount }
             };
         }
         
-        public static MilliGanjubusErrorType? Convert(this ErrorType self)
+        public static MgErrorType? Convert(this ErrorType self)
         {
             if (!Map.Forward.Contains(self))
                 return null;
@@ -26,7 +26,7 @@ namespace Nandaka.MilliGanjubus.Utils
             return Map.Forward[self];
         }
 
-        public static ErrorType? Convert(this MilliGanjubusErrorType self)
+        public static ErrorType? Convert(this MgErrorType self)
         {
             if (!Map.Reverse.Contains(self))
                 return null;

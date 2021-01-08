@@ -2,8 +2,8 @@ using System;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
+using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
-using Nandaka.Core.Table;
 using Nandaka.MilliGanjubus.Components;
 using Xunit;
 using Xunit.Sdk;
@@ -20,11 +20,11 @@ namespace Nandaka.Tests.MilliGanjubus
 
         public ParserTests()
         {
-            _parser = new MilliGanjubusApplicationParser(new MilliGanjubusInfo());
+            _parser = new MgApplicationParser();
             _parser.MessageParsed += Parser_MessageParsed;
         }
 
-        private void Parser_MessageParsed(object sender, MessageReceivedEventArgs e)
+        private void Parser_MessageParsed(object? sender, MessageReceivedEventArgs e)
         {
             _messageCount++;
             _parsedMessage = e.ReceivedMessage;
@@ -71,7 +71,7 @@ namespace Nandaka.Tests.MilliGanjubus
             // Asserts
             Assert.Equal(1, _messageCount);
             
-            if (_parsedMessage is not IReceivedMessage registerMessage)
+            if (_parsedMessage is not IRegisterMessage registerMessage)
                 throw new NotNullException();
             
             Assert.Equal(messageType, registerMessage.MessageType);
@@ -129,7 +129,7 @@ namespace Nandaka.Tests.MilliGanjubus
             // Asserts
             Assert.Equal(1, _messageCount);
             
-            if (_parsedMessage is not IReceivedMessage registerMessage)
+            if (_parsedMessage is not IRegisterMessage registerMessage)
                 throw new NotNullException();
             
             Assert.Equal(messageType, registerMessage.MessageType);
@@ -324,7 +324,7 @@ namespace Nandaka.Tests.MilliGanjubus
         {
             // fill checkSums
             buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            buffer[^1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             Assert.Throws<InvalidMetaDataReceivedException>(() => _parser.Parse(buffer));
             // Assert
@@ -339,7 +339,7 @@ namespace Nandaka.Tests.MilliGanjubus
             var buffer = new byte[] { 0xBB, 0x00, 0x0C, 0x00, 0xA5, 0x04, 0x01, 0x03, 0x04, 0x05, 0x06, 0x00 };
             // fill checkSums
             buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            buffer[^1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             Assert.Throws<InvalidRegistersReceivedException>(() => _parser.Parse(buffer));
             // Assert
@@ -354,7 +354,7 @@ namespace Nandaka.Tests.MilliGanjubus
             var buffer = new byte[] { 0xBB, 0x00, 0x0C, 0x00, 0xA5, 0x01, 0x07, 0x03, 0x04, 0x05, 0x06, 0x00 };
             // fill checkSums
             buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            buffer[^1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             Assert.Throws<TooMuchDataRequestedException>(() => _parser.Parse(buffer));
             // Assert
@@ -405,7 +405,7 @@ namespace Nandaka.Tests.MilliGanjubus
             var buffer = new byte[] { 0xBB, 0x01, 0x11, 0x00, 0xA5, 0x01, 0x08, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x00 };
             // fill checkSums
             buffer[3] = CheckSum.Crc8(buffer.AsSpan().Slice(0, 3).ToArray());
-            buffer[buffer.Length - 1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
+            buffer[^1] = CheckSum.Crc8(buffer.AsSpan().Slice(0, buffer.Length - 1).ToArray());
             // Act
             _parser.Parse(buffer);
             // Assert

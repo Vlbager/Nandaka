@@ -8,7 +8,7 @@ namespace Nandaka.Tests.MilliGanjubus
     {
         public ErrorMessage Create(int deviceAddress, MessageType messageType, int errorCode)
         {
-            return MilliGanjubusErrorMessage.Create(deviceAddress, messageType, (MilliGanjubusErrorType) errorCode);
+            return MgErrorMessage.Create(deviceAddress, messageType, (MgErrorType) errorCode);
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Exceptions;
+using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
-using Nandaka.Core.Table;
 using Nandaka.Tests.Common;
 
 namespace Nandaka.Tests.MilliGanjubus
@@ -38,8 +38,8 @@ namespace Nandaka.Tests.MilliGanjubus
         {
             RegisterType registerType = GetRegisterType(operationType);
             
-            UInt8RegisterGroup[] registers = addresses
-                .Select(address => UInt8RegisterGroup.CreateNew(address, registerType))
+            Register<byte>[] registers = addresses
+                .Select(address => new Register<byte>(address, registerType))
                 .ToArray();
 
             return new CommonMessage(_deviceAddress, messageType, operationType, registers);

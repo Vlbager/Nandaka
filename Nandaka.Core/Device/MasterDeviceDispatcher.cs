@@ -9,46 +9,46 @@ namespace Nandaka.Core.Device
         private readonly IDeviceUpdatePolicy _updatePolicy;
         private readonly ILog _log;
 
-        public IReadOnlyCollection<NandakaDevice> SlaveDevices { get; }
+        public IReadOnlyCollection<ForeignDeviceCtx> SlaveDevices { get; }
 
         public TimeSpan RequestTimeout => _updatePolicy.RequestTimeout;
         
-        private MasterDeviceDispatcher(IReadOnlyCollection<NandakaDevice> slaveDevices, IDeviceUpdatePolicy updatePolicy, ILog log)
+        private MasterDeviceDispatcher(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, IDeviceUpdatePolicy updatePolicy, ILog log)
         {
             SlaveDevices = slaveDevices;
             _updatePolicy = updatePolicy;
             _log = log;
         }
 
-        public static MasterDeviceDispatcher Create(IReadOnlyCollection<NandakaDevice> slaveDevices, IDeviceUpdatePolicy updatePolicy, ILog log)
+        public static MasterDeviceDispatcher Create(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, IDeviceUpdatePolicy updatePolicy, ILog log)
         {
             var updaterLog = new PrefixLog(log, "[Dispatcher]");
             return new MasterDeviceDispatcher(slaveDevices, updatePolicy, updaterLog);
         }
         
-        public NandakaDevice GetNextDevice()
+        public ForeignDeviceCtx GetNextDevice()
         {
-            NandakaDevice nextDevice = _updatePolicy.GetNextDevice(SlaveDevices, _log, out bool isUpdateCycleCompleted);
+            ForeignDeviceCtx nextDeviceCtx = _updatePolicy.GetNextDevice(SlaveDevices, _log, out bool isUpdateCycleCompleted);
             
             if (isUpdateCycleCompleted)
                 Thread.Sleep(_updatePolicy.UpdateTimeout);
 
-            return nextDevice;
+            return nextDeviceCtx;
         }
 
-        public void OnMessageReceived(NandakaDevice device)
+        public void OnMessageReceived(ForeignDeviceCtx deviceCtx)
         {
-            _updatePolicy.OnMessageReceived(device, _log);
+            _updatePolicy.OnMessageReceived(deviceCtx, _log);
         }
 
-        public void OnErrorOccured(NandakaDevice device, DeviceError error)
+        public void OnErrorOccured(ForeignDeviceCtx deviceCtx, DeviceError error)
         {
-            _updatePolicy.OnErrorOccured(device, error, _log);
+            _updatePolicy.OnErrorOccured(deviceCtx, error, _log);
         }
 
-        public void OnUnexpectedDeviceResponse(NandakaDevice expectedDevice, int responseDeviceAddress)
+        public void OnUnexpectedDeviceResponse(ForeignDeviceCtx expectedDeviceCtx, int responseDeviceAddress)
         {
-            _updatePolicy.OnUnexpectedDeviceResponse(SlaveDevices, expectedDevice, responseDeviceAddress, _log);
+            _updatePolicy.OnUnexpectedDeviceResponse(SlaveDevices, expectedDeviceCtx, responseDeviceAddress, _log);
         }
     }
 }

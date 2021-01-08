@@ -28,5 +28,7 @@ namespace Nandaka.Core.Protocol
         {
             _exception = exception;
         }
+        
+        public bool IsSuccessful() => _exception != null;
     }
 }

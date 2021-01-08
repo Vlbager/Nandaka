@@ -28,7 +28,7 @@ namespace Nandaka.Core.Threading
             _thread = new Thread(Routine) { IsBackground = true };
         }
 
-        public static MasterThread Create(IReadOnlyCollection<NandakaDevice> slaveDevices, IProtocol protocol, IDeviceUpdatePolicy updatePolicy, ILog log)
+        public static MasterThread Create(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, IProtocol protocol, IDeviceUpdatePolicy updatePolicy, ILog log)
         {
             var threadLog = new PrefixLog(log, "[Master]");
             var dispatcher = MasterDeviceDispatcher.Create(slaveDevices, updatePolicy, threadLog);
@@ -46,11 +46,11 @@ namespace Nandaka.Core.Threading
                     if (_isStopped)
                         break;
 
-                    NandakaDevice device = _dispatcher.GetNextDevice();
+                    ForeignDeviceCtx deviceCtx = _dispatcher.GetNextDevice();
 
-                    _log.AppendMessage(LogMessageType.Info, $"Set current device: {device}");
+                    _log.AppendMessage(LogMessageType.Info, $"Set current device: {deviceCtx}");
 
-                    SendNextMessage(device);
+                    SendNextMessage(deviceCtx);
                 }
             }
             catch (Exception exception)
@@ -63,33 +63,33 @@ namespace Nandaka.Core.Threading
             _log.AppendMessage(LogMessageType.Warning, "Master thread has been stopped");
         }
 
-        private void SendNextMessage(NandakaDevice device)
+        private void SendNextMessage(ForeignDeviceCtx deviceCtx)
         {
-            MasterSession session = _deviceSessions[device.Address];
+            MasterSession session = _deviceSessions[deviceCtx.Address];
 
             try
             {
-                if (device.TryGetSpecific(out ISpecificMessage? specificMessage))
+                if (deviceCtx.TryGetSpecific(out ISpecificMessage? specificMessage))
                     session.ProcessSpecificMessage(specificMessage!);
                 else
                     session.ProcessNextMessage();
 
-                _dispatcher.OnMessageReceived(device);
+                _dispatcher.OnMessageReceived(deviceCtx);
             }
             catch (DeviceNotRespondException deviceNotRespondException)
             {
                 _log.AppendMessage(LogMessageType.Warning, deviceNotRespondException.Message);
-                _dispatcher.OnErrorOccured(device, DeviceError.NotResponding);
+                _dispatcher.OnErrorOccured(deviceCtx, DeviceError.NotResponding);
             }
             catch (InvalidAddressReceivedException invalidAddressException)
             {
                 _log.AppendMessage(LogMessageType.Error, invalidAddressException.Message);
-                _dispatcher.OnUnexpectedDeviceResponse(device, invalidAddressException.ReceivedAddress);
+                _dispatcher.OnUnexpectedDeviceResponse(deviceCtx, invalidAddressException.ReceivedAddress);
             }
             catch (InvalidMessageReceivedException invalidMessageException)
             {
                 _log.AppendMessage(LogMessageType.Error, invalidMessageException.ToString());
-                _dispatcher.OnErrorOccured(device, DeviceError.WrongPacketData);
+                _dispatcher.OnErrorOccured(deviceCtx, DeviceError.WrongPacketData);
             }
         }
 

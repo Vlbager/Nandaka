@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Helpers;
+using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
-using Nandaka.Core.Table;
 using Nandaka.MilliGanjubus.Components;
 using Nandaka.MilliGanjubus.Models;
 using Nandaka.Tests.Common;
@@ -24,16 +24,15 @@ namespace Nandaka.Tests.MilliGanjubus
             ErrorType.TooMuchDataRequested
         };
 
-        private static readonly int[] ValidErrorCodes = Enum.GetValues<MilliGanjubusErrorType>()
+        private static readonly int[] ValidErrorCodes = Enum.GetValues<MgErrorType>()
                                                             .Cast<int>()
                                                             .ToArray();
 
         static ParserComposerMilliGanjubusTests()
         {
-            MilliGanjubusInfo protocolInfo = new();
-            ByteRegisterGenerator = new RegisterGenerator(UInt8RegisterGroup.CreateNew, sizeof(byte));
-            CommonTests = new ParserComposerCommonTests(new MilliGanjubusApplicationParser(protocolInfo), new MilliGanjubusComposer(protocolInfo),
-                                                        ByteRegisterGenerator, protocolInfo);
+            ByteRegisterGenerator = new RegisterGenerator((address, registerType) => new Register<byte>(address, registerType), sizeof(byte));
+            CommonTests = new ParserComposerCommonTests(new MgApplicationParser(), new MgComposer(),
+                                                        ByteRegisterGenerator, MgInfo.Instance);
         }
 
         [Fact]

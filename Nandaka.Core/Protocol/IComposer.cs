@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using Nandaka.Core.Table;
+using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Protocol
 {
     public interface IComposer<in TIn, out TOut>
     {
-        TOut Compose(TIn message, out IReadOnlyCollection<IRegisterGroup> composedGroups);
+        TOut Compose(TIn message, out IReadOnlyList<IRegister> composedRegisters);
     }
 }

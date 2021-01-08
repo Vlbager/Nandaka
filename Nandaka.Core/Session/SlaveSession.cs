@@ -4,29 +4,29 @@ using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
-using Nandaka.Core.Table;
+using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Session
 {
     internal class SlaveSession : IDisposable
     {
-        private readonly NandakaDevice _device;
+        private readonly ForeignDeviceCtx _deviceCtx;
         private readonly IProtocol _protocol;
         private readonly ILog _log;
         private readonly MessageListener _listener;
 
-        private SlaveSession(NandakaDevice device, IProtocol protocol, ILog log)
+        private SlaveSession(ForeignDeviceCtx deviceCtx, IProtocol protocol, ILog log)
         {
-            _device = device;
+            _deviceCtx = deviceCtx;
             _protocol = protocol;
             _log = log;
             _listener = new MessageListener(protocol);
         }
 
-        public static SlaveSession Create(NandakaDevice device, IProtocol protocol, ILog log)
+        public static SlaveSession Create(ForeignDeviceCtx deviceCtx, IProtocol protocol, ILog log)
         {
             var sessionLog = new PrefixLog(log, "[Session]");
-            return new SlaveSession(device, protocol, sessionLog);
+            return new SlaveSession(deviceCtx, protocol, sessionLog);
         }
         
         public void ProcessNextMessage()
@@ -34,14 +34,14 @@ namespace Nandaka.Core.Session
             if (!_listener.WaitMessage(out IMessage? receivedMessage))
                 return;
             
-            if (receivedMessage!.MessageType != MessageType.Request || receivedMessage.SlaveDeviceAddress != _device.Address)
+            if (receivedMessage!.MessageType != MessageType.Request || receivedMessage.SlaveDeviceAddress != _deviceCtx.Address)
                 return;
             
             _log.AppendMessage(LogMessageType.Info, $"Request message to device-{receivedMessage.SlaveDeviceAddress} received");
 
             switch (receivedMessage)
             {
-                case IReceivedMessage registerMessage:
+                case IRegisterMessage registerMessage:
                     ProcessRegisterMessage(registerMessage);
                     break;
                 
@@ -51,7 +51,7 @@ namespace Nandaka.Core.Session
             }
         }
 
-        private void ProcessRegisterMessage(IReceivedMessage registerMessage)
+        private void ProcessRegisterMessage(IRegisterMessage registerMessage)
         {
             try
             {
@@ -64,15 +64,15 @@ namespace Nandaka.Core.Session
             catch (InvalidMessageReceivedException exception)
             {
                 _log.AppendMessage(LogMessageType.Warning, exception.ToString());
-                var errorMessage = ErrorMessage.CreateCommon(_device.Address, MessageType.Response, exception.ErrorType);
+                var errorMessage = ErrorMessage.CreateCommon(_deviceCtx.Address, MessageType.Response, exception.ErrorType);
                 _protocol.SendMessage(errorMessage);
             }
         }
 
-        private void ProcessRegisterMessageInternal(IReceivedMessage registerMessage)
+        private void ProcessRegisterMessageInternal(IRegisterMessage registerMessage)
         {
-            IReadOnlyDictionary<IRegisterGroup, IRegister[]> requestMap =
-                _device.RegisterGroups.MapRegistersToPossibleGroups(registerMessage.Registers);
+            IReadOnlyDictionary<IRegister, IRegister> requestMap =
+                _deviceCtx.Registers.MapRegistersAsPossible(registerMessage.Registers);
             
             _log.AppendMessage(LogMessageType.Info, "Updating registers...");
 
@@ -93,7 +93,7 @@ namespace Nandaka.Core.Session
 
             _log.AppendMessage(LogMessageType.Info, "Registers updated. Sending response");
             
-            var response = new CommonMessage(_device.Address, MessageType.Response, registerMessage.OperationType, requestMap.Keys);
+            var response = new CommonMessage(_deviceCtx.Address, MessageType.Response, registerMessage.OperationType, requestMap.Keys);
             _protocol.SendMessage(response);
             
             _log.AppendMessage(LogMessageType.Info, "Response has been successfully sent");
@@ -103,7 +103,7 @@ namespace Nandaka.Core.Session
         {
             _log.AppendMessage(LogMessageType.Info,"Processing message as specific message");
             
-            _device.OnSpecificMessageReceived(specificMessage);
+            _deviceCtx.OnSpecificMessageReceived(specificMessage);
             // todo: response on specific message?
             
             _log.AppendMessage(LogMessageType.Warning, "Specific messages response has not been sent. Not Implemented");

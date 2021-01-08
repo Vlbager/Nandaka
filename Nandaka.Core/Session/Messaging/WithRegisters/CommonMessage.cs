@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Nandaka.Core.Table;
+using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Session
 {
@@ -9,18 +9,18 @@ namespace Nandaka.Core.Session
         public int SlaveDeviceAddress { get; }
         public MessageType MessageType { get; }
         public OperationType OperationType { get; }
-        public IReadOnlyCollection<IRegisterGroup> RegisterGroups { get; }
+        public IReadOnlyList<IRegister> Registers { get; }
 
         public CommonMessage(int slaveDeviceAddress, MessageType type, OperationType operationType,
-            IEnumerable<IRegisterGroup> registerGroups)
+            IEnumerable<IRegister> registers)
         {
             SlaveDeviceAddress = slaveDeviceAddress;
             MessageType = type;
             OperationType = operationType;
-            RegisterGroups = registerGroups.ToArray();
+            Registers = registers.ToArray();
         }
 
         public CommonMessage(int slaveDeviceAddress, MessageType type, OperationType operationType)
-        : this(slaveDeviceAddress, type, operationType, Enumerable.Empty<IRegisterGroup>()) { }
+        : this(slaveDeviceAddress, type, operationType, Enumerable.Empty<IRegister>()) { }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System;
-using Nandaka.Core.Table;
+using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Attributes
 {
@@ -12,11 +12,11 @@ namespace Nandaka.Core.Attributes
             _updateIntervalInMilliseconds = updateIntervalInMilliseconds;
         }
 
-        public override void Modify(IRegisterGroup registerGroup)
+        public override void Modify(IRegister register)
         {
-            registerGroup.GetType()
-                .GetProperty(nameof(IRegisterGroup.UpdateInterval))
-                ?.SetValue(registerGroup, TimeSpan.FromMilliseconds(_updateIntervalInMilliseconds));
+            register.GetType()
+                .GetProperty(nameof(IRegister.UpdateInterval))
+                ?.SetValue(register, TimeSpan.FromMilliseconds(_updateIntervalInMilliseconds));
         }
     }
 }

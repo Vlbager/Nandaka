@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 
 namespace Nandaka.Core.Exceptions
 {
-    // All inheritors of this exceptions may be catched and handled.
+    // All inheritors of this exceptions may be caught and handled.
     [Serializable]
     public class NandakaException : NandakaBaseException
     {

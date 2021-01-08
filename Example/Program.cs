@@ -20,11 +20,11 @@ namespace Example
         {
             Console.WriteLine("MasterExample started");
             
-            var serialPortProvider = new SerialDataPortProvider("COM3", 57600);
-            var protocol = MilliGanjubus.Create(serialPortProvider);
-            
             var manager = new MasterDeviceManager();
-            var device = TestDevice.Create();
+            var device = TestDeviceCtx.Create();
+            
+            var serialPortProvider = new SerialDataPortProvider("COM3", 57600);
+            var protocol = MgProtocol.Create(serialPortProvider, device);
             
             manager.AddSlaveDevice(device);
             manager.Start(protocol, new ForceUpdatePolicy(TimeSpan.FromMilliseconds(300), TimeSpan.FromMilliseconds(1)));

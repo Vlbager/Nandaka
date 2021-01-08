@@ -7,7 +7,7 @@ namespace Nandaka.Core.Helpers
     /// <summary>
     /// Thread unsafe mapper.
     /// </summary>
-    public class Map<T1, T2> : IEnumerable<KeyValuePair<T1, T2>> 
+    public sealed class Map<T1, T2> : IEnumerable<KeyValuePair<T1, T2>> 
         where T1: notnull 
         where T2: notnull
     {

@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Helpers;
+using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
-using Nandaka.Core.Table;
 
 namespace Nandaka.Tests.Common
 {
@@ -28,8 +27,8 @@ namespace Nandaka.Tests.Common
 
         public IEnumerable<IRegisterMessage> GenerateSingleRegister(IEnumerable<int> registerAddresses, IEnumerable<int> deviceAddresses)
         {
-            IEnumerable<IRegisterGroup[]> registerBatches = _registerGenerator.Generate(registerAddresses)
-                                                                              .Select(register => new[] { register });
+            IEnumerable<IRegister[]> registerBatches = _registerGenerator.Generate(registerAddresses)
+                                                                         .Select(register => new[] { register });
 
             return Generate(registerBatches, deviceAddresses);
         }
@@ -37,7 +36,7 @@ namespace Nandaka.Tests.Common
         public IEnumerable<IRegisterMessage> Generate(IEnumerable<int> messageSizes, IReadOnlyCollection<int> addressPool,
                                                       IEnumerable<int> deviceAddresses)
         {
-            IEnumerable<IRegisterGroup[]> registerBatches = _registerGenerator.GenerateBatches(messageSizes, addressPool);
+            IEnumerable<IRegister[]> registerBatches = _registerGenerator.GenerateBatches(messageSizes, addressPool);
             return Generate(registerBatches, deviceAddresses);
         }
 
@@ -58,7 +57,7 @@ namespace Nandaka.Tests.Common
                    select errorMessageFactory.Create(deviceAddress, messageType, errorCode);
         }
 
-        private IEnumerable<IRegisterMessage> Generate(IEnumerable<IRegisterGroup[]> registerBatches, IEnumerable<int> deviceAddresses)
+        private IEnumerable<IRegisterMessage> Generate(IEnumerable<IRegister[]> registerBatches, IEnumerable<int> deviceAddresses)
         {
             return from registerBatch in registerBatches
                    from deviceAddress in deviceAddresses
