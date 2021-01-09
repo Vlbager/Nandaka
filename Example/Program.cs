@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Example.MasterExample;
 using Nandaka.Core.Device;
 using Nandaka.Core.Network;
+using Nandaka.Core.Registers;
 using Nandaka.MilliGanjubus;
 
 namespace Example
@@ -13,7 +15,18 @@ namespace Example
     {
         public static void Main()
         {
-            MasterExample();
+            //MasterExample();
+
+            IReadOnlyList<IRegister> byteRegisters = new IRegister<byte>[]
+            {
+                new Register<byte>(1, RegisterType.ReadRequest),
+                new Register<byte>(1, RegisterType.ReadRequest)
+            };
+
+            if (byteRegisters is IReadOnlyList<IRegister<byte>> roByte)
+                Console.WriteLine("byte registers is OK");
+
+            Console.ReadLine();
         }
 
         private static void MasterExample()

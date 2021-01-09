@@ -61,13 +61,13 @@ namespace Nandaka.MilliGanjubus.Components
                 return (byte) mgErrorMessage.ErrorCode;
             }
 
-            throw new InvalidMessageToComposeException("Specified error message does not contains any compatible error type");
+            throw new NandakaBaseException("Specified error message does not contains any compatible error type");
         }
 
         private byte[] Compose(IRegisterMessage message, out IReadOnlyList<IRegister> composedRegisters)
         {
             if (message.Registers.IsEmpty())
-                throw new InvalidMessageToComposeException("Specified message does not contains any registers");
+                throw new NandakaBaseException("Specified message does not contains any registers");
             
             byte[] data = GetDataBytes(message, out composedRegisters);
 
@@ -95,6 +95,9 @@ namespace Nandaka.MilliGanjubus.Components
 
         private byte[] GetDataBytes(IRegisterMessage message, out IReadOnlyList<IRegister> composedGroups)
         {
+            if (message.Registers is not IReadOnlyList<IRegister<byte>>)
+                throw new NandakaBaseException("MG composer supports only byte registers");
+            
             byte gByte;
             bool withValues = false;
             switch (message.MessageType)

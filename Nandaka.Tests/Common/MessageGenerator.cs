@@ -6,18 +6,39 @@ using Nandaka.Core.Session;
 
 namespace Nandaka.Tests.Common
 {
-    internal class MessageGenerator
+    internal abstract class MessageGenerator
     {
-        private static readonly IEnumerable<OperationType> OperationTypes = new[] { OperationType.Read, OperationType.Write };
-        private static readonly IEnumerable<MessageType> MessageTypes = new[] { MessageType.Request, MessageType.Response };
+        protected static readonly IEnumerable<OperationType> OperationTypes = new[] { OperationType.Read, OperationType.Write };
+        protected static readonly IEnumerable<MessageType> MessageTypes = new[] { MessageType.Request, MessageType.Response };
         
-        private readonly RegisterGenerator _registerGenerator;
-
-        public int RegisterValueSize => _registerGenerator.RegisterValueSize;
-        
-        public MessageGenerator(RegisterGenerator registerGenerator)
+        public static IEnumerable<ErrorMessage> GenerateCommonErrorMessages(IEnumerable<ErrorType> errorTypes, IEnumerable<int> deviceAddresses, bool responseOnly)
         {
-            _registerGenerator = registerGenerator;
+            return from deviceAddress in deviceAddresses
+                   from errorType in errorTypes
+                   from messageType in responseOnly ? MessageType.Response.ToEnumerable() : MessageTypes
+                   select ErrorMessage.CreateCommon(deviceAddress, messageType, errorType);
+        }
+
+        public static IEnumerable<ErrorMessage> GenerateProtocolErrorMessages(IProtocolErrorMessageFactory errorMessageFactory, IEnumerable<int> errorCodes,
+                                                                              IEnumerable<int> deviceAddresses, bool responseOnly)
+        {
+            return from deviceAddress in deviceAddresses
+                   from errorCode in errorCodes
+                   from messageType in responseOnly ? MessageType.Response.ToEnumerable() : MessageTypes
+                   select errorMessageFactory.Create(deviceAddress, messageType, errorCode);
+        }
+    }
+    
+    internal sealed class MessageGenerator<T> : MessageGenerator
+        where T: struct
+    {
+        private readonly RegisterGenerator<T> _registerGenerator;
+
+        public static int RegisterValueSize => RegisterGenerator<T>.RegisterValueSize;
+        
+        public MessageGenerator()
+        {
+            _registerGenerator = new RegisterGenerator<T>();
         }
 
         public IEnumerable<IRegisterMessage> GenerateSingleRegister(int registerAddress, int deviceAddress)
@@ -38,23 +59,6 @@ namespace Nandaka.Tests.Common
         {
             IEnumerable<IRegister[]> registerBatches = _registerGenerator.GenerateBatches(messageSizes, addressPool);
             return Generate(registerBatches, deviceAddresses);
-        }
-
-        public IEnumerable<ErrorMessage> GenerateCommonErrorMessages(IEnumerable<ErrorType> errorTypes, IEnumerable<int> deviceAddresses, bool responseOnly)
-        {
-            return from deviceAddress in deviceAddresses
-                   from errorType in errorTypes
-                   from messageType in responseOnly ? MessageType.Response.ToEnumerable() : MessageTypes
-                   select ErrorMessage.CreateCommon(deviceAddress, messageType, errorType);
-        }
-
-        public IEnumerable<ErrorMessage> GenerateProtocolErrorMessages(IProtocolErrorMessageFactory errorMessageFactory, IEnumerable<int> errorCodes,
-                                                                       IEnumerable<int> deviceAddresses, bool responseOnly)
-        {
-            return from deviceAddress in deviceAddresses
-                   from errorCode in errorCodes
-                   from messageType in responseOnly ? MessageType.Response.ToEnumerable() : MessageTypes
-                   select errorMessageFactory.Create(deviceAddress, messageType, errorCode);
         }
 
         private IEnumerable<IRegisterMessage> Generate(IEnumerable<IRegister[]> registerBatches, IEnumerable<int> deviceAddresses)

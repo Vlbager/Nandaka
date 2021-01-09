@@ -13,9 +13,10 @@ using ErrorMessage = Nandaka.Core.Session.ErrorMessage;
 
 namespace Nandaka.Tests.Common
 {
-    public class ParserComposerCommonTests : IParserComposerTests
+    public class ParserComposerCommonTests<TRegisterValue> : IParserComposerTests
+        where TRegisterValue: struct
     {
-        private readonly MessageGenerator _messageGenerator;
+        private readonly MessageGenerator<TRegisterValue> _messageGenerator;
         private readonly IProtocolInfo _protocolInfo;
         private readonly IParser<byte[], MessageReceivedEventArgs> _parser;
         private readonly IComposer<IMessage, byte[]> _composer;
@@ -24,10 +25,9 @@ namespace Nandaka.Tests.Common
         private int _messageCounter;
         private IMessage? _parsedMessage;
 
-        public ParserComposerCommonTests(IParser<byte[], MessageReceivedEventArgs> parser, IComposer<IMessage, byte[]> composer,
-                                         RegisterGenerator standardRegisterGenerator, IProtocolInfo protocolInfo)
+        public ParserComposerCommonTests(IParser<byte[], MessageReceivedEventArgs> parser, IComposer<IMessage, byte[]> composer, IProtocolInfo protocolInfo)
         {
-            _messageGenerator = new MessageGenerator(standardRegisterGenerator);
+            _messageGenerator = new MessageGenerator<TRegisterValue>();
             _composer = composer;
             _protocolInfo = protocolInfo;
             _parser = parser;
@@ -45,7 +45,7 @@ namespace Nandaka.Tests.Common
         
         public void AllValidSizedSeriesRegisterMessages()
         {
-            int maxRegisterSize = _messageGenerator.RegisterValueSize + _protocolInfo.AddressSize;
+            int maxRegisterSize = MessageGenerator<TRegisterValue>.RegisterValueSize + _protocolInfo.AddressSize;
             int maxRegistersInMessage = (_protocolInfo.MaxDataLength) / maxRegisterSize;
 
             // Registers should not be in range.
@@ -62,7 +62,7 @@ namespace Nandaka.Tests.Common
         public void AllValidSizedRangeRegisterMessages()
         {
             int headerSize = 2 * _protocolInfo.AddressSize;
-            int maxRegisterInMessage = (_protocolInfo.MaxDataLength - headerSize) / _messageGenerator.RegisterValueSize;
+            int maxRegisterInMessage = (_protocolInfo.MaxDataLength - headerSize) / MessageGenerator<TRegisterValue>.RegisterValueSize;
 
             int[] addressPool = GetAllValidAddresses().Take(maxRegisterInMessage)
                                                       .ToArray();
@@ -75,7 +75,7 @@ namespace Nandaka.Tests.Common
         
         public void InvalidSizedSeriesMessages()
         {
-            int maxRegisterSize = _messageGenerator.RegisterValueSize + _protocolInfo.AddressSize;
+            int maxRegisterSize = MessageGenerator<TRegisterValue>.RegisterValueSize + _protocolInfo.AddressSize;
             int invalidRegistersCount = _protocolInfo.MaxDataLength / maxRegisterSize + 1;
             
             // Registers should not be in range.
@@ -96,7 +96,7 @@ namespace Nandaka.Tests.Common
         public void InvalidSizedRangeMessages()
         {
             int headerSize = 2 * _protocolInfo.AddressSize;
-            int invalidRegistersCount = (_protocolInfo.MaxDataLength - headerSize) / _messageGenerator.RegisterValueSize + 1;
+            int invalidRegistersCount = (_protocolInfo.MaxDataLength - headerSize) / MessageGenerator<TRegisterValue>.RegisterValueSize + 1;
 
             int[] addresses = GetAllValidAddresses().Take(invalidRegistersCount)
                                                     .ToArray();
@@ -119,7 +119,7 @@ namespace Nandaka.Tests.Common
 
         public void ValidCommonErrorMessages(IEnumerable<ErrorType> validErrorTypes)
         {
-            IEnumerable<ErrorMessage> messages = _messageGenerator.GenerateCommonErrorMessages(validErrorTypes, 1.ToEnumerable(), true);
+            IEnumerable<ErrorMessage> messages = MessageGenerator.GenerateCommonErrorMessages(validErrorTypes, 1.ToEnumerable(), true);
 
             foreach (ErrorMessage message in messages)
                 AssertErrorMessage(message);
@@ -127,7 +127,7 @@ namespace Nandaka.Tests.Common
 
         public void InvalidCommonErrorMessages(IEnumerable<ErrorType> invalidErrorTypes)
         {
-            IEnumerable<ErrorMessage> messages = _messageGenerator.GenerateCommonErrorMessages(invalidErrorTypes, 1.ToEnumerable(), true);
+            IEnumerable<ErrorMessage> messages = MessageGenerator.GenerateCommonErrorMessages(invalidErrorTypes, 1.ToEnumerable(), true);
 
             foreach (ErrorMessage message in messages)
                 Assert.ThrowsAny<NandakaBaseException>(() => _composer.Compose(message, out _));
@@ -200,7 +200,7 @@ namespace Nandaka.Tests.Common
         
         private IEnumerable<int> GetAllValidAddresses()
         {
-            int messagesCount = (_protocolInfo.MaxRegisterAddress - _protocolInfo.MinRegisterAddress) / _messageGenerator.RegisterValueSize;
+            int messagesCount = (_protocolInfo.MaxRegisterAddress - _protocolInfo.MinRegisterAddress) / MessageGenerator<TRegisterValue>.RegisterValueSize;
 
             return Enumerable.Range(_protocolInfo.MinRegisterAddress, messagesCount);
         }

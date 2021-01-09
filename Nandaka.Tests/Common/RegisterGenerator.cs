@@ -1,37 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Nandaka.Core.Registers;
 
 namespace Nandaka.Tests.Common
 {
-    public class RegisterGenerator
+    internal abstract class RegisterGenerator
     {
-        private readonly Func<int, RegisterType, IRegister> _registerFactory;
-        
-        public static readonly IEnumerable<RegisterType> Types = new[] { RegisterType.ReadRequest, RegisterType.WriteRequest };
-        
-        public int RegisterValueSize { get; }
+        protected static readonly IEnumerable<RegisterType> Types = new[] { RegisterType.ReadRequest, RegisterType.WriteRequest };
+    }
+    
+    internal sealed class RegisterGenerator<T> : RegisterGenerator 
+        where T: struct
+    {
+        public static int RegisterValueSize { get; } = Marshal.SizeOf<T>();
 
-        public RegisterGenerator(Func<int, RegisterType, IRegister> registerFactory, int registerValueSize)
-        {
-            _registerFactory = registerFactory;
-            RegisterValueSize = registerValueSize;
-        }
-
-        public IEnumerable<IRegister> Generate(IEnumerable<int> addresses)
+        public IEnumerable<IRegister<T>> Generate(IEnumerable<int> addresses)
         {
             return from type in Types 
                    from address in addresses
-                   select _registerFactory(address, type);
+                   select new Register<T>(address, type);
         }
 
-        public IEnumerable<IRegister> Generate(IEnumerable<int> addresses, RegisterType type)
+        public IEnumerable<IRegister<T>> Generate(IEnumerable<int> addresses, RegisterType type)
         {
-            return addresses.Select(address => _registerFactory(address, type));
+            return addresses.Select(address => new Register<T>(address, type));
         }
 
-        public IEnumerable<IRegister[]> GenerateBatches(IEnumerable<int> batchSizes, IReadOnlyCollection<int> addressPool)
+        public IEnumerable<IRegister<T>[]> GenerateBatches(IEnumerable<int> batchSizes, IReadOnlyCollection<int> addressPool)
         {
             return from batch in batchSizes.Select(addressPool.GetCircular)
                    from registerType in Types

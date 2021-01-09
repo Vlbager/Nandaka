@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Helpers;
-using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
 using Nandaka.MilliGanjubus.Components;
 using Nandaka.MilliGanjubus.Models;
@@ -13,9 +12,7 @@ namespace Nandaka.Tests.MilliGanjubus
 {
     public class ParserComposerMilliGanjubusTests : IParserComposerTests
     {
-        private static readonly ParserComposerCommonTests CommonTests;
-
-        private static readonly RegisterGenerator ByteRegisterGenerator;
+        private static readonly ParserComposerCommonTests<byte> CommonTests;
 
         private static readonly ErrorType[] ValidErrorTypes =
         {
@@ -30,9 +27,7 @@ namespace Nandaka.Tests.MilliGanjubus
 
         static ParserComposerMilliGanjubusTests()
         {
-            ByteRegisterGenerator = new RegisterGenerator((address, registerType) => new Register<byte>(address, registerType), sizeof(byte));
-            CommonTests = new ParserComposerCommonTests(new MgApplicationParser(), new MgComposer(),
-                                                        ByteRegisterGenerator, MgInfo.Instance);
+            CommonTests = new ParserComposerCommonTests<byte>(new MgApplicationParser(), new MgComposer(), MgInfo.Instance);
         }
 
         [Fact]
@@ -104,10 +99,9 @@ namespace Nandaka.Tests.MilliGanjubus
         [Trait("ShouldParseCompose", "All")]
         public void ValidProtocolErrorMessages()
         {
-            var messageGenerator = new MessageGenerator(ByteRegisterGenerator);
             var errorMessageFactory = new ProtocolErrorMessageFactory();
 
-            IEnumerable<ErrorMessage> messages = messageGenerator.GenerateProtocolErrorMessages(errorMessageFactory, ValidErrorCodes, 
+            IEnumerable<ErrorMessage> messages = MessageGenerator.GenerateProtocolErrorMessages(errorMessageFactory, ValidErrorCodes, 
                                                                                                 1.ToEnumerable(), true);
 
             foreach (ErrorMessage errorMessage in messages)
@@ -118,10 +112,9 @@ namespace Nandaka.Tests.MilliGanjubus
         [Trait("ShouldFail", "All")]
         public void InvalidProtocolErrorMessages()
         {
-            var messageGenerator = new MessageGenerator(ByteRegisterGenerator);
             var errorMessageFactory = new ProtocolErrorMessageFactory();
 
-            IEnumerable<ErrorMessage> messages = messageGenerator.GenerateProtocolErrorMessages(errorMessageFactory, GetInvalidErrorCodes(), 
+            IEnumerable<ErrorMessage> messages = MessageGenerator.GenerateProtocolErrorMessages(errorMessageFactory, GetInvalidErrorCodes(), 
                                                                                                 1.ToEnumerable(), true);
 
             foreach (ErrorMessage errorMessage in messages)

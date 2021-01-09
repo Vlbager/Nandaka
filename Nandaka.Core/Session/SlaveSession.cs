@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
@@ -93,7 +94,7 @@ namespace Nandaka.Core.Session
 
             _log.AppendMessage(LogMessageType.Info, "Registers updated. Sending response");
             
-            var response = new CommonMessage(_deviceCtx.Address, MessageType.Response, registerMessage.OperationType, requestMap.Keys);
+            var response = new CommonMessage(_deviceCtx.Address, MessageType.Response, registerMessage.OperationType, requestMap.Keys.ToArray());
             _protocol.SendMessage(response);
             
             _log.AppendMessage(LogMessageType.Info, "Response has been successfully sent");
