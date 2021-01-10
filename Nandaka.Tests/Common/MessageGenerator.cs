@@ -19,13 +19,13 @@ namespace Nandaka.Tests.Common
                    select ErrorMessage.CreateCommon(deviceAddress, messageType, errorType);
         }
 
-        public static IEnumerable<ErrorMessage> GenerateProtocolErrorMessages(IProtocolErrorMessageFactory errorMessageFactory, IEnumerable<int> errorCodes,
-                                                                              IEnumerable<int> deviceAddresses, bool responseOnly)
+        public static IEnumerable<ErrorMessage> GenerateProtocolErrorMessages(IEnumerable<int> errorCodes, IEnumerable<int> deviceAddresses, 
+                                                                              bool responseOnly)
         {
             return from deviceAddress in deviceAddresses
                    from errorCode in errorCodes
                    from messageType in responseOnly ? MessageType.Response.ToEnumerable() : MessageTypes
-                   select errorMessageFactory.Create(deviceAddress, messageType, errorCode);
+                   select ErrorMessage.CreateFromProtocol(deviceAddress, messageType, new ProtocolSpecifiedErrorMessage(errorCode));
         }
     }
     

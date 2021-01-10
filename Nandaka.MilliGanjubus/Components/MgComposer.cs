@@ -13,6 +13,10 @@ namespace Nandaka.MilliGanjubus.Components
 {
     internal class MgComposer : IComposer<IMessage, byte[]>
     {
+        private static readonly int[] MgErrorCodes = Enum.GetValues<MgErrorType>()
+                                                         .Cast<int>()
+                                                         .ToArray();
+        
         private readonly MgInfo _info;
 
         public MgComposer()
@@ -55,10 +59,11 @@ namespace Nandaka.MilliGanjubus.Components
             if (mgErrorType.HasValue)
                 return (byte) mgErrorType.Value;
 
-            if (message.ErrorType == ErrorType.InternalProtocolError &&
-                message.ProtocolSpecifiedErrorMessage is MgErrorMessage mgErrorMessage)
+            if (message.ErrorType == ErrorType.InternalProtocolError && 
+                message.ProtocolSpecifiedErrorMessage != null &&
+                MgErrorCodes.Contains(message.ProtocolSpecifiedErrorMessage.ErrorCode))
             {
-                return (byte) mgErrorMessage.ErrorCode;
+                return (byte) message.ProtocolSpecifiedErrorMessage.ErrorCode;
             }
 
             throw new NandakaBaseException("Specified error message does not contains any compatible error type");

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Session;
 using Nandaka.MilliGanjubus.Components;
@@ -99,10 +100,8 @@ namespace Nandaka.Tests.MilliGanjubus
         [Trait("ShouldParseCompose", "All")]
         public void ValidProtocolErrorMessages()
         {
-            var errorMessageFactory = new ProtocolErrorMessageFactory();
-
-            IEnumerable<ErrorMessage> messages = MessageGenerator.GenerateProtocolErrorMessages(errorMessageFactory, ValidErrorCodes, 
-                                                                                                1.ToEnumerable(), true);
+            IEnumerable<ErrorMessage> messages = MessageGenerator.GenerateProtocolErrorMessages(ValidErrorCodes, 1.ToEnumerable(),
+                                                                                                true);
 
             foreach (ErrorMessage errorMessage in messages)
                 CommonTests.AssertErrorMessage(errorMessage);
@@ -112,15 +111,13 @@ namespace Nandaka.Tests.MilliGanjubus
         [Trait("ShouldFail", "All")]
         public void InvalidProtocolErrorMessages()
         {
-            var errorMessageFactory = new ProtocolErrorMessageFactory();
-
-            IEnumerable<ErrorMessage> messages = MessageGenerator.GenerateProtocolErrorMessages(errorMessageFactory, GetInvalidErrorCodes(), 
+            IEnumerable<ErrorMessage> messages = MessageGenerator.GenerateProtocolErrorMessages(GetInvalidErrorCodes(), 
                                                                                                 1.ToEnumerable(), true);
 
             foreach (ErrorMessage errorMessage in messages)
-                CommonTests.AssertErrorMessage(errorMessage);
+                Assert.ThrowsAny<NandakaBaseException>(() => CommonTests.AssertErrorMessage(errorMessage));
         }
-        
+
         private static int[] GetInvalidErrorCodes()
         {
             const int minCornerCaseErrorCode = 0;
