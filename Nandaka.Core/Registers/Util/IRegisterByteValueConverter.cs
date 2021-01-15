@@ -2,7 +2,7 @@
 
 namespace Nandaka.Core.Registers
 {
-    public interface IRegisterValueProcessor<T> where T: struct
+    public interface IRegisterByteValueConverter<T> where T: struct
     {
         byte[] ToBytes(T value);
         T FromBytes(IReadOnlyList<byte> fromBytes);

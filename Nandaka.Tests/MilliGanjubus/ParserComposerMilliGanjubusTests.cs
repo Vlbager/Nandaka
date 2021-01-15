@@ -117,6 +117,21 @@ namespace Nandaka.Tests.MilliGanjubus
             foreach (ErrorMessage errorMessage in messages)
                 Assert.ThrowsAny<NandakaBaseException>(() => CommonTests.AssertErrorMessage(errorMessage));
         }
+        
+        
+        [Fact]
+        [Trait("ShouldFail", "All")]
+        public void InvalidRegisterTypes()
+        {
+            IEnumerable<IRegisterMessage> messagesWithInvalidRegisters = new MessageGenerator<sbyte>()
+                                                                         .GenerateSingleRegister(1, 1)
+                                                                         .Concat(new MessageGenerator<short>().GenerateSingleRegister(1, 1))
+                                                                         .Concat(new MessageGenerator<int>().GenerateSingleRegister(1, 1))
+                                                                         .Concat(new MessageGenerator<long>().GenerateSingleRegister(1, 1));
+
+            foreach (IRegisterMessage message in messagesWithInvalidRegisters)
+                Assert.ThrowsAny<NandakaBaseException>(() => CommonTests.AssertRegisterMessage(message));
+        }
 
         private static int[] GetInvalidErrorCodes()
         {

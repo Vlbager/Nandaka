@@ -11,9 +11,10 @@ namespace Nandaka.Core.Registers
         where T : struct
     {
         private static readonly int GenericParameterSize = Marshal.SizeOf<T>();
-        private static readonly IRegisterValueProcessor<T> RvProcessor = new LittleEndianRegisterValueProcessor<T>(GenericParameterSize);
 
         private readonly ReaderWriterLockSlim _rwLock = new();
+
+        private IRegisterByteValueConverter<T> _rvConverter = RegisterValueConverterFactory.GetLittleEndianConverter<T>();
         
         private T _value;
         private bool _isUpdated;
@@ -64,12 +65,19 @@ namespace Nandaka.Core.Registers
 
         public IRegister CreateFromBytes(IReadOnlyList<byte> bytes)
         {
-            return new Register<T>(Address, RegisterType.Raw, RvProcessor.FromBytes(bytes));
+            return new Register<T>(Address, RegisterType.Raw, _rvConverter.FromBytes(bytes));
         }
 
         public byte[] ToBytes()
         {
-            return RvProcessor.ToBytes(Value);
+            return _rvConverter.ToBytes(Value);
+        }
+
+        internal void SetRvConverter(bool isLittleEndian)
+        {
+            _rvConverter = isLittleEndian 
+                ? RegisterValueConverterFactory.GetLittleEndianConverter<T>() 
+                : RegisterValueConverterFactory.GetBigEndianConverter<T>();
         }
 
         public void Dispose()

@@ -6,26 +6,29 @@ using Nandaka.Core.Exceptions;
 
 namespace Nandaka.Core.Registers
 {
-    internal sealed class LittleEndianRegisterValueProcessor<T> : IRegisterValueProcessor<T>
+    internal sealed class ReverseByteValueConverter<T> : IRegisterByteValueConverter<T>
         where T: struct
     {
-        private readonly int _valueSize;
+        private static readonly int ValueSize = Marshal.SizeOf<T>();
 
-        public LittleEndianRegisterValueProcessor(int valueSize)
-        {
-            _valueSize = valueSize;
-        }
+        private static readonly Lazy<ReverseByteValueConverter<T>> LazyInstance =
+            new Lazy<ReverseByteValueConverter<T>>(() => new ReverseByteValueConverter<T>());
+        
+        private ReverseByteValueConverter()
+        { }
+
+        public static ReverseByteValueConverter<T> Instance => LazyInstance.Value;
 
         public byte[] ToBytes(T value)
         {
-            var result = new byte[_valueSize];
+            var result = new byte[ValueSize];
             unsafe
             {
                 var ptr = new IntPtr(Unsafe.AsPointer(ref value));
 
                 var offset = 0;
                 
-                for (int byteIndex = _valueSize - 1; byteIndex >= 0; byteIndex--)
+                for (int byteIndex = ValueSize - 1; byteIndex >= 0; byteIndex--)
                     result[byteIndex] = Marshal.ReadByte(ptr, offset++);
             }
             return result;
@@ -33,7 +36,7 @@ namespace Nandaka.Core.Registers
 
         public T FromBytes(IReadOnlyList<byte> bytes)
         {
-            if (bytes.Count != _valueSize)
+            if (bytes.Count != ValueSize)
                 throw new NandakaBaseException("Wrong amount of bytes for convert to register value");
 
             T value = default;

@@ -6,8 +6,8 @@ namespace Nandaka.Core.Helpers
     {
         public static bool IfIncludes(this Range range, int value)
         {
-            return range.Start.Value >= value &&
-                   range.End.Value <= value;
+            return range.Start.Value <= value &&
+                   range.End.Value >= value;
         }
     }
 }

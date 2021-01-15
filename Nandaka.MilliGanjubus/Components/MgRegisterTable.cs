@@ -43,7 +43,7 @@ namespace Nandaka.MilliGanjubus.Components
                 {
                     int byteRegisterAddress = register.Address + registerByteIndex;
                     if (addressPool.Contains(byteRegisterAddress))
-                        throw new ConfigurationException($"MG contract error: more than one byte register with address " +
+                        throw new ConfigurationException("MG contract error: more than one byte register with address " +
                                                          $"'{byteRegisterAddress.ToString()}' was defined." +
                                                          " Make sure that each byte of your register can have its own address");
 
