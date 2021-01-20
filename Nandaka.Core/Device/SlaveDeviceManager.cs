@@ -1,4 +1,5 @@
 ﻿using System;
+using Nandaka.Core.Logging;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Threading;
 
@@ -6,28 +7,25 @@ namespace Nandaka.Core.Device
 {
     public sealed class SlaveDeviceManager : IDisposable
     {
-        private readonly ILog _log;
-
-        private SlaveThread? _thread;
+        private readonly SlaveThread _thread;
         
-        public ForeignDeviceCtx DeviceCtx { get; }
+        public NandakaDeviceCtx DeviceCtx { get; }
 
-        public SlaveDeviceManager(ForeignDeviceCtx deviceCtx)
+        private SlaveDeviceManager(IProtocol protocol, NandakaDeviceCtx deviceCtx)
         {
-            _log = Log.Instance;
             DeviceCtx = deviceCtx;
+            _thread = SlaveThread.Create(deviceCtx, protocol);
+            _thread.Start();
         }
 
-        public void Start(IProtocol protocol)
+        public static SlaveDeviceManager Start(IProtocol protocol, NandakaDeviceCtx deviceCtx)
         {
-            _log.AppendMessage(LogMessageType.Info, $"Starting {DeviceCtx.Name} slave thread");
-            _thread = SlaveThread.Create(DeviceCtx, protocol, _log);
-            _thread.Start();
+            return new SlaveDeviceManager(protocol, deviceCtx);
         }
 
         public void Dispose()
         {
-            _thread?.Dispose();
+            _thread.Dispose();
         }
     }
 }

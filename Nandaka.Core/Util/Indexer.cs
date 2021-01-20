@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Nandaka.Core.Helpers
+namespace Nandaka.Core.Util
 {
     public sealed class Indexer<TIn, TOut> where TIn: notnull
     {

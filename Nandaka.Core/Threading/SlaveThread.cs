@@ -1,40 +1,43 @@
 ﻿using System;
 using System.Threading;
 using Nandaka.Core.Device;
+using Nandaka.Core.Logging;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
+using Nandaka.Core.Util;
 
 namespace Nandaka.Core.Threading
 {
-    internal class SlaveThread : IDisposable
+    internal sealed class SlaveThread : IDisposable
     {
         private readonly SlaveSession _session;
-        private readonly ILog _log;
-        
+        private readonly NandakaDeviceCtx _device;
+        private readonly DisposableList _disposable;
         private readonly Thread _thread;
+        
         private bool _isStopped;
         
-        private SlaveThread(SlaveSession session, ILog log)
+        private SlaveThread(NandakaDeviceCtx deviceCtx, IProtocol protocol)
         {
-            _session = session;
-            _log = log;
+            _disposable = new DisposableList();
+            _session = _disposable.Add(SlaveSession.Create(deviceCtx, protocol));
+            _device = deviceCtx;
             _thread = new Thread(Routine) { IsBackground = true };
         }
         
-        public static SlaveThread Create(ForeignDeviceCtx deviceCtx, IProtocol protocol, ILog log)
+        public static SlaveThread Create(NandakaDeviceCtx deviceCtx, IProtocol protocol)
         {
-            var threadLog = new PrefixLog(log, $"[{deviceCtx.Name} Slave]");
-            var session = SlaveSession.Create(deviceCtx, protocol, threadLog);
-            return new SlaveThread(session, threadLog);
+            return new SlaveThread(deviceCtx, protocol);
         }
 
         public void Start() => _thread.Start();
-
-        // todo: logger
+        
         private void Routine()
         {
             try
             {
+                InitializeLog();
+                
                 while (true)
                 {
                     if (_isStopped)
@@ -45,18 +48,23 @@ namespace Nandaka.Core.Threading
             }
             catch (Exception exception)
             {
-                _log.AppendMessage(LogMessageType.Error, "Unexpected error occured");
-                _log.AppendMessage(LogMessageType.Error, exception.ToString());
-                Dispose();
+                Log.AppendException(exception,"Unexpected error occured");
             }
             
-            _log.AppendMessage(LogMessageType.Warning, $"Slave thread has been stopped");
+            Log.AppendWarning("Slave thread has been stopped");
+        }
+
+        private void InitializeLog()
+        {
+            _disposable.Add(Log.InitializeLog($"{_device.Name}.Slave.log"));
+            
+            Log.AppendMessage(LogLevel.Low, "Starting slave thread." + Environment.NewLine + _device.ToLogLine());
         }
 
         public void Dispose()
         {
-            _session.Dispose();
             _isStopped = true;
+            _disposable.Dispose();
         }
     }
 }

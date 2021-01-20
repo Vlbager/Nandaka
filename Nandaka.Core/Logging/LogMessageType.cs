@@ -1,4 +1,4 @@
-﻿namespace Nandaka.Core
+﻿namespace Nandaka.Core.Logging
 {
     public enum LogMessageType
     {

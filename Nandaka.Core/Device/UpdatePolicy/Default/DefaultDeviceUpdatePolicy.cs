@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Exceptions;
+using Nandaka.Core.Logging;
 
 namespace Nandaka.Core.Device
 {
@@ -41,7 +42,7 @@ namespace Nandaka.Core.Device
             TimeSpan.FromMilliseconds(updateTimoutMilliseconds), maxErrorInRowCount) { }
         
 
-        public ForeignDeviceCtx GetNextDevice(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, ILog log, out bool isUpdateCycleCompleted)
+        public ForeignDeviceCtx GetNextDevice(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, out bool isUpdateCycleCompleted)
         {
             while (true)
             {
@@ -64,14 +65,14 @@ namespace Nandaka.Core.Device
             }
         }
 
-        public void OnMessageReceived(ForeignDeviceCtx deviceCtx, ILog log)
+        public void OnMessageReceived(ForeignDeviceCtx deviceCtx)
         {
             deviceCtx.ErrorCounter.Clear();
         }
 
-        public void OnErrorOccured(ForeignDeviceCtx deviceCtx, DeviceError error, ILog log)
+        public void OnErrorOccured(ForeignDeviceCtx deviceCtx, DeviceError error)
         {
-            log.AppendMessage(LogMessageType.Error, $"Error occured with {deviceCtx}. Reason: {error}");
+            Log.AppendWarning($"Error occured with {deviceCtx}. Reason: {error}");
             
             if (!IsDeviceShouldBeStopped(deviceCtx, error))
                 return;
@@ -92,23 +93,22 @@ namespace Nandaka.Core.Device
                     break;
             }
             
-            log.AppendMessage(LogMessageType.Error, $"Device has reached the max number of errors. {deviceCtx} will be disconnected");
+            Log.AppendWarning($"Device has reached the max number of errors. {deviceCtx} will be disconnected");
         }
 
-        public void OnUnexpectedDeviceResponse(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, ForeignDeviceCtx expectedDeviceCtx, int responseDeviceAddress, ILog log)
+        public void OnUnexpectedDeviceResponse(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, ForeignDeviceCtx expectedDeviceCtx, int responseDeviceAddress)
         {
-            log.AppendMessage(LogMessageType.Warning, $"Message from unexpected device {responseDeviceAddress} received");
+            Log.AppendWarning($"Message from unexpected device {responseDeviceAddress} received");
 
             ForeignDeviceCtx? responseDevice = slaveDevices.FirstOrDefault(device => device.Address == responseDeviceAddress);
             if (responseDevice != null && IsDeviceSkipPreviousMessage(responseDevice))
             {
-                log.AppendMessage(LogMessageType.Error,
-                    $"Device {responseDevice} is responding too long and will be disconnected");
+                Log.AppendWarning($"Device {responseDevice} is responding too long and will be disconnected");
                 responseDevice.State = DeviceState.Corrupted;
                 return;
             }
 
-            log.AppendMessage(LogMessageType.Error, $"Device {expectedDeviceCtx} response with wrong address");
+            Log.AppendWarning($"Device {expectedDeviceCtx} response with wrong address");
             expectedDeviceCtx.State = DeviceState.Corrupted;
         }
         

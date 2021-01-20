@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Exceptions;
+using Nandaka.Core.Logging;
 
 namespace Nandaka.Core.Device
 {
@@ -28,7 +29,7 @@ namespace Nandaka.Core.Device
             : this(TimeSpan.FromMilliseconds(waitResponseTimeoutMilliseconds),
                 TimeSpan.FromMilliseconds(updateTimoutMilliseconds)) { }
         
-        public ForeignDeviceCtx GetNextDevice(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, ILog log, out bool isUpdateCycleCompleted)
+        public ForeignDeviceCtx GetNextDevice(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, out bool isUpdateCycleCompleted)
         {
             while (true)
             {
@@ -51,19 +52,19 @@ namespace Nandaka.Core.Device
             }
         }
 
-        public void OnMessageReceived(ForeignDeviceCtx deviceCtx, ILog log)
+        public void OnMessageReceived(ForeignDeviceCtx deviceCtx)
         {
             // Empty.
         }
 
-        public void OnErrorOccured(ForeignDeviceCtx deviceCtx, DeviceError error, ILog log)
+        public void OnErrorOccured(ForeignDeviceCtx deviceCtx, DeviceError error)
         {
-            log.AppendMessage(LogMessageType.Error, $"Error occured with {deviceCtx}. Reason: {error}");
+            Log.AppendWarning($"Error occured with {deviceCtx}. Reason: {error}");
         }
 
-        public void OnUnexpectedDeviceResponse(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, ForeignDeviceCtx expectedDeviceCtx, int responseDeviceAddress, ILog log)
+        public void OnUnexpectedDeviceResponse(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, ForeignDeviceCtx expectedDeviceCtx, int responseDeviceAddress)
         {
-            log.AppendMessage(LogMessageType.Warning, $"Message from unexpected device {responseDeviceAddress} received");
+            Log.AppendWarning($"Message from unexpected device {responseDeviceAddress} received");
         }
         
         private void UpdateEnumerator(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices)

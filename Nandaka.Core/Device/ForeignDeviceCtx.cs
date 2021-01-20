@@ -20,13 +20,13 @@ namespace Nandaka.Core.Device
 
         protected ForeignDeviceCtx(int address, IRegistersUpdatePolicy updatePolicy, DeviceState state)
             : this(address, state, updatePolicy, new NullSpecificMessageHandler()) { }
-        protected new static Register<T> CreateRwRegister<T>(int address, T value = default)
+        protected new static IRegister<T> CreateRwRegister<T>(int address, T value = default)
             where T: struct
         {
             return new Register<T>(address, RegisterType.WriteRequest, value);
         }
 
-        protected new static Register<T> CreateRoRegister<T>(int address, T value = default)
+        protected new static IReadOnlyRegister<T> CreateRoRegister<T>(int address, T value = default)
             where T: struct
         {
             return new Register<T>(address, RegisterType.ReadRequest, value);

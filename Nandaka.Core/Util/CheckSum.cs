@@ -1,4 +1,4 @@
-namespace Nandaka.Core.Helpers
+namespace Nandaka.Core.Util
 {
     public static class CheckSum
     {

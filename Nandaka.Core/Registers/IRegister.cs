@@ -18,6 +18,7 @@ namespace Nandaka.Core.Registers
         void Update(IRegister updateRegister);
         void UpdateWithoutValues();
         IRegister CreateFromBytes(IReadOnlyList<byte> bytes);
+        Type GetValueType();
     }
 
     public interface IReadOnlyRegister<out T> : IRegister

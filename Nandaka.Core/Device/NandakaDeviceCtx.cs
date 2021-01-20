@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
 
@@ -40,6 +41,26 @@ namespace Nandaka.Core.Device
             while (!_specificMessages.IsEmpty)
                 _specificMessageHandler.WaitResponse();
         }
+
+        public string ToLogLine()
+        {
+            var builder = new StringBuilder();
+
+            builder.AppendLine($"Device name: '{Name}'; Device address: '{Address.ToString()}'");
+            builder.AppendLine($"Registers count: '{Registers.Count}'");
+
+            foreach (IRegister register in Registers)
+            {
+                builder.AppendLine($"        {register.GetValueType()} register: " +
+                                   $"registerType = {register.RegisterType.ToString()}; " +
+                                   $"address = {register.Address.ToString()};");
+            }
+
+            builder.AppendLine();
+
+            return builder.ToString();
+        }
+        
         internal void OnSpecificMessageReceived(ISpecificMessage message)
             => _specificMessageHandler.OnSpecificMessageReceived(message);
 
@@ -51,13 +72,13 @@ namespace Nandaka.Core.Device
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        protected static Register<T> CreateRwRegister<T>(int address, T value = default)
+        protected static IRegister<T> CreateRwRegister<T>(int address, T value = default)
             where T: struct
         {
             return new Register<T>(address, RegisterType.ReadRequest, value);
         }
 
-        protected static Register<T> CreateRoRegister<T>(int address, T value = default)
+        protected static IReadOnlyRegister<T> CreateRoRegister<T>(int address, T value = default)
             where T: struct
         {
             return new Register<T>(address, RegisterType.WriteRequest, value);

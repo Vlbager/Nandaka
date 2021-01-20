@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace Nandaka.Core.Helpers
+namespace Nandaka.Core.Util
 {
     
     /// <summary>

@@ -68,6 +68,11 @@ namespace Nandaka.Core.Registers
             return new Register<T>(Address, RegisterType.Raw, _rvConverter.FromBytes(bytes));
         }
 
+        public Type GetValueType()
+        {
+            return Value.GetType();
+        }
+
         public byte[] ToBytes()
         {
             return _rvConverter.ToBytes(Value);

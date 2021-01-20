@@ -4,35 +4,39 @@ using System.Linq;
 using System.Threading;
 using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
+using Nandaka.Core.Logging;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
+using Nandaka.Core.Util;
 
 namespace Nandaka.Core.Threading
 {
-    internal class MasterThread : IDisposable
+    internal sealed class MasterThread : IDisposable
     {
         private readonly Dictionary<int, MasterSession> _deviceSessions;
         private readonly MasterDeviceDispatcher _dispatcher;
-        private readonly ILog _log;
-
         private readonly Thread _thread;
+        private readonly string _masterName;
+        private readonly DisposableList _disposable;
+        
         private bool _isStopped;
 
-        private MasterThread(MasterDeviceDispatcher dispatcher, IProtocol protocol, ILog log)
+        private MasterThread(MasterDeviceDispatcher dispatcher, IProtocol protocol, string masterName)
         {
             _dispatcher = dispatcher;
-            _log = log;
+            _masterName = masterName;
             _deviceSessions = dispatcher.SlaveDevices.ToDictionary(device => device.Address,
-                    device => new MasterSession(protocol, device, dispatcher, _log));
+                                                                   device => new MasterSession(protocol, device, dispatcher));
+
+            _disposable = new DisposableList();
             
             _thread = new Thread(Routine) { IsBackground = true };
         }
 
-        public static MasterThread Create(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, IProtocol protocol, IDeviceUpdatePolicy updatePolicy, ILog log)
+        public static MasterThread Create(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, IProtocol protocol, IDeviceUpdatePolicy updatePolicy, string masterName)
         {
-            var threadLog = new PrefixLog(log, "[Master]");
-            var dispatcher = MasterDeviceDispatcher.Create(slaveDevices, updatePolicy, threadLog);
-            return new MasterThread(dispatcher, protocol, threadLog);
+            var dispatcher = new MasterDeviceDispatcher(slaveDevices, updatePolicy);
+            return new MasterThread(dispatcher, protocol, masterName);
         }
 
         public void StartRoutine() => _thread.Start();
@@ -41,6 +45,8 @@ namespace Nandaka.Core.Threading
         {
             try
             {
+                InitializeLog();
+                
                 while (true)
                 {
                     if (_isStopped)
@@ -48,19 +54,26 @@ namespace Nandaka.Core.Threading
 
                     ForeignDeviceCtx deviceCtx = _dispatcher.GetNextDevice();
 
-                    _log.AppendMessage(LogMessageType.Info, $"Set current device: {deviceCtx}");
+                    Log.AppendMessage($"Set current device: {deviceCtx}");
 
                     SendNextMessage(deviceCtx);
                 }
             }
             catch (Exception exception)
             {
-                _log.AppendMessage(LogMessageType.Error, "Unexpected error occured");
-                _log.AppendMessage(LogMessageType.Error, exception.ToString());
-                Dispose();
+                Log.AppendException(exception, "Unexpected error occured");
             }
             
-            _log.AppendMessage(LogMessageType.Warning, "Master thread has been stopped");
+            Log.AppendWarning("Master thread has been stopped");
+        }
+
+        private void InitializeLog()
+        {
+            _disposable.Add(Log.InitializeLog($"{_masterName}.Master.log"));
+            
+            string devicesInfo = String.Join(Environment.NewLine, _dispatcher.SlaveDevices.Select(device => device.ToLogLine()));
+            
+            Log.AppendMessage(LogLevel.Low, "Starting Master thread, devices:" + Environment.NewLine + devicesInfo);
         }
 
         private void SendNextMessage(ForeignDeviceCtx deviceCtx)
@@ -78,17 +91,17 @@ namespace Nandaka.Core.Threading
             }
             catch (DeviceNotRespondException deviceNotRespondException)
             {
-                _log.AppendMessage(LogMessageType.Warning, deviceNotRespondException.Message);
+                Log.AppendWarning(deviceNotRespondException.Message);
                 _dispatcher.OnErrorOccured(deviceCtx, DeviceError.NotResponding);
             }
             catch (InvalidAddressReceivedException invalidAddressException)
             {
-                _log.AppendMessage(LogMessageType.Error, invalidAddressException.Message);
+                Log.AppendWarning(invalidAddressException.Message);
                 _dispatcher.OnUnexpectedDeviceResponse(deviceCtx, invalidAddressException.ReceivedAddress);
             }
             catch (InvalidMessageReceivedException invalidMessageException)
             {
-                _log.AppendMessage(LogMessageType.Error, invalidMessageException.ToString());
+                Log.AppendWarning(invalidMessageException.Message);
                 _dispatcher.OnErrorOccured(deviceCtx, DeviceError.WrongPacketData);
             }
         }
@@ -96,6 +109,7 @@ namespace Nandaka.Core.Threading
         public void Dispose()
         {
             _isStopped = true;
+            _disposable.Dispose();
         }
     }
 }

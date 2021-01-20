@@ -7,34 +7,28 @@ namespace Nandaka.Core.Device
 {
     public sealed class MasterDeviceManager : IDisposable
     {
-        private readonly ILog _log;
+        private const string DefaultMasterName = "Default";
+        
+        private readonly MasterThread _thread;
 
-        private MasterThread? _thread;
-        private readonly List<ForeignDeviceCtx> _slaveDevices;
+        public IReadOnlyCollection<ForeignDeviceCtx> SlaveDevices { get; }
 
-        public IReadOnlyCollection<ForeignDeviceCtx> SlaveDevices => _slaveDevices;
-
-        public MasterDeviceManager()
+        private MasterDeviceManager(IProtocol protocol, IDeviceUpdatePolicy updatePolicy, IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, string masterName)
         {
-            _log = Log.Instance;
-            _slaveDevices = new List<ForeignDeviceCtx>();
-        }
-
-        public void AddSlaveDevice(ForeignDeviceCtx foreignDeviceCtx)
-        {
-            _slaveDevices.Add(foreignDeviceCtx);
-        }
-
-        public void Start(IProtocol protocol, IDeviceUpdatePolicy updatePolicy)
-        {
-            _log.AppendMessage(LogMessageType.Info, "Starting Master thread");
-            _thread = MasterThread.Create(SlaveDevices, protocol, updatePolicy, _log);
+            SlaveDevices = slaveDevices;
+            _thread = MasterThread.Create(SlaveDevices, protocol, updatePolicy, masterName);
             _thread.StartRoutine();
+        }
+
+        public static MasterDeviceManager Start(IProtocol protocol, IDeviceUpdatePolicy updatePolicy, IReadOnlyCollection<ForeignDeviceCtx> slaveDevices,
+                                                string masterName = DefaultMasterName)
+        {
+            return new MasterDeviceManager(protocol, updatePolicy, slaveDevices, masterName);
         }
 
         public void Dispose()
         {
-            _thread?.Dispose();
+            _thread.Dispose();
         }
     }
 }

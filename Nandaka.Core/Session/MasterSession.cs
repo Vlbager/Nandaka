@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
+using Nandaka.Core.Logging;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Registers;
 
@@ -16,9 +17,9 @@ namespace Nandaka.Core.Session
         private readonly IProtocol _protocol;
         private readonly ForeignDeviceCtx _foreignDeviceCtx;
 
-        public MasterSession(IProtocol protocol, ForeignDeviceCtx foreignDeviceCtx, MasterDeviceDispatcher dispatcher, ILog log)
+        public MasterSession(IProtocol protocol, ForeignDeviceCtx foreignDeviceCtx, MasterDeviceDispatcher dispatcher)
         {
-            _log = new PrefixLog(log, $"[{foreignDeviceCtx.Name} Session]");
+            _log = new PrefixLog(Log.Instance, $"[{foreignDeviceCtx.Name} Session] ");
             _protocol = protocol;
             _foreignDeviceCtx = foreignDeviceCtx;
             _registersUpdatePolicy = foreignDeviceCtx.UpdatePolicy;
@@ -33,15 +34,14 @@ namespace Nandaka.Core.Session
 
                 if (message is EmptyMessage)
                 {
-                    _log.AppendMessage(LogMessageType.Info, $"Nothing to process. Skip {_foreignDeviceCtx.Name}");
+                    _log.AppendMessage($"Nothing to process. Skip {_foreignDeviceCtx.Name}");
                     return;
                 }
                 
-                _log.AppendMessage(LogMessageType.Info, $"Sending {message.OperationType}-register message");
+                _log.AppendMessage($"Sending {message.OperationType}-register message");
 
                 _protocol.SendAsPossible(message, out IReadOnlyList<IRegister> requestRegisters);
-                _log.AppendMessage(LogMessageType.Info, 
-                    $"Register groups with addresses {requestRegisters.GetAllAddressesAsString()} was requested");
+                _log.AppendMessage($"Register groups with addresses {requestRegisters.GetAllAddressesAsString()} was requested");
 
                 while (true)
                 {
@@ -68,11 +68,11 @@ namespace Nandaka.Core.Session
                     if (!(receivedMessage is IRegisterMessage response))
                         throw new InvalidMetaDataReceivedException("Wrong response received");
 
-                    _log.AppendMessage(LogMessageType.Info, "Response received, updating registers");
+                    _log.AppendMessage("Response received, updating registers");
 
                     UpdateRegisters(requestRegisters, response.Registers, response.OperationType);
 
-                    _log.AppendMessage(LogMessageType.Info, "Registers updated");
+                    _log.AppendMessage("Registers updated");
 
                     break;
                 }
