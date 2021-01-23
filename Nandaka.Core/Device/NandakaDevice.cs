@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -9,27 +7,27 @@ using Nandaka.Core.Session;
 
 namespace Nandaka.Core.Device
 {
-    public abstract class NandakaDeviceCtx : INotifyPropertyChanged
+    public abstract class NandakaDevice : INotifyPropertyChanged
     {
         private readonly ISpecificMessageHandler _specificMessageHandler;
         private readonly ConcurrentQueue<ISpecificMessage> _specificMessages;
 
-        public IReadOnlyCollection<IRegister> Registers { get; private set; }
+        public RegisterTable Table { get; private set; }
         public abstract string Name { get; }
         public int Address { get; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected NandakaDeviceCtx(int address, ISpecificMessageHandler specificMessageHandler)
+        protected NandakaDevice(int address, RegisterTable table, ISpecificMessageHandler specificMessageHandler)
         {
             Address = address;
             _specificMessageHandler = specificMessageHandler;
             _specificMessages = new ConcurrentQueue<ISpecificMessage>();
-            Registers = Array.Empty<IRegister>();
+            Table = table;
         }
 
-        protected NandakaDeviceCtx(int address)
-            : this(address, new NullSpecificMessageHandler()) { }
+        protected NandakaDevice(int address, RegisterTable table)
+            : this(address, table, new NullSpecificMessageHandler()) { }
 
         public void SendSpecific(ISpecificMessage message, bool isAsync)
         {
@@ -47,9 +45,9 @@ namespace Nandaka.Core.Device
             var builder = new StringBuilder();
 
             builder.AppendLine($"Device name: '{Name}'; Device address: '{Address.ToString()}'");
-            builder.AppendLine($"Registers count: '{Registers.Count}'");
+            builder.AppendLine($"Registers count: '{Table.Count}'");
 
-            foreach (IRegister register in Registers)
+            foreach (IRegister register in Table)
             {
                 builder.AppendLine($"        {register.GetValueType()} register: " +
                                    $"registerType = {register.RegisterType.ToString()}; " +
@@ -70,18 +68,6 @@ namespace Nandaka.Core.Device
         protected virtual void RaisePropertyChanged([CallerMemberName]string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected static IRegister<T> CreateRwRegister<T>(int address, T value = default)
-            where T: struct
-        {
-            return new Register<T>(address, RegisterType.ReadRequest, value);
-        }
-
-        protected static IReadOnlyRegister<T> CreateRoRegister<T>(int address, T value = default)
-            where T: struct
-        {
-            return new Register<T>(address, RegisterType.WriteRequest, value);
         }
     }
 }

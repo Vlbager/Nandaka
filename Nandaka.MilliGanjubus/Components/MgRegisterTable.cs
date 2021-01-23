@@ -83,11 +83,15 @@ namespace Nandaka.MilliGanjubus.Components
             int mgRegisterIndex = 0; 
             while (mgRegisterIndex < mgRegisters.Count)
             {
-                int userRegisterAddress = mgRegisters[mgRegisterIndex].Address;
+                IRegister receivedHeadMgRegister = mgRegisters[mgRegisterIndex];
+                int userRegisterAddress = receivedHeadMgRegister.Address;
                 if (!_internalTable.TryGetValue(userRegisterAddress, out MgMappedRegister? mapped))
                     throw new InvalidRegistersReceivedException($"Can't find user register with address '{userRegisterAddress.ToString()}'");
 
                 IRegister userRegister = mapped.UserRegister;
+                if (receivedHeadMgRegister.RegisterType == RegisterType.RawWithoutValues)
+                    userRegisters.Add(userRegister.CreateCopy());
+                
                 var receivedBytes = new List<byte>(userRegister.DataSize);
                 
                 foreach (IRegister<byte> mappedMgRegister in mapped.MgRegisters)
@@ -101,7 +105,7 @@ namespace Nandaka.MilliGanjubus.Components
                     mgRegisterIndex++;
                 }
                 
-                userRegisters.Add(userRegister.CreateFromBytes(receivedBytes));
+                userRegisters.Add(userRegister.CreateCopyFromBytes(receivedBytes));
             }
 
             return userRegisters.ToArray();

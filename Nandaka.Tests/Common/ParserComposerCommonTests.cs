@@ -88,7 +88,7 @@ namespace Nandaka.Tests.Common
 
             foreach (IRegisterMessage message in messages)
             {
-                _composer.Compose(message, out IReadOnlyList<IRegister> composedRegisters);
+                _composer.Compose(message, out IReadOnlyList<int> composedRegisters);
                 Assert.True(composedRegisters.Count < message.Registers.Count);
             }
         }
@@ -106,7 +106,7 @@ namespace Nandaka.Tests.Common
 
             foreach (IRegisterMessage message in messages)
             {
-                _composer.Compose(message, out IReadOnlyList<IRegister> composedRegisters);
+                _composer.Compose(message, out IReadOnlyList<int> composedRegisters);
                 Assert.True(composedRegisters.Count < message.Registers.Count);
             }
         }
@@ -114,7 +114,7 @@ namespace Nandaka.Tests.Common
         public void ZeroSizeMessage()
         {
             var message = new CommonMessage(1, MessageType.Request, OperationType.Read, Array.Empty<IRegister>());
-            Assert.ThrowsAny<NandakaBaseException>(() => _composer.Compose(message, out IReadOnlyList<IRegister> _));
+            Assert.ThrowsAny<NandakaBaseException>(() => _composer.Compose(message, out IReadOnlyList<int> _));
         }
 
         public void ValidCommonErrorMessages(IEnumerable<ErrorType> validErrorTypes)
@@ -165,7 +165,7 @@ namespace Nandaka.Tests.Common
 
         internal void AssertRegisterMessage(IRegisterMessage message)
         {
-            byte[] composed = _composer.Compose(message, out IReadOnlyList<IRegister> composedRegisters);
+            byte[] composed = _composer.Compose(message, out IReadOnlyList<int> composedRegisters);
                 
             Assert.Equal(message.Registers.Count, composedRegisters.Count);
 

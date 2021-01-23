@@ -12,10 +12,10 @@ namespace Nandaka.Core.Helpers
         /// first register address, last register address, register 1 value, register 2 value, ..., register n value. 
         /// </summary>
         public static byte[] ComposeDataAsRange(IReadOnlyCollection<IRegister> registers, IProtocolInfo info, IEnumerable<byte> dataHeader,
-            bool withValues, out IReadOnlyList<IRegister> composedRegisters)
+            bool withValues, out IReadOnlyList<int> composedRegisterAddresses)
         {
             var result = new List<byte>(dataHeader);
-            var composedRegistersList = new List<IRegister>();
+            var composedRegisterAddressList = new List<int>();
 
             result.AddRange(GetRegisterAddress(registers.First().Address, info));
             
@@ -35,22 +35,22 @@ namespace Nandaka.Core.Helpers
                 if (withValues)
                     result.AddRange(register.ToBytes());
 
-                composedRegistersList.Add(register);
+                composedRegisterAddressList.Add(register.Address);
             }
 
-            byte[] endRangeAddress = GetRegisterAddress(composedRegistersList[^1].Address, info);
+            byte[] endRangeAddress = GetRegisterAddress(composedRegisterAddressList[^1], info);
             foreach (int indexOffset in Enumerable.Range(0, info.AddressSize))
                 result[lastRegisterAddressIndex + indexOffset] = endRangeAddress[indexOffset];
 
-            composedRegisters = composedRegistersList;
+            composedRegisterAddresses = composedRegisterAddressList;
             return result.ToArray();
         }
 
         public static byte[] ComposeDataAsSeries(IReadOnlyCollection<IRegister> registers, IProtocolInfo info, IEnumerable<byte> dataHeader,
-            bool withValues, out IReadOnlyList<IRegister> composedRegisters)
+            bool withValues, out IReadOnlyList<int> composedRegisterAddresses)
         {
             var result = new List<byte>(dataHeader);
-            var composedRegistersList = new List<IRegister>();
+            var composedRegisterAddressList = new List<int>();
 
             int currentDataPacketSize = 0;
             foreach (IRegister register in registers)
@@ -67,10 +67,10 @@ namespace Nandaka.Core.Helpers
                 if (withValues)
                     result.AddRange(register.ToBytes());
                 
-                composedRegistersList.Add(register);
+                composedRegisterAddressList.Add(register.Address);
             }
 
-            composedRegisters = composedRegistersList;
+            composedRegisterAddresses = composedRegisterAddressList;
             return result.ToArray();
         }
 

@@ -7,9 +7,9 @@ namespace Nandaka.Core.Device
     {
         TimeSpan RequestTimeout { get; }
         TimeSpan UpdateTimeout { get; }
-        ForeignDeviceCtx GetNextDevice(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, out bool isUpdateCycleCompleted);
-        void OnMessageReceived(ForeignDeviceCtx deviceCtx);
-        void OnErrorOccured(ForeignDeviceCtx deviceCtx, DeviceError error);
-        void OnUnexpectedDeviceResponse(IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, ForeignDeviceCtx expectedDeviceCtx, int responseDeviceAddress);
+        ForeignDevice GetNextDevice(IReadOnlyCollection<ForeignDevice> slaveDevices, out bool isUpdateCycleCompleted);
+        void OnMessageReceived(ForeignDevice device);
+        void OnErrorOccured(ForeignDevice device, DeviceError error);
+        void OnUnexpectedDeviceResponse(IReadOnlyCollection<ForeignDevice> slaveDevices, ForeignDevice expectedDevice, int responseDeviceAddress);
     }
 }

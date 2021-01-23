@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
@@ -15,14 +16,14 @@ namespace Nandaka.Core.Session
         private readonly IRegistersUpdatePolicy _registersUpdatePolicy;
         private readonly MasterDeviceDispatcher _dispatcher;
         private readonly IProtocol _protocol;
-        private readonly ForeignDeviceCtx _foreignDeviceCtx;
+        private readonly ForeignDevice _foreignDevice;
 
-        public MasterSession(IProtocol protocol, ForeignDeviceCtx foreignDeviceCtx, MasterDeviceDispatcher dispatcher)
+        public MasterSession(IProtocol protocol, ForeignDevice foreignDevice, MasterDeviceDispatcher dispatcher)
         {
-            _log = new PrefixLog(Log.Instance, $"[{foreignDeviceCtx.Name} Session] ");
+            _log = new PrefixLog(Log.Instance, $"[{foreignDevice.Name} Session] ");
             _protocol = protocol;
-            _foreignDeviceCtx = foreignDeviceCtx;
-            _registersUpdatePolicy = foreignDeviceCtx.UpdatePolicy;
+            _foreignDevice = foreignDevice;
+            _registersUpdatePolicy = foreignDevice.UpdatePolicy;
             _dispatcher = dispatcher;
         }
 
@@ -30,18 +31,20 @@ namespace Nandaka.Core.Session
         {
             using (var listener = new MessageListener(_protocol))
             {
-                IRegisterMessage message = _registersUpdatePolicy.GetNextMessage(_foreignDeviceCtx);
+                IRegisterMessage message = _registersUpdatePolicy.GetNextMessage(_foreignDevice);
 
                 if (message is EmptyMessage)
                 {
-                    _log.AppendMessage($"Nothing to process. Skip {_foreignDeviceCtx.Name}");
+                    _log.AppendMessage($"Nothing to process. Skip {_foreignDevice.Name}");
                     return;
                 }
                 
                 _log.AppendMessage($"Sending {message.OperationType}-register message");
 
-                _protocol.SendAsPossible(message, out IReadOnlyList<IRegister> requestRegisters);
-                _log.AppendMessage($"Register groups with addresses {requestRegisters.GetAllAddressesAsString()} was requested");
+                _protocol.SendAsPossible(message, out IReadOnlyList<int> requestedRegisterAddresses);
+                
+                _log.AppendMessage("Register groups with addresses " +
+                                   $"{requestedRegisterAddresses.Select(a => a.ToString()).Join(", ")} was requested");
 
                 while (true)
                 {
@@ -55,9 +58,9 @@ namespace Nandaka.Core.Session
                     if (receivedMessage is HighPriorityMessage)
                         continue;
 
-                    if (receivedMessage.SlaveDeviceAddress != _foreignDeviceCtx.Address)
+                    if (receivedMessage.SlaveDeviceAddress != _foreignDevice.Address)
                     {
-                        _dispatcher.OnUnexpectedDeviceResponse(_foreignDeviceCtx,
+                        _dispatcher.OnUnexpectedDeviceResponse(_foreignDevice,
                             receivedMessage.SlaveDeviceAddress);
                         continue;
                     }
@@ -70,7 +73,8 @@ namespace Nandaka.Core.Session
 
                     _log.AppendMessage("Response received, updating registers");
 
-                    UpdateRegisters(requestRegisters, response.Registers, response.OperationType);
+                    var patch = UpdatePatch.GetPatchForAllRegisters(_foreignDevice, requestedRegisterAddresses, response.Registers);
+                    patch.Apply();
 
                     _log.AppendMessage("Registers updated");
 
@@ -97,9 +101,9 @@ namespace Nandaka.Core.Session
                 if (receivedMessage is HighPriorityMessage)
                     continue;
 
-                if (receivedMessage.SlaveDeviceAddress != _foreignDeviceCtx.Address)
+                if (receivedMessage.SlaveDeviceAddress != _foreignDevice.Address)
                 {
-                    _dispatcher.OnUnexpectedDeviceResponse(_foreignDeviceCtx,
+                    _dispatcher.OnUnexpectedDeviceResponse(_foreignDevice,
                                                            receivedMessage.SlaveDeviceAddress);
                     continue;
                 }
@@ -110,7 +114,7 @@ namespace Nandaka.Core.Session
                 if (!(receivedMessage is ISpecificMessage response))
                     throw new InvalidMetaDataReceivedException("Wrong response received");
 
-                _foreignDeviceCtx.OnSpecificMessageReceived(response);
+                _foreignDevice.OnSpecificMessageReceived(response);
 
                 break;
             }
@@ -119,26 +123,6 @@ namespace Nandaka.Core.Session
         private void ProcessErrorMessage(ErrorMessage errorMessage)
         {
             throw new NotImplementedException();
-        }
-
-        private static void UpdateRegisters(IReadOnlyCollection<IRegister> registersToUpdate, IReadOnlyCollection<IRegister> sourceRegisters,
-            OperationType operationType)
-        {
-            IReadOnlyDictionary<IRegister, IRegister> registerMap = registersToUpdate.MapRegistersToAllGroups(sourceRegisters);
-
-            switch (operationType)
-            {
-                case OperationType.Read:
-                    registerMap.Update();
-                    break;
-                
-                case OperationType.Write:
-                    registerMap.UpdateWithoutValues();
-                    break;
-                
-                default:
-                    throw new NandakaBaseException("Wrong operation type");
-            }
         }
     }
 }

@@ -11,9 +11,9 @@ namespace Nandaka.Core.Session
     {
         public OldVersionUpdatePolicy() { }
         
-        public IRegisterMessage GetNextMessage(ForeignDeviceCtx deviceCtx)
+        public IRegisterMessage GetNextMessage(ForeignDevice device)
         {
-            IRegister[] orderedByVersionRegisters = deviceCtx.Registers
+            IRegister[] orderedByVersionRegisters = device.Table
                 .OrderBy(register => register.LastUpdateTime)
                 .ToArray();
 
@@ -27,7 +27,7 @@ namespace Nandaka.Core.Session
                 ? OperationType.Write
                 : OperationType.Read;
 
-            return new CommonMessage(deviceCtx.Address, MessageType.Request, operationType, registersToUpdate);
+            return new CommonMessage(device.Address, MessageType.Request, operationType, registersToUpdate);
         }
     }
 }

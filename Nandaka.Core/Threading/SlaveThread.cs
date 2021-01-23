@@ -11,23 +11,23 @@ namespace Nandaka.Core.Threading
     internal sealed class SlaveThread : IDisposable
     {
         private readonly SlaveSession _session;
-        private readonly NandakaDeviceCtx _device;
+        private readonly ForeignDevice _device;
         private readonly DisposableList _disposable;
         private readonly Thread _thread;
         
         private bool _isStopped;
         
-        private SlaveThread(NandakaDeviceCtx deviceCtx, IProtocol protocol)
+        private SlaveThread(ForeignDevice device, IProtocol protocol)
         {
             _disposable = new DisposableList();
-            _session = _disposable.Add(SlaveSession.Create(deviceCtx, protocol));
-            _device = deviceCtx;
+            _session = _disposable.Add(SlaveSession.Create(device, protocol));
+            _device = device;
             _thread = new Thread(Routine) { IsBackground = true };
         }
         
-        public static SlaveThread Create(NandakaDeviceCtx deviceCtx, IProtocol protocol)
+        public static SlaveThread Create(ForeignDevice device, IProtocol protocol)
         {
-            return new SlaveThread(deviceCtx, protocol);
+            return new SlaveThread(device, protocol);
         }
 
         public void Start() => _thread.Start();

@@ -4,6 +4,7 @@
     {
         ReadRequest,
         WriteRequest,
-        Raw
+        Raw,
+        RawWithoutValues
     }
 }

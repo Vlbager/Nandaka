@@ -16,8 +16,8 @@ namespace Nandaka.Core.Registers
         
         byte[] ToBytes();
         void Update(IRegister updateRegister);
-        void UpdateWithoutValues();
-        IRegister CreateFromBytes(IReadOnlyList<byte> bytes);
+        IRegister CreateCopyFromBytes(IReadOnlyList<byte> bytes);
+        IRegister CreateCopy();
         Type GetValueType();
     }
 

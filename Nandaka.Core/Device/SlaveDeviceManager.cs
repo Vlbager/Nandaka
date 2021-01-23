@@ -9,18 +9,18 @@ namespace Nandaka.Core.Device
     {
         private readonly SlaveThread _thread;
         
-        public NandakaDeviceCtx DeviceCtx { get; }
+        public ForeignDevice Device { get; }
 
-        private SlaveDeviceManager(IProtocol protocol, NandakaDeviceCtx deviceCtx)
+        private SlaveDeviceManager(IProtocol protocol, ForeignDevice device)
         {
-            DeviceCtx = deviceCtx;
-            _thread = SlaveThread.Create(deviceCtx, protocol);
+            Device = device;
+            _thread = SlaveThread.Create(device, protocol);
             _thread.Start();
         }
 
-        public static SlaveDeviceManager Start(IProtocol protocol, NandakaDeviceCtx deviceCtx)
+        public static SlaveDeviceManager Start(IProtocol protocol, ForeignDevice device)
         {
-            return new SlaveDeviceManager(protocol, deviceCtx);
+            return new SlaveDeviceManager(protocol, device);
         }
 
         public void Dispose()

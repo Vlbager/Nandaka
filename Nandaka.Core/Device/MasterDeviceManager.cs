@@ -11,16 +11,16 @@ namespace Nandaka.Core.Device
         
         private readonly MasterThread _thread;
 
-        public IReadOnlyCollection<ForeignDeviceCtx> SlaveDevices { get; }
+        public IReadOnlyCollection<ForeignDevice> SlaveDevices { get; }
 
-        private MasterDeviceManager(IProtocol protocol, IDeviceUpdatePolicy updatePolicy, IReadOnlyCollection<ForeignDeviceCtx> slaveDevices, string masterName)
+        private MasterDeviceManager(IProtocol protocol, IDeviceUpdatePolicy updatePolicy, IReadOnlyCollection<ForeignDevice> slaveDevices, string masterName)
         {
             SlaveDevices = slaveDevices;
             _thread = MasterThread.Create(SlaveDevices, protocol, updatePolicy, masterName);
             _thread.StartRoutine();
         }
 
-        public static MasterDeviceManager Start(IProtocol protocol, IDeviceUpdatePolicy updatePolicy, IReadOnlyCollection<ForeignDeviceCtx> slaveDevices,
+        public static MasterDeviceManager Start(IProtocol protocol, IDeviceUpdatePolicy updatePolicy, IReadOnlyCollection<ForeignDevice> slaveDevices,
                                                 string masterName = DefaultMasterName)
         {
             return new MasterDeviceManager(protocol, updatePolicy, slaveDevices, masterName);

@@ -44,28 +44,35 @@ namespace Nandaka.Core.Registers
             RegisterType = registerType;
             _value = value;
         }
-
-        public void Update(IRegister<T> updateRegister)
-        {
-            SetRegisterValue(updateRegister.Value, isUpdated: true);
-        }
-
+        
         public void Update(IRegister updateRegister)
         {
-            if (updateRegister is not IRegister<T> updateRegister2)
+            if (updateRegister is not IRegister<T> updateRegisterTyped)
                 throw new InvalidRegistersReceivedException("Wrong register type to update");
-            
-            Update(updateRegister2);
+
+            switch (RegisterType)
+            {
+                case RegisterType.Raw:
+                    SetRegisterValue(updateRegisterTyped.Value, isUpdated: true);
+                    break;
+                
+                case RegisterType.RawWithoutValues:
+                    SetRegisterValue(Value, isUpdated: true);
+                    break;
+
+                default:
+                    throw new NandakaBaseException("Wrong update register type");
+            }
         }
 
-        public void UpdateWithoutValues()
-        {
-            SetRegisterValue(Value, isUpdated: true);
-        }
-
-        public IRegister CreateFromBytes(IReadOnlyList<byte> bytes)
+        public IRegister CreateCopyFromBytes(IReadOnlyList<byte> bytes)
         {
             return new Register<T>(Address, RegisterType.Raw, _rvConverter.FromBytes(bytes));
+        }
+
+        public IRegister CreateCopy()
+        {
+            return new Register<T>(Address, RegisterType.RawWithoutValues);
         }
 
         public Type GetValueType()

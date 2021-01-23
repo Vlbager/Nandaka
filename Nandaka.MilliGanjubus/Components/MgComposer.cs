@@ -25,15 +25,15 @@ namespace Nandaka.MilliGanjubus.Components
             _info = MgInfo.Instance;
         }
 
-        public byte[] Compose(IMessage message, out IReadOnlyList<IRegister> composedRegisters)
+        public byte[] Compose(IMessage message, out IReadOnlyList<int> composedRegisterAddresses)
         {
             switch (message)
             {
                 case IRegisterMessage registerMessage:
-                    return Compose(registerMessage, out composedRegisters);
+                    return Compose(registerMessage, out composedRegisterAddresses);
 
                 case ErrorMessage errorMessage:
-                    composedRegisters = Array.Empty<IRegister>();
+                    composedRegisterAddresses = Array.Empty<int>();
                     return Compose(errorMessage);
 
                 default:
@@ -70,12 +70,12 @@ namespace Nandaka.MilliGanjubus.Components
             throw new NandakaBaseException("Specified error message does not contains any compatible error type");
         }
 
-        private byte[] Compose(IRegisterMessage message, out IReadOnlyList<IRegister> composedRegisters)
+        private byte[] Compose(IRegisterMessage message, out IReadOnlyList<int> composedRegisterAddresses)
         {
             if (message.Registers.IsEmpty())
                 throw new NandakaBaseException("Specified message does not contains any registers");
             
-            byte[] data = GetDataBytes(message, out composedRegisters);
+            byte[] data = GetDataBytes(message, out composedRegisterAddresses);
 
             byte[] packet = PreparePacketWithHeader(_info.MinPacketLength + data.Length, message.SlaveDeviceAddress);
 
@@ -99,7 +99,7 @@ namespace Nandaka.MilliGanjubus.Components
             return packetBlank;
         }
 
-        private byte[] GetDataBytes(IRegisterMessage message, out IReadOnlyList<IRegister> composedGroups)
+        private byte[] GetDataBytes(IRegisterMessage message, out IReadOnlyList<int> composedRegisterAddresses)
         {
             if (message.Registers is not IReadOnlyList<IRegister<byte>>)
                 throw new NandakaBaseException("MG composer supports only byte registers");
@@ -150,9 +150,9 @@ namespace Nandaka.MilliGanjubus.Components
             byte[] dataHeader = {gByte};
 
             if (isRange)
-                return RegisterConverter.ComposeDataAsRange(message.Registers, _info, dataHeader, withValues, out composedGroups);
+                return RegisterConverter.ComposeDataAsRange(message.Registers, _info, dataHeader, withValues, out composedRegisterAddresses);
 
-            return RegisterConverter.ComposeDataAsSeries(message.Registers, _info, dataHeader, withValues, out composedGroups);
+            return RegisterConverter.ComposeDataAsSeries(message.Registers, _info, dataHeader, withValues, out composedRegisterAddresses);
         }
     }
 }

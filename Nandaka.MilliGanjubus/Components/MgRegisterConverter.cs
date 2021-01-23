@@ -16,10 +16,10 @@ namespace Nandaka.MilliGanjubus.Components
             _addressPool = new HashSet<int>();
         }
 
-        public static MgRegisterConverter Create(IReadOnlyCollection<NandakaDeviceCtx> devices)
+        public static MgRegisterConverter Create(IReadOnlyCollection<ForeignDevice> devices)
         {
             var tableMap = new MgRegisterConverter();
-            foreach (NandakaDeviceCtx device in devices)
+            foreach (ForeignDevice device in devices)
                 tableMap.AddWithValidation(device);
 
             return tableMap;
@@ -41,7 +41,7 @@ namespace Nandaka.MilliGanjubus.Components
             return mgTable.ToUserRegisters(mgRegisters);
         }
 
-        private void AddWithValidation(NandakaDeviceCtx device)
+        private void AddWithValidation(ForeignDevice device)
         {
             int address = device.Address;
                 
@@ -50,7 +50,7 @@ namespace Nandaka.MilliGanjubus.Components
 
             _addressPool.Add(address);
 
-            MgRegisterTable registerTable = MgRegisterTable.CreateWithValidation(device.Registers);
+            MgRegisterTable registerTable = MgRegisterTable.CreateWithValidation(device.Table);
             
             _deviceTables.Add(address, registerTable);
         }
