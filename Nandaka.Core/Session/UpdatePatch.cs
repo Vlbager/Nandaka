@@ -23,7 +23,7 @@ namespace Nandaka.Core.Session
                 deviceRegister.Update(receivedRegister);
         }
 
-        public static UpdatePatch GetPatchForAllRegisters(NandakaDevice device, IReadOnlyCollection<int> requestedAddresses, 
+        public static UpdatePatch CreatePatchForAllRegisters(NandakaDevice device, IReadOnlyCollection<int> requestedAddresses, 
                                                           IEnumerable<IRegister> receivedRegisters)
         {
             Dictionary<IRegister, IRegister> result = requestedAddresses
@@ -42,7 +42,7 @@ namespace Nandaka.Core.Session
             return new UpdatePatch(result);
         }
 
-        public static UpdatePatch GetPatchForPossibleRegisters(NandakaDevice device, IEnumerable<IRegister> receivedRegisters)
+        public static UpdatePatch CreatePatchForPossibleRegisters(NandakaDevice device, IEnumerable<IRegister> receivedRegisters)
         {
             var result = new Dictionary<IRegister, IRegister>();
 

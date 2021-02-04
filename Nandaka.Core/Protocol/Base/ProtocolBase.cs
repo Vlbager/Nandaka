@@ -11,6 +11,9 @@ namespace Nandaka.Core.Protocol
         private readonly IDataPortProvider<T> _dataPortProvider;
         private readonly IComposer<IMessage, T> _composer;
         private readonly IParser<T, MessageReceivedEventArgs> _parser;
+        
+        public abstract IProtocolInfo Info { get; }
+        public abstract bool IsResponseMayBeSkipped { get; }
 
         public event EventHandler<MessageReceivedEventArgs> MessageReceived
         {

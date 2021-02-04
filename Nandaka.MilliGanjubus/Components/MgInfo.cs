@@ -24,8 +24,8 @@ namespace Nandaka.MilliGanjubus.Components
 
         internal const int MaxRegisterValueSize = 9;
 
-        internal static readonly Range ReadRequestRegistersAddressRange = new Range(0, 127);
-        internal static readonly Range WriteRequestRegistersAddressRange = new Range(128, 255);
+        internal static readonly Range ReadRequestRegistersAddressRange = new(0, 127);
+        internal static readonly Range WriteRequestRegistersAddressRange = new(128, 255);
 
         public int MinPacketLength => 5;
 
@@ -45,8 +45,6 @@ namespace Nandaka.MilliGanjubus.Components
         public int DataOffset => 4;
 
         public int AddressSize => sizeof(byte);
-
-        public int HeaderCheckSumSize => sizeof(byte);
 
         public int PacketCheckSumSize => sizeof(byte);
         

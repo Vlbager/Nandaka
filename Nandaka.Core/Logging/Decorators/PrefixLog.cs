@@ -13,6 +13,10 @@ namespace Nandaka.Core.Logging
             _prefix = prefix;
         }
 
+        public PrefixLog(string prefix) 
+            : this(Log.Instance, prefix)
+        { }
+
         public void AppendMessage(string message)
         {
             _inner.AppendMessage(GetMessageWithPrefix(message));

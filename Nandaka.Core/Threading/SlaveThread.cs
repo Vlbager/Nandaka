@@ -10,7 +10,7 @@ namespace Nandaka.Core.Threading
 {
     internal sealed class SlaveThread : IDisposable
     {
-        private readonly SlaveSession _session;
+        private readonly ISession _session;
         private readonly ForeignDevice _device;
         private readonly DisposableList _disposable;
         private readonly Thread _thread;
@@ -20,7 +20,7 @@ namespace Nandaka.Core.Threading
         private SlaveThread(ForeignDevice device, IProtocol protocol)
         {
             _disposable = new DisposableList();
-            _session = _disposable.Add(SlaveSession.Create(device, protocol));
+            _session = _disposable.Add(new SlaveSyncSession(protocol, device));
             _device = device;
             _thread = new Thread(Routine) { IsBackground = true };
         }

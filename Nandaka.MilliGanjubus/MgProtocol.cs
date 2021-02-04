@@ -22,6 +22,9 @@ namespace Nandaka.MilliGanjubus
         private readonly MgRegisterConverter _registerConverter;
         private readonly MgInfo _info;
 
+        public IProtocolInfo Info => _info;
+        public bool IsResponseMayBeSkipped => false;
+
         public event EventHandler<MessageReceivedEventArgs>? MessageReceived;
 
         private MgProtocol(IDataPortProvider<byte[]> dataPortProvider, MgRegisterConverter registerConverter)
@@ -85,7 +88,7 @@ namespace Nandaka.MilliGanjubus
         
         private void OnMessageParsed(object? sender, MessageReceivedEventArgs eventArgs)
         {
-            if (!eventArgs.IsSuccessful() || eventArgs.ReceivedMessage is not MgRegisterMessage mgRegisterMessage)
+            if (!eventArgs.IsException() || eventArgs.ReceivedMessage is not MgRegisterMessage mgRegisterMessage)
             {
                 MessageReceived?.Invoke(sender, eventArgs);
                 return;

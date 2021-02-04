@@ -37,10 +37,5 @@ namespace Nandaka.Core.Device
         {
             _updatePolicy.OnErrorOccured(device, error);
         }
-
-        public void OnUnexpectedDeviceResponse(ForeignDevice expectedDevice, int responseDeviceAddress)
-        {
-            _updatePolicy.OnUnexpectedDeviceResponse(SlaveDevices, expectedDevice, responseDeviceAddress);
-        }
     }
 }

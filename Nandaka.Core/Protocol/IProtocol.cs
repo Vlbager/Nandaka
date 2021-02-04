@@ -7,6 +7,8 @@ namespace Nandaka.Core.Protocol
 {
     public interface IProtocol
     {
+        IProtocolInfo Info { get; }
+        bool IsResponseMayBeSkipped { get; }
         void SendAsPossible(IRegisterMessage message, out IReadOnlyList<int> sentRegisterAddresses);
         void SendMessage(IMessage message);
         event EventHandler<MessageReceivedEventArgs> MessageReceived;

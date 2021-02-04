@@ -13,7 +13,7 @@ namespace Nandaka.Core.Threading
 {
     internal sealed class MasterThread : IDisposable
     {
-        private readonly Dictionary<int, MasterSession> _deviceSessions;
+        private readonly Dictionary<int, ISession> _deviceSessions;
         private readonly MasterDeviceDispatcher _dispatcher;
         private readonly Thread _thread;
         private readonly string _masterName;
@@ -25,8 +25,9 @@ namespace Nandaka.Core.Threading
         {
             _dispatcher = dispatcher;
             _masterName = masterName;
-            _deviceSessions = dispatcher.SlaveDevices.ToDictionary(device => device.Address,
-                                                                   device => new MasterSession(protocol, device, dispatcher));
+            _deviceSessions = dispatcher.SlaveDevices
+                                        .ToDictionary(device => device.Address, 
+                                            device => new MasterSyncSession(protocol, dispatcher.RequestTimeout, device) as ISession);
 
             _disposable = new DisposableList();
             
@@ -78,14 +79,14 @@ namespace Nandaka.Core.Threading
 
         private void SendNextMessage(ForeignDevice device)
         {
-            MasterSession session = _deviceSessions[device.Address];
+            ISession session = _deviceSessions[device.Address];
 
             try
             {
-                if (device.TryGetSpecific(out ISpecificMessage? specificMessage))
-                    session.ProcessSpecificMessage(specificMessage!);
-                else
-                    session.ProcessNextMessage();
+                // if (device.TryGetSpecific(out ISpecificMessage? specificMessage))
+                //     session.ProcessSpecificMessage(specificMessage!);
+                // else
+                session.ProcessNextMessage();
 
                 _dispatcher.OnMessageReceived(device);
             }
@@ -93,11 +94,6 @@ namespace Nandaka.Core.Threading
             {
                 Log.AppendWarning(deviceNotRespondException.Message);
                 _dispatcher.OnErrorOccured(device, DeviceError.NotResponding);
-            }
-            catch (InvalidAddressReceivedException invalidAddressException)
-            {
-                Log.AppendWarning(invalidAddressException.Message);
-                _dispatcher.OnUnexpectedDeviceResponse(device, invalidAddressException.ReceivedAddress);
             }
             catch (InvalidMessageReceivedException invalidMessageException)
             {
