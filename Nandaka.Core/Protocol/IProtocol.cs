@@ -9,6 +9,7 @@ namespace Nandaka.Core.Protocol
     {
         IProtocolInfo Info { get; }
         bool IsResponseMayBeSkipped { get; }
+        bool IsAsyncRequestsAllowed { get; }
         void SendAsPossible(IRegisterMessage message, out IReadOnlyList<int> sentRegisterAddresses);
         void SendMessage(IMessage message);
         event EventHandler<MessageReceivedEventArgs> MessageReceived;

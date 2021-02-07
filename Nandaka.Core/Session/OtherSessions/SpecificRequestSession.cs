@@ -12,6 +12,7 @@ namespace Nandaka.Core.Session
         public SpecificRequestSession(IProtocol protocol, TimeSpan requestTimeout, NandakaDevice device) 
             : base(protocol, device, requestTimeout)
         {
+            Log = new PrefixLog(device.Name);
             FilterRules.Add(message => message is ISpecificMessage or ErrorMessage);
         }
 

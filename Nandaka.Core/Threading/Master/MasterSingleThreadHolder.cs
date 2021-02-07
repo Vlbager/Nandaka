@@ -11,9 +11,10 @@ using Nandaka.Core.Util;
 
 namespace Nandaka.Core.Threading
 {
-    internal sealed class MasterThread : IDisposable
+    internal sealed class MasterSingleThreadHolder : IMasterSessionsHolder
     {
-        private readonly Dictionary<int, ISession> _deviceSessions;
+        private readonly MasterDeviceSessionMap _deviceSessionsMap;
+        private readonly ISession _highPrioritySession;
         private readonly MasterDeviceDispatcher _dispatcher;
         private readonly Thread _thread;
         private readonly string _masterName;
@@ -21,23 +22,22 @@ namespace Nandaka.Core.Threading
         
         private bool _isStopped;
 
-        private MasterThread(MasterDeviceDispatcher dispatcher, IProtocol protocol, string masterName)
+        public MasterSingleThreadHolder(MasterDeviceDispatcher dispatcher, IProtocol protocol, MasterDeviceSessionMap sessionMap, string masterName)
         {
             _dispatcher = dispatcher;
             _masterName = masterName;
-            _deviceSessions = dispatcher.SlaveDevices
-                                        .ToDictionary(device => device.Address, 
-                                            device => new MasterSyncSession(protocol, dispatcher.RequestTimeout, device) as ISession);
-
+            _deviceSessionsMap = sessionMap;
+            _highPrioritySession = InitHighPrioritySession(protocol);
             _disposable = new DisposableList();
-            
             _thread = new Thread(Routine) { IsBackground = true };
         }
 
-        public static MasterThread Create(IReadOnlyCollection<ForeignDevice> slaveDevices, IProtocol protocol, IDeviceUpdatePolicy updatePolicy, string masterName)
+        private static ISession InitHighPrioritySession(IProtocol protocol)
         {
-            var dispatcher = new MasterDeviceDispatcher(slaveDevices, updatePolicy);
-            return new MasterThread(dispatcher, protocol, masterName);
+            if (!protocol.Info.IsHighPriorityMessageSupported)
+                return new NullSession();
+
+            throw new NotImplementedException("High priority message session");
         }
 
         public void StartRoutine() => _thread.Start();
@@ -52,12 +52,10 @@ namespace Nandaka.Core.Threading
                 {
                     if (_isStopped)
                         break;
+                    
+                    _highPrioritySession.ProcessNext();
 
-                    ForeignDevice device = _dispatcher.GetNextDevice();
-
-                    Log.AppendMessage($"Set current device: {device}");
-
-                    SendNextMessage(device);
+                    ProcessNext();
                 }
             }
             catch (Exception exception)
@@ -74,20 +72,24 @@ namespace Nandaka.Core.Threading
             
             string devicesInfo = String.Join(Environment.NewLine, _dispatcher.SlaveDevices.Select(device => device.ToLogLine()));
             
-            Log.AppendMessage(LogLevel.Low, "Starting Master thread, devices:" + Environment.NewLine + devicesInfo);
+            Log.AppendMessage(LogLevel.Low, "Starting single Master thread, devices:" + Environment.NewLine + devicesInfo);
         }
 
-        private void SendNextMessage(ForeignDevice device)
+        private void ProcessNext()
         {
-            ISession session = _deviceSessions[device.Address];
+            DeviceSessionCollection sessionCollection = _deviceSessionsMap.GetNextDevice();
+
+            ForeignDevice device = sessionCollection.Device;
+
+            Log.AppendMessage($"Set current device: {device}");
+            
+            IReadOnlyCollection<ISession> sessions = sessionCollection.Sessions;
 
             try
             {
-                // if (device.TryGetSpecific(out ISpecificMessage? specificMessage))
-                //     session.ProcessSpecificMessage(specificMessage!);
-                // else
-                session.ProcessNextMessage();
-
+                foreach (ISession session in sessions)
+                    session.ProcessNext();
+                
                 _dispatcher.OnMessageReceived(device);
             }
             catch (DeviceNotRespondException deviceNotRespondException)

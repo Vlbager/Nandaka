@@ -24,6 +24,7 @@ namespace Nandaka.MilliGanjubus
 
         public IProtocolInfo Info => _info;
         public bool IsResponseMayBeSkipped => false;
+        public bool IsAsyncRequestsAllowed => false;
 
         public event EventHandler<MessageReceivedEventArgs>? MessageReceived;
 

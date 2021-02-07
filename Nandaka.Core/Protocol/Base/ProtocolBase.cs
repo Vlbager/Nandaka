@@ -14,6 +14,7 @@ namespace Nandaka.Core.Protocol
         
         public abstract IProtocolInfo Info { get; }
         public abstract bool IsResponseMayBeSkipped { get; }
+        public abstract bool IsAsyncRequestsAllowed { get; }
 
         public event EventHandler<MessageReceivedEventArgs> MessageReceived
         {

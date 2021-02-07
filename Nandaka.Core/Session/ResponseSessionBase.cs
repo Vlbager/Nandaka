@@ -26,7 +26,7 @@ namespace Nandaka.Core.Session
             _socket = listener.OpenSocket(filterRules);
         }
         
-        public void ProcessNextMessage()
+        public void ProcessNext()
         {
             Log.AppendMessage(LogLevel.Low, "Waiting for request");
 

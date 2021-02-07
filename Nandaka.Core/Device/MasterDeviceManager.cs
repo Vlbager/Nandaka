@@ -9,15 +9,16 @@ namespace Nandaka.Core.Device
     {
         private const string DefaultMasterName = "Default";
         
-        private readonly MasterThread _thread;
+        private readonly IMasterSessionsHolder _sessionsHolder;
 
         public IReadOnlyCollection<ForeignDevice> SlaveDevices { get; }
 
         private MasterDeviceManager(IProtocol protocol, IDeviceUpdatePolicy updatePolicy, IReadOnlyCollection<ForeignDevice> slaveDevices, string masterName)
         {
             SlaveDevices = slaveDevices;
-            _thread = MasterThread.Create(SlaveDevices, protocol, updatePolicy, masterName);
-            _thread.StartRoutine();
+            var dispatcher = new MasterDeviceDispatcher(slaveDevices, updatePolicy);
+            _sessionsHolder = MasterSessionHolderFactory.Create(protocol, dispatcher, masterName);
+            _sessionsHolder.StartRoutine();
         }
 
         public static MasterDeviceManager Start(IProtocol protocol, IDeviceUpdatePolicy updatePolicy, IReadOnlyCollection<ForeignDevice> slaveDevices,
@@ -28,7 +29,7 @@ namespace Nandaka.Core.Device
 
         public void Dispose()
         {
-            _thread.Dispose();
+            _sessionsHolder.Dispose();
         }
     }
 }

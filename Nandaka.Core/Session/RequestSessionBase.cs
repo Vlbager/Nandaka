@@ -31,7 +31,7 @@ namespace Nandaka.Core.Session
             };
         }
 
-        public void ProcessNextMessage()
+        public void ProcessNext()
         {
             TRequestMessage message = GetNextMessage();
 

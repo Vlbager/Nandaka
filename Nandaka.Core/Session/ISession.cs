@@ -2,6 +2,6 @@
 {
     public interface ISession
     {
-        void ProcessNextMessage();
+        void ProcessNext();
     }
 }
