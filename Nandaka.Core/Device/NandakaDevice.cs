@@ -9,8 +9,13 @@ namespace Nandaka.Core.Device
 {
     public abstract class NandakaDevice : INotifyPropertyChanged
     {
-        private readonly ISpecificMessageHandler _specificMessageHandler;
+        private readonly ISpecificMessageHandler _specificMessageHandler = new NullSpecificMessageHandler();
         private readonly ConcurrentQueue<ISpecificMessage> _specificMessages;
+
+        public ISpecificMessageHandler SpecificMessageHandler
+        {
+            init => _specificMessageHandler = value;
+        }
 
         public RegisterTable Table { get; private set; }
         public abstract string Name { get; }
@@ -18,16 +23,12 @@ namespace Nandaka.Core.Device
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected NandakaDevice(int address, RegisterTable table, ISpecificMessageHandler specificMessageHandler)
+        protected NandakaDevice(int address, RegisterTable table)
         {
             Address = address;
-            _specificMessageHandler = specificMessageHandler;
             _specificMessages = new ConcurrentQueue<ISpecificMessage>();
             Table = table;
         }
-
-        protected NandakaDevice(int address, RegisterTable table)
-            : this(address, table, new NullSpecificMessageHandler()) { }
 
         public void SendSpecific(ISpecificMessage message, bool isAsync)
         {

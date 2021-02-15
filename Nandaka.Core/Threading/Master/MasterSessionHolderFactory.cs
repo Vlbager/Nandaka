@@ -24,16 +24,17 @@ namespace Nandaka.Core.Threading
 
             foreach (ForeignDevice slaveDevice in dispatcher.SlaveDevices)
             {
-                var sessionList = new List<ISession>(2)
-                {
-                    new MasterSyncSession(protocol, dispatcher.RequestTimeout, slaveDevice)
-                };
+                var sessionList = new List<ISession>();
+                
+                IErrorMessageHandler errorHandler = slaveDevice.ErrorMessageHandlerField ?? new DefaultErrorMessageHandler(dispatcher, slaveDevice);
                 
                 if (protocol.Info.IsSpecificMessageSupported)
-                    sessionList.Add(new SpecificRequestSession(protocol, dispatcher.RequestTimeout, slaveDevice));
+                    sessionList.Add(new SpecificRequestSession(protocol, dispatcher.RequestTimeout, slaveDevice, errorHandler));
 
                 if (protocol.IsAsyncRequestsAllowed && protocol.Info.IsHighPriorityMessageSupported)
                     throw new NotImplementedException("High priority message session");
+                
+                sessionList.Add(new MasterSyncSession(protocol, dispatcher.RequestTimeout, slaveDevice, errorHandler));
 
                 sessions.Add(new DeviceSessionCollection(slaveDevice, sessionList));
             }

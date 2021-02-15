@@ -6,19 +6,25 @@ namespace Nandaka.Core.Device
 {
     public abstract class ForeignDevice : NandakaDevice
     {
-        internal IRegistersUpdatePolicy UpdatePolicy { get; }
+        internal readonly IErrorMessageHandler? ErrorMessageHandlerField;
+        internal readonly IRegistersUpdatePolicy UpdatePolicyField = new WriteFirstUpdatePolicy();
+        
+        internal IRegistersUpdatePolicy UpdatePolicy
+        {
+            init => UpdatePolicyField = value;
+        }
+        public IErrorMessageHandler ErrorMessageHandler
+        {
+            init => ErrorMessageHandlerField = value;
+        }
         public DeviceState State { get; set; }
         public Dictionary<DeviceError, int> ErrorCounter { get; }
 
-        protected ForeignDevice(int address, RegisterTable table, DeviceState state, IRegistersUpdatePolicy updatePolicy, ISpecificMessageHandler specificMessageHandler)
-            :base(address, table, specificMessageHandler)
+        protected ForeignDevice(int address, RegisterTable table, DeviceState state) 
+            : base(address, table)
         {
-            UpdatePolicy = updatePolicy;
             ErrorCounter = new Dictionary<DeviceError, int>();
             State = state;
         }
-
-        protected ForeignDevice(int address, RegisterTable table, IRegistersUpdatePolicy updatePolicy, DeviceState state)
-            : this(address, table, state, updatePolicy, new NullSpecificMessageHandler()) { }
     }
 }

@@ -13,11 +13,11 @@ namespace Nandaka.Core.Session
     {
         private readonly IProtocol _protocol;
         private readonly ForeignDevice _device;
-        
+
         protected override ILog Log { get; }
 
-        public MasterSyncSession(IProtocol protocol, TimeSpan requestTimeout, ForeignDevice device) 
-            : base(protocol, device, requestTimeout)
+        public MasterSyncSession(IProtocol protocol, TimeSpan requestTimeout, ForeignDevice device, IErrorMessageHandler errorMessageHandler) 
+            : base(protocol, device, requestTimeout, errorMessageHandler)
         {
             _protocol = protocol;
             _device = device;
@@ -26,7 +26,7 @@ namespace Nandaka.Core.Session
         
         protected override IRegisterMessage GetNextMessage()
         {
-            return _device.UpdatePolicy.GetNextMessage(_device);
+            return _device.UpdatePolicyField.GetNextMessage(_device);
         }
 
         protected override RegisterRequestSentResult SendRequest(IRegisterMessage message)
@@ -43,24 +43,10 @@ namespace Nandaka.Core.Session
 
         protected override void ProcessResponse(IMessage message, RegisterRequestSentResult sentResult)
         {
-            switch (message)
-            {
-                case IRegisterMessage registerResponse:
-                    ProcessRegisterMessageResponse(registerResponse, sentResult);
-                    break;
-                
-                case ErrorMessage errorResponse:
-                    ProcessErrorResponse(errorResponse);
-                    break;
-                
-                default:
-                    throw new NandakaBaseException($"Unexpected message type: {message.GetType()}");
-            }
-        }
-
-        private void ProcessErrorResponse(ErrorMessage errorMessage)
-        {
-            throw new NotImplementedException();
+            if (message is not IRegisterMessage registerMessage)
+                throw new NandakaBaseException($"Unexpected message type: {message.GetType()}");
+            
+            ProcessRegisterMessageResponse(registerMessage, sentResult);
         }
 
         private void ProcessRegisterMessageResponse(IRegisterMessage response, RegisterRequestSentResult sentResult)

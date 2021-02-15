@@ -13,14 +13,16 @@ namespace Nandaka.Core.Session
         private readonly MessageListener _listener;
         private readonly TimeSpan _requestTimeout;
         private readonly NandakaDevice _device;
+        private readonly IErrorMessageHandler _errorMessageHandler;
         
         protected MessageFilterRules FilterRules { get; }
         
         protected abstract ILog Log { get; }
 
-        protected RequestSessionBase(IProtocol protocol, NandakaDevice device, TimeSpan requestTimeout)
+        protected RequestSessionBase(IProtocol protocol, NandakaDevice device, TimeSpan requestTimeout, IErrorMessageHandler errorMessageHandler)
         {
             _requestTimeout = requestTimeout;
+            _errorMessageHandler = errorMessageHandler;
             _listener = new MessageListener(protocol);
             _device = device;
             FilterRules = new MessageFilterRules
@@ -51,7 +53,16 @@ namespace Nandaka.Core.Session
             if (!socket.WaitMessage(out IMessage? receivedMessage, _requestTimeout))
                 throw new DeviceNotRespondException($"Device {_device.Name} not responding");
 
-            ProcessResponse(receivedMessage!, sentResult);
+            if (receivedMessage is ErrorMessage errorMessage)
+                ProcessErrorResponse(errorMessage);
+            else
+                ProcessResponse(receivedMessage!, sentResult);
+        }
+
+        private void ProcessErrorResponse(ErrorMessage errorMessage)
+        {
+            Log.AppendWarning(LogLevel.Low, $"ErrorMessage received: {errorMessage.ToLogLine()}");
+            _errorMessageHandler.OnErrorReceived(errorMessage);
         }
 
         protected abstract TRequestMessage GetNextMessage();

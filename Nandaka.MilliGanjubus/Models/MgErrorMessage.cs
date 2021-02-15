@@ -17,5 +17,10 @@ namespace Nandaka.MilliGanjubus.Models
             
             return ErrorMessage.CreateFromProtocol(slaveDeviceAddress, messageType, new MgErrorMessage(errorType));
         }
+
+        public override string ToLogLine()
+        {
+            return $"Milliganjubus error code: '{ErrorCode}'; error type: {(MgErrorType)ErrorCode}";
+        }
     }
 }

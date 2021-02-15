@@ -1,4 +1,6 @@
-﻿namespace Nandaka.Core.Session
+﻿using System;
+
+namespace Nandaka.Core.Session
 {
     public sealed class ErrorMessage : IMessage
     {
@@ -30,6 +32,15 @@
                                                       ProtocolSpecifiedErrorMessage protocolSpecifiedErrorMessage)
         {
             return new ErrorMessage(slaveDeviceAddress, messageType, ErrorType.InternalProtocolError, protocolSpecifiedErrorMessage);
+        }
+
+        public string ToLogLine()
+        {
+            string protocolSpecifiedInfo = ProtocolSpecifiedErrorMessage != null
+                                           ? $"{Environment.NewLine}{ProtocolSpecifiedErrorMessage.ToLogLine()}"
+                                           : String.Empty;
+            
+            return $"Error from '{SlaveDeviceAddress.ToString()}' device: errorType: {ErrorType}" + protocolSpecifiedInfo;
         }
     }
 }

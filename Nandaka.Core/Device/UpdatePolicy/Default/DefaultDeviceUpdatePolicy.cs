@@ -114,7 +114,10 @@ namespace Nandaka.Core.Device
         
         private bool IsDeviceShouldBeStopped(ForeignDevice device, DeviceError newError)
         {
-            int errorCount = device.ErrorCounter[newError];
+            int errorCount = device.ErrorCounter.TryAdd(newError, 1) 
+                           ? 1 
+                           : device.ErrorCounter[newError];
+            
             device.ErrorCounter[newError] = errorCount + 1;
 
             return errorCount > _maxErrorInRowCount;

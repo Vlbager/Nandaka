@@ -8,5 +8,10 @@
         {
             ErrorCode = protocolErrorCode;
         }
+
+        public virtual string ToLogLine()
+        {
+            return $"ErrorCode: {ErrorCode.ToString()}";
+        }
     }
 }

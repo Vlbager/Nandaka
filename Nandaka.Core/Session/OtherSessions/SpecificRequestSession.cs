@@ -9,8 +9,8 @@ namespace Nandaka.Core.Session
     {
         protected override ILog Log { get; }
         
-        public SpecificRequestSession(IProtocol protocol, TimeSpan requestTimeout, NandakaDevice device) 
-            : base(protocol, device, requestTimeout)
+        public SpecificRequestSession(IProtocol protocol, TimeSpan requestTimeout, NandakaDevice device, IErrorMessageHandler errorMessageHandler) 
+            : base(protocol, device, requestTimeout, errorMessageHandler)
         {
             Log = new PrefixLog(device.Name);
             FilterRules.Add(message => message is ISpecificMessage or ErrorMessage);
