@@ -14,7 +14,7 @@ namespace Nandaka.Core.Threading
     internal sealed class MasterSingleThreadHolder : IMasterSessionsHolder
     {
         private readonly MasterDeviceSessionMap _deviceSessionsMap;
-        private readonly ISession _highPrioritySession;
+        private readonly ISessionHandler _highPrioritySessionHandler;
         private readonly MasterDeviceDispatcher _dispatcher;
         private readonly Thread _thread;
         private readonly string _masterName;
@@ -24,18 +24,18 @@ namespace Nandaka.Core.Threading
 
         public MasterSingleThreadHolder(MasterDeviceDispatcher dispatcher, IProtocol protocol, MasterDeviceSessionMap sessionMap, string masterName)
         {
+            _disposable = new DisposableList();
             _dispatcher = dispatcher;
             _masterName = masterName;
-            _deviceSessionsMap = sessionMap;
-            _highPrioritySession = InitHighPrioritySession(protocol);
-            _disposable = new DisposableList();
+            _deviceSessionsMap = _disposable.Add(sessionMap);
+            _highPrioritySessionHandler = InitHighPrioritySession(protocol);
             _thread = new Thread(Routine) { IsBackground = true };
         }
 
-        private static ISession InitHighPrioritySession(IProtocol protocol)
+        private static ISessionHandler InitHighPrioritySession(IProtocol protocol)
         {
             if (!protocol.Info.IsHighPriorityMessageSupported)
-                return new NullSession();
+                return new NullSessionHandler();
 
             throw new NotImplementedException("High priority message session");
         }
@@ -53,7 +53,7 @@ namespace Nandaka.Core.Threading
                     if (_isStopped)
                         break;
                     
-                    _highPrioritySession.ProcessNext();
+                    _highPrioritySessionHandler.ProcessNext();
 
                     ProcessNext();
                 }
@@ -83,11 +83,11 @@ namespace Nandaka.Core.Threading
 
             Log.AppendMessage($"Set current device: {device}");
             
-            IReadOnlyCollection<ISession> sessions = sessionCollection.Sessions;
+            IReadOnlyCollection<ISessionHandler> sessions = sessionCollection.SessionHandlers;
 
             try
             {
-                foreach (ISession session in sessions)
+                foreach (ISessionHandler session in sessions)
                     session.ProcessNext();
                 
                 _dispatcher.OnMessageReceived(device);

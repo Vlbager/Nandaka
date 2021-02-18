@@ -5,7 +5,7 @@ namespace Nandaka.Core.Util
 {
     public sealed class DisposableList : IDisposable
     {
-        private readonly IList<IDisposable> _list;
+        private readonly List<IDisposable> _list;
 
         public DisposableList()
         {
@@ -17,6 +17,13 @@ namespace Nandaka.Core.Util
         {
             _list.Add(disposable);
             return disposable;
+        }
+
+        public void AddRange<T>(IEnumerable<T> disposables)
+            where T: IDisposable
+        {
+            foreach(T disposable in disposables)
+                _list.Add(disposable);
         }
         
         public void Dispose()

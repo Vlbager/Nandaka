@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
@@ -9,27 +8,26 @@ using Nandaka.Core.Protocol;
 
 namespace Nandaka.Core.Session
 {
-    public sealed class MasterSyncSession : RequestSessionBase<IRegisterMessage, RegisterRequestSentResult>
+    public sealed class MasterSyncSession : IRequestSession<IRegisterMessage, RegisterRequestSentResult>
     {
         private readonly IProtocol _protocol;
         private readonly ForeignDevice _device;
 
-        protected override ILog Log { get; }
+        private ILog Log { get; }
 
-        public MasterSyncSession(IProtocol protocol, TimeSpan requestTimeout, ForeignDevice device, IErrorMessageHandler errorMessageHandler) 
-            : base(protocol, device, requestTimeout, errorMessageHandler)
+        public MasterSyncSession(IProtocol protocol, ForeignDevice device)
         {
             _protocol = protocol;
             _device = device;
             Log = new PrefixLog(_device.Name);
         }
         
-        protected override IRegisterMessage GetNextMessage()
+        public IRegisterMessage GetNextMessage()
         {
             return _device.UpdatePolicyField.GetNextMessage(_device);
         }
 
-        protected override RegisterRequestSentResult SendRequest(IRegisterMessage message)
+        public RegisterRequestSentResult SendRequest(IRegisterMessage message)
         {
             Log.AppendMessage($"Sending {message.OperationType.ToString()}-register message");
 
@@ -41,7 +39,7 @@ namespace Nandaka.Core.Session
             return new RegisterRequestSentResult(IsResponseRequired(message), requestedRegisterAddresses);
         }
 
-        protected override void ProcessResponse(IMessage message, RegisterRequestSentResult sentResult)
+        public void ProcessResponse(IMessage message, RegisterRequestSentResult sentResult)
         {
             if (message is not IRegisterMessage registerMessage)
                 throw new NandakaBaseException($"Unexpected message type: {message.GetType()}");

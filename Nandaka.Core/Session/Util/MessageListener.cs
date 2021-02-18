@@ -4,7 +4,7 @@ using Nandaka.Core.Protocol;
 namespace Nandaka.Core.Session
 {
 
-    internal sealed class MessageListener
+    internal sealed class MessageListener : IDisposable
     {
         private readonly IProtocol _protocol;
 
@@ -20,6 +20,11 @@ namespace Nandaka.Core.Session
         {
             //todo:NAN-22
             return new MessageSocket(_protocol, filterRules);
+        }
+
+        public void Dispose()
+        {
+            //todo:NAN-22
         }
     }
 }

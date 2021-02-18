@@ -24,22 +24,31 @@ namespace Nandaka.Core.Threading
 
             foreach (ForeignDevice slaveDevice in dispatcher.SlaveDevices)
             {
-                var sessionList = new List<ISession>();
+                var handlerList = new List<ISessionHandler>();
                 
                 IErrorMessageHandler errorHandler = slaveDevice.ErrorMessageHandlerField ?? new DefaultErrorMessageHandler(dispatcher, slaveDevice);
                 
                 if (protocol.Info.IsSpecificMessageSupported)
-                    sessionList.Add(new SpecificRequestSession(protocol, dispatcher.RequestTimeout, slaveDevice, errorHandler));
+                    handlerList.Add(GetSessionHandler(new SpecificRequestSession(), protocol, slaveDevice, dispatcher.RequestTimeout, errorHandler));
 
                 if (protocol.IsAsyncRequestsAllowed && protocol.Info.IsHighPriorityMessageSupported)
                     throw new NotImplementedException("High priority message session");
                 
-                sessionList.Add(new MasterSyncSession(protocol, dispatcher.RequestTimeout, slaveDevice, errorHandler));
+                handlerList.Add(GetSessionHandler(new MasterSyncSession(protocol, slaveDevice), protocol, slaveDevice, dispatcher.RequestTimeout, errorHandler));
 
-                sessions.Add(new DeviceSessionCollection(slaveDevice, sessionList));
+                sessions.Add(new DeviceSessionCollection(slaveDevice, handlerList));
             }
 
             return sessions;
+        }
+
+        private static ISessionHandler GetSessionHandler<TRequestMessage, TSentResult>(IRequestSession<TRequestMessage, TSentResult> session, 
+                                                                                       IProtocol protocol, NandakaDevice device, TimeSpan requestTimeout, 
+                                                                                       IErrorMessageHandler errorHandler)
+            where TRequestMessage: IMessage
+            where TSentResult: ISentResult
+        {
+            return new RequestSessionHandler<TRequestMessage, TSentResult>(session, protocol, device, requestTimeout, errorHandler);
         }
     }
 }

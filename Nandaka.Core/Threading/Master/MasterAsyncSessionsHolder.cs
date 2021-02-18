@@ -25,6 +25,7 @@ namespace Nandaka.Core.Threading
             _dispatcher = dispatcher;
             _masterName = masterName;
             _disposable = new DisposableList();
+            _disposable.AddRange(sessions);
             _threads = sessions.Select(deviceSessions => new Thread(() => Routine(deviceSessions)))
                                .ToArray();
         }
@@ -39,7 +40,7 @@ namespace Nandaka.Core.Threading
 
                 InitializeLog(device);
                 
-                IReadOnlyCollection<ISession> sessions = deviceSessions.Sessions;
+                IReadOnlyCollection<ISessionHandler> sessions = deviceSessions.SessionHandlers;
                 
                 while (true)
                 {
@@ -64,11 +65,11 @@ namespace Nandaka.Core.Threading
             Log.AppendMessage("Starting Master thread, device:" + Environment.NewLine + device.ToLogLine());
         }
 
-        private void ProcessNext(ForeignDevice device, IReadOnlyCollection<ISession> sessions)
+        private void ProcessNext(ForeignDevice device, IReadOnlyCollection<ISessionHandler> sessions)
         {
             try
             {
-                foreach (ISession session in sessions)
+                foreach (ISessionHandler session in sessions)
                     session.ProcessNext();
                 
                 _dispatcher.OnMessageReceived(device);

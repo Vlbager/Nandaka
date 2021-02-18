@@ -14,7 +14,7 @@ namespace Nandaka.Core.Device
         private SlaveDeviceManager(IProtocol protocol, ForeignDevice device)
         {
             Device = device;
-            _thread = SlaveThread.Create(device, protocol);
+            _thread = new SlaveThread(device, protocol);
             _thread.Start();
         }
 

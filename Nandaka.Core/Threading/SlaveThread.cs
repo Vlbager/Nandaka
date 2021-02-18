@@ -10,27 +10,33 @@ namespace Nandaka.Core.Threading
 {
     internal sealed class SlaveThread : IDisposable
     {
-        private readonly ISession _session;
-        private readonly ForeignDevice _device;
+        private readonly ISessionHandler _sessionHandler;
+        private readonly NandakaDevice _device;
         private readonly DisposableList _disposable;
         private readonly Thread _thread;
         
         private bool _isStopped;
         
-        private SlaveThread(ForeignDevice device, IProtocol protocol)
+        public SlaveThread(NandakaDevice device, IProtocol protocol)
         {
             _disposable = new DisposableList();
-            _session = _disposable.Add(new SlaveSyncSession(protocol, device));
+            _sessionHandler = _disposable.Add(GetSessionHandler(protocol, device));
             _device = device;
             _thread = new Thread(Routine) { IsBackground = true };
         }
         
-        public static SlaveThread Create(ForeignDevice device, IProtocol protocol)
+        public static SlaveThread Create(NandakaDevice device, IProtocol protocol)
         {
             return new SlaveThread(device, protocol);
         }
 
         public void Start() => _thread.Start();
+        
+        public void Dispose()
+        {
+            _isStopped = true;
+            _disposable.Dispose();
+        }
         
         private void Routine()
         {
@@ -43,7 +49,7 @@ namespace Nandaka.Core.Threading
                     if (_isStopped)
                         break;
 
-                    _session.ProcessNext();
+                    _sessionHandler.ProcessNext();
                 }
             }
             catch (Exception exception)
@@ -61,10 +67,10 @@ namespace Nandaka.Core.Threading
             Log.AppendMessage(LogLevel.Low, "Starting slave thread." + Environment.NewLine + _device.ToLogLine());
         }
 
-        public void Dispose()
+        private static ISessionHandler GetSessionHandler(IProtocol protocol, NandakaDevice device)
         {
-            _isStopped = true;
-            _disposable.Dispose();
+            var session = new SlaveSyncSession(protocol, device);
+            return new ResponseSessionHandler<IRegisterMessage>(session, protocol, device);
         }
     }
 }

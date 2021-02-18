@@ -1,32 +1,20 @@
 ﻿using System;
-using Nandaka.Core.Device;
-using Nandaka.Core.Logging;
-using Nandaka.Core.Protocol;
 
 namespace Nandaka.Core.Session
 {
-    public sealed class SpecificRequestSession : RequestSessionBase<ErrorMessage, DefaultSentResult>
+    public sealed class SpecificRequestSession : IRequestSession<ISpecificMessage, DefaultSentResult>
     {
-        protected override ILog Log { get; }
-        
-        public SpecificRequestSession(IProtocol protocol, TimeSpan requestTimeout, NandakaDevice device, IErrorMessageHandler errorMessageHandler) 
-            : base(protocol, device, requestTimeout, errorMessageHandler)
-        {
-            Log = new PrefixLog(device.Name);
-            FilterRules.Add(message => message is ISpecificMessage or ErrorMessage);
-        }
-
-        protected override ErrorMessage GetNextMessage()
+        public ISpecificMessage GetNextMessage()
         {
             throw new NotImplementedException();
         }
 
-        protected override DefaultSentResult SendRequest(ErrorMessage message)
+        public DefaultSentResult SendRequest(ISpecificMessage message)
         {
             throw new NotImplementedException();
         }
 
-        protected override void ProcessResponse(IMessage message, DefaultSentResult sentResult)
+        public void ProcessResponse(IMessage message, DefaultSentResult sentResult)
         {
             throw new NotImplementedException();
         }

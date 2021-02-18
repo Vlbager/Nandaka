@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Device;
 
 namespace Nandaka.Core.Threading
 {
-    internal sealed class MasterDeviceSessionMap
+    internal sealed class MasterDeviceSessionMap : IDisposable
     {
         private readonly MasterDeviceDispatcher _dispatcher;
         private readonly Dictionary<int, DeviceSessionCollection> _sessionsByAddress;
@@ -20,6 +21,12 @@ namespace Nandaka.Core.Threading
         {
             ForeignDevice device = _dispatcher.GetNextDevice();
             return _sessionsByAddress[device.Address];
+        }
+
+        public void Dispose()
+        {
+            foreach (DeviceSessionCollection deviceSessionCollection in _sessionsByAddress.Values)
+                deviceSessionCollection.Dispose();
         }
     }
 }

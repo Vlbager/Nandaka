@@ -1,18 +1,25 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Nandaka.Core.Device;
 using Nandaka.Core.Session;
 
 namespace Nandaka.Core.Threading
 {
-    public sealed class DeviceSessionCollection
+    public sealed class DeviceSessionCollection : IDisposable
     {
         public ForeignDevice Device { get; }
-        public IReadOnlyCollection<ISession> Sessions { get; }
+        public IReadOnlyCollection<ISessionHandler> SessionHandlers { get; }
 
-        public DeviceSessionCollection(ForeignDevice device, IReadOnlyCollection<ISession> sessions)
+        public DeviceSessionCollection(ForeignDevice device, IReadOnlyCollection<ISessionHandler> sessionHandlers)
         {
             Device = device;
-            Sessions = sessions;
+            SessionHandlers = sessionHandlers;
+        }
+
+        public void Dispose()
+        {
+            foreach (ISessionHandler handler in SessionHandlers)
+                handler.Dispose();
         }
     }
 }
