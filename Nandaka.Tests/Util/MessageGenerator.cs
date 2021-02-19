@@ -4,7 +4,7 @@ using Nandaka.Core.Helpers;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
 
-namespace Nandaka.Tests.Common
+namespace Nandaka.Tests.Util
 {
     internal abstract class MessageGenerator
     {

@@ -22,6 +22,9 @@ namespace Nandaka.Core.Registers
                 if (dictionary.ContainsKey(register.Address))
                     throw new ConfigurationException("Two or more registers with same addresses was defined");
 
+                if (register.Address < 0)
+                    throw new ConfigurationException("Register address should not be negative");
+                
                 if (register.RegisterType != RegisterType.ReadRequest && register.RegisterType != RegisterType.WriteRequest)
                     throw new ConfigurationException("Registers must have WriteRequest or ReadRequest type");
                 

@@ -31,6 +31,15 @@ namespace Nandaka.Core.Helpers
                 action(item);
         }
 
+        public static IEnumerable<TSource> With<TSource>(this IEnumerable<TSource> source, Action<TSource> action)
+        {
+            foreach (TSource item in source)
+            {
+                action(item);
+                yield return item;
+            }
+        }
+
         public static bool IsEmpty<TSource>(this IEnumerable<TSource> source) => !source.Any();
 
         public static IEnumerable<TResult> SafeCast<TSource, TResult>(this IEnumerable<TSource> source)

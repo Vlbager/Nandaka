@@ -11,8 +11,6 @@ namespace Nandaka.Core.Session
     /// </summary>
     public class WriteFirstUpdatePolicy : IRegistersUpdatePolicy
     {
-        public WriteFirstUpdatePolicy() { }
-        
         public IRegisterMessage GetNextMessage(ForeignDevice device)
         {
             IRegister[] writeRegistersToUpdate = device.Table
@@ -33,7 +31,7 @@ namespace Nandaka.Core.Session
             if (!readRegistersToUpdate.IsEmpty())
                 return new CommonMessage(device.Address, MessageType.Request, OperationType.Read, readRegistersToUpdate);
 
-            return new EmptyMessage();
+            return EmptyMessage.Create();
         }
     }
 }

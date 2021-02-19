@@ -6,7 +6,8 @@ using Nandaka.Core.Helpers;
 using Nandaka.Core.Session;
 using Nandaka.MilliGanjubus.Components;
 using Nandaka.MilliGanjubus.Models;
-using Nandaka.Tests.Common;
+using Nandaka.Tests.ProtocolCommon;
+using Nandaka.Tests.Util;
 using Xunit;
 
 namespace Nandaka.Tests.MilliGanjubus

@@ -5,7 +5,7 @@ using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Registers;
 using Nandaka.MilliGanjubus.Components;
-using Nandaka.Tests.Common;
+using Nandaka.Tests.Util;
 using Xunit;
 
 namespace Nandaka.Tests.MilliGanjubus
@@ -242,13 +242,6 @@ namespace Nandaka.Tests.MilliGanjubus
             
             // Act & Assert
             Assert.Throws<ConfigurationException>(() => MgRegisterTable.CreateWithValidation(registers));
-        }
-
-        [Fact]
-        [Trait("Invalid", "registers not in range")]
-        public void RegistersNotInRange()
-        {
-            
         }
 
         private static IRegister<int>[] GetFullInt32Table()

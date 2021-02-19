@@ -3,7 +3,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Nandaka.Core.Registers;
 
-namespace Nandaka.Tests.Common
+namespace Nandaka.Tests.Util
 {
     internal abstract class RegisterGenerator
     {

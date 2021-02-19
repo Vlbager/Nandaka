@@ -7,11 +7,12 @@ using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
+using Nandaka.Tests.Util;
 using Xunit;
 using Xunit.Sdk;
 using ErrorMessage = Nandaka.Core.Session.ErrorMessage;
 
-namespace Nandaka.Tests.Common
+namespace Nandaka.Tests.ProtocolCommon
 {
     public class ParserComposerCommonTests<TRegisterValue> : IParserComposerTests
         where TRegisterValue: struct

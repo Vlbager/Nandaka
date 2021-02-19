@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Nandaka.Core.Session;
 
-namespace Nandaka.Tests.Common
+namespace Nandaka.Tests.ProtocolCommon
 {
     public interface IParserComposerTests
     {

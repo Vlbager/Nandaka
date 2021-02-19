@@ -50,7 +50,7 @@ namespace Nandaka.Core.Registers
             if (updateRegister is not IRegister<T> updateRegisterTyped)
                 throw new InvalidRegistersReceivedException("Wrong register type to update");
 
-            switch (RegisterType)
+            switch (updateRegister.RegisterType)
             {
                 case RegisterType.Raw:
                     SetRegisterValue(updateRegisterTyped.Value, isUpdated: true);

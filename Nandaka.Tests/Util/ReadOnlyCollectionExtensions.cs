@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Nandaka.Core.Helpers;
 
-namespace Nandaka.Tests.Common
+namespace Nandaka.Tests.Util
 {
     public static class ReadOnlyCollectionExtensions
     {

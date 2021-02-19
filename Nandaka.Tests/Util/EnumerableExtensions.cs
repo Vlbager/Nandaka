@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Nandaka.Tests.Common
+namespace Nandaka.Tests.Util
 {
     public static class EnumerableExtensions
     {
