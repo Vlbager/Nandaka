@@ -27,7 +27,7 @@ namespace Nandaka.Core.Session
 
             receivedMessage = receivedEventArgs!.ReceivedMessage;
 
-            return false;
+            return true;
         }
 
         public IMessage WaitMessage()

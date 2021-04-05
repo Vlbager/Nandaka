@@ -45,13 +45,13 @@ namespace Nandaka.Core.Session
                 return;
             }
             
+            using MessageSocket socket = _listener.OpenSocket(_filterRules);
+            
             TSentResult sentResult = _requestSession.SendRequest(message);
 
             if (!sentResult.IsResponseRequired)
                 return;
 
-            using MessageSocket socket = _listener.OpenSocket(_filterRules);
-            
             if (!socket.WaitMessage(out IMessage? receivedMessage, _requestTimeout))
                 throw new DeviceNotRespondException($"Device {_device.Name} not responding");
 

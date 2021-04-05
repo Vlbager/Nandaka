@@ -3,6 +3,7 @@ using System.Threading;
 using Nandaka.Core.Device;
 using Nandaka.Core.Logging;
 using Nandaka.Core.Protocol;
+using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
 using Nandaka.Core.Util;
 
@@ -23,11 +24,6 @@ namespace Nandaka.Core.Threading
             _sessionHandler = _disposable.Add(GetSessionHandler(protocol, device));
             _device = device;
             _thread = new Thread(Routine) { IsBackground = true };
-        }
-        
-        public static SlaveThread Create(NandakaDevice device, IProtocol protocol)
-        {
-            return new SlaveThread(device, protocol);
         }
 
         public void Start() => _thread.Start();

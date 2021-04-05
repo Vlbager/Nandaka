@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using Nandaka.Core.Device;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
 using Nandaka.Tests.Util;
@@ -11,20 +9,6 @@ namespace Nandaka.Tests.RegisterPolicies
 {
     public static class LastTimeUpdatePolicyTests
     {
-        private class TestDevice : ForeignDevice
-        {
-            public override string Name => nameof(TestDevice);
-            
-            private TestDevice(int address, RegisterTable table, DeviceState state) 
-                : base(address, table, state) { }
-
-            public static TestDevice Create(IEnumerable<IRegister> registers)
-            {
-                var table = RegisterTable.CreateWithValidation(registers);
-                return new TestDevice(1, table, DeviceState.Connected);
-            }
-        }
-        
         private static readonly LastTimeUpdatePolicy UpdatePolicy = new();
 
         [Fact]

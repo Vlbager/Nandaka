@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Nandaka.Core.Device;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
@@ -12,20 +11,6 @@ namespace Nandaka.Tests.RegisterPolicies
 {
     public static class WriteFirstRegisterPolicyTests
     {
-        private class TestDevice : ForeignDevice
-        {
-            public override string Name => nameof(TestDevice);
-            
-            private TestDevice(int address, RegisterTable table, DeviceState state) 
-                : base(address, table, state) { }
-
-            public static TestDevice Create(IEnumerable<IRegister> registers)
-            {
-                var table = RegisterTable.CreateWithValidation(registers);
-                return new TestDevice(1, table, DeviceState.Connected);
-            }
-        }
-        
         private static readonly WriteFirstUpdatePolicy UpdatePolicy = new();
         private static readonly RegisterGenerator<int> Generator = new();
         

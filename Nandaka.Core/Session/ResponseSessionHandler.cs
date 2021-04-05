@@ -44,7 +44,6 @@ namespace Nandaka.Core.Session
         public void Dispose()
         {
             _socket.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }
