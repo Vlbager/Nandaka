@@ -3,6 +3,6 @@
     public interface IResponseSession<in TResponseMessage>
         where TResponseMessage: IMessage
     {
-        void ProcessResponse(TResponseMessage message);
+        void ProcessRequest(TResponseMessage request);
     }
 }

@@ -1,13 +1,12 @@
-﻿using System.Collections.Concurrent;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Text;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
 
 namespace Nandaka.Core.Device
 {
-    public abstract class NandakaDevice : INotifyPropertyChanged
+    public abstract class NandakaDevice
     {
         private readonly ISpecificMessageHandler _specificMessageHandler = new NullSpecificMessageHandler();
         private readonly ConcurrentQueue<ISpecificMessage> _specificMessages;
@@ -21,13 +20,15 @@ namespace Nandaka.Core.Device
         public abstract string Name { get; }
         public int Address { get; }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public event EventHandler<RegisterChangedEventArgs>? OnRegisterChanged; 
 
         protected NandakaDevice(int address, RegisterTable table)
         {
             Address = address;
             _specificMessages = new ConcurrentQueue<ISpecificMessage>();
             Table = table;
+            foreach (IRegister register in table)
+                register.OnRegisterChanged += (sender, args) => OnRegisterChanged?.Invoke(sender, args);
         }
 
         public void SendSpecific(ISpecificMessage message, bool isAsync)
@@ -65,10 +66,5 @@ namespace Nandaka.Core.Device
 
         internal bool TryGetSpecific(out ISpecificMessage? message)
             => _specificMessages.TryDequeue(out message);
-
-        protected virtual void RaisePropertyChanged([CallerMemberName]string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 }

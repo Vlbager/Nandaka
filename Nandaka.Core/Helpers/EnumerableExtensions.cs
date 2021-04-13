@@ -60,7 +60,7 @@ namespace Nandaka.Core.Helpers
             yield return obj;
         }
 
-        public static string Join(this IEnumerable<string> self, string separator)
+        public static string JoinString<T>(this IEnumerable<T> self, string separator)
         {
             return String.Join(separator, self);
         }

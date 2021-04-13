@@ -36,7 +36,7 @@ namespace Nandaka.Core.Registers
 
         public DateTime LastUpdateTime => _rwLock.GetWithReadLock(ref _lastUpdateTime);
         
-        public event EventHandler? OnRegisterChanged;
+        public event EventHandler<RegisterChangedEventArgs>? OnRegisterChanged;
 
         public Register(int address, RegisterType registerType, T value = default)
         {
@@ -57,12 +57,17 @@ namespace Nandaka.Core.Registers
                     break;
                 
                 case RegisterType.RawWithoutValues:
-                    SetRegisterValue(Value, isUpdated: true);
+                    MarkAsUpdated();
                     break;
 
                 default:
                     throw new NandakaBaseException("Wrong update register type");
             }
+        }
+
+        public void MarkAsUpdated()
+        {
+            SetRegisterValue(Value, isUpdated: true);
         }
 
         public IRegister CreateCopyFromBytes(IReadOnlyList<byte> bytes)
@@ -119,7 +124,7 @@ namespace Nandaka.Core.Registers
             _isUpdated = isUpdated;
             _lastUpdateTime = DateTime.Now;
             _rwLock.ExitWriteLock();
-            OnRegisterChanged?.Invoke(this, EventArgs.Empty);
+            OnRegisterChanged?.Invoke(this, new RegisterChangedEventArgs(Address));
         }
     }
 }

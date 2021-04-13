@@ -36,7 +36,7 @@ namespace Nandaka.Core.Session
             
             _log.AppendMessage($"Request message to device-{message.SlaveDeviceAddress} received");
             
-            _responseSession.ProcessResponse((TResponseMessage)message);
+            _responseSession.ProcessRequest((TResponseMessage)message);
                 
             _log.AppendMessage("Message processed");
         }

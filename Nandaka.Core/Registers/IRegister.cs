@@ -12,10 +12,12 @@ namespace Nandaka.Core.Registers
         DateTime LastUpdateTime { get; }
         TimeSpan UpdateInterval { get; }
         
-        event EventHandler OnRegisterChanged;
+        event EventHandler<RegisterChangedEventArgs> OnRegisterChanged;
         
         byte[] ToBytes();
         void Update(IRegister updateRegister);
+        void MarkAsUpdated();
+        
         IRegister CreateCopyFromBytes(IReadOnlyList<byte> bytes);
         IRegister CreateCopy();
         Type GetValueType();

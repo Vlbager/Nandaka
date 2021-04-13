@@ -5,6 +5,7 @@ using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Logging;
 using Nandaka.Core.Protocol;
+using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Session
 {
@@ -12,6 +13,7 @@ namespace Nandaka.Core.Session
     {
         private readonly IProtocol _protocol;
         private readonly ForeignDevice _device;
+        private readonly DeviceRegistersProvider _provider;
 
         private ILog Log { get; }
 
@@ -19,6 +21,7 @@ namespace Nandaka.Core.Session
         {
             _protocol = protocol;
             _device = device;
+            _provider = new DeviceRegistersProvider(device);
             Log = new PrefixLog(_device.Name);
         }
         
@@ -34,9 +37,13 @@ namespace Nandaka.Core.Session
             _protocol.SendAsPossible(message, out IReadOnlyList<int> requestedRegisterAddresses);
 
             Log.AppendMessage("Register groups with addresses " +
-                              $"{requestedRegisterAddresses.Select(a => a.ToString()).Join(", ")} was requested");
+                              $"{requestedRegisterAddresses.JoinString(", ")} was requested");
 
-            return new RegisterRequestSentResult(IsResponseRequired(message), requestedRegisterAddresses);
+            var sentResult = new RegisterRequestSentResult(IsResponseRequired(message), requestedRegisterAddresses);
+
+            PostProcessRequest(sentResult);
+
+            return sentResult;
         }
 
         public void ProcessResponse(IMessage message, RegisterRequestSentResult sentResult)
@@ -50,11 +57,22 @@ namespace Nandaka.Core.Session
         private void ProcessRegisterMessageResponse(IRegisterMessage response, RegisterRequestSentResult sentResult)
         {
             Log.AppendMessage("Response received, updating registers");
+            
+            IReadOnlyList<IRegister> updatedRegisters = _provider.UpdateAllRequested(sentResult.RequestedAddresses, response.Registers);
 
-            var patch = UpdatePatch.CreatePatchForAllRegisters(_device, sentResult.RequestedAddresses, response.Registers);
-            patch.Apply();
+            Log.AppendMessage($"Registers {updatedRegisters.ToLogLine()} updated");
+        }
 
-            Log.AppendMessage("Registers updated");
+        private void PostProcessRequest(RegisterRequestSentResult sentResult)
+        {
+            if (sentResult.IsResponseRequired)
+                return;
+            
+            Log.AppendMessage("Set updated state for registers in request");
+            
+            _provider.MarkAsUpdatedAllRequested(sentResult.RequestedAddresses);
+            
+            Log.AppendMessage("Requested registers mark as updated");
         }
 
         private bool IsResponseRequired(IRegisterMessage message)
