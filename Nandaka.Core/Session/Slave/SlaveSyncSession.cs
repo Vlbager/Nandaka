@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
@@ -12,14 +13,14 @@ namespace Nandaka.Core.Session
     {
         private readonly IProtocol _protocol;
         private readonly NandakaDevice _device;
-        private readonly DeviceRegistersProvider _provider;
+        private readonly DeviceRegistersSynchronizer _synchronizer;
         private readonly ILog _log;
         
         public SlaveSyncSession(IProtocol protocol, NandakaDevice device)
         {
             _protocol = protocol;
             _device = device;
-            _provider = new DeviceRegistersProvider(device);
+            _synchronizer = new DeviceRegistersSynchronizer(device);
             _log = new PrefixLog(device.Name);
         }
 
@@ -58,26 +59,27 @@ namespace Nandaka.Core.Session
 
         private void ProcessReadRequest(IRegisterMessage request)
         {
-            IReadOnlyList<IRegister> deviceRegisters = _provider.GetDeviceRegisters(request.Registers);
+            IReadOnlyList<IRegister> deviceRegisters = _synchronizer.GetDeviceRegisters(request.Registers);
+            _synchronizer.MarkAsUpdatedAllRequested(request.Registers.Select(register => register.Address).ToArray());
 
-            SendResponseIfRequired(request.OperationType, deviceRegisters);
+            SendResponse(request.OperationType, deviceRegisters);
         }
 
         private void ProcessWriteRequest(IRegisterMessage message)
         {
-            IReadOnlyList<IRegister> updatedDeviceRegisters = _provider.UpdateAllReceived(message.Registers);
-
-            SendResponseIfRequired(message.OperationType, updatedDeviceRegisters);
-        }
-
-        private void SendResponseIfRequired(OperationType operationType, IReadOnlyList<IRegister> registers)
-        {
-            if (_protocol.IsResponseMayBeSkipped && operationType == OperationType.Write)
+            IReadOnlyList<IRegister> updatedDeviceRegisters = _synchronizer.UpdateAllReceived(message.Registers);
+            
+            if (_protocol.IsResponseMayBeSkipped)
             {
                 _log.AppendMessage("Write message response will be skipped");
                 return;
             }
-            
+
+            SendResponse(message.OperationType, updatedDeviceRegisters);
+        }
+
+        private void SendResponse(OperationType operationType, IReadOnlyList<IRegister> registers)
+        {
             var response = new CommonMessage(_device.Address, MessageType.Response, operationType, registers);
             _protocol.SendMessage(response);
 

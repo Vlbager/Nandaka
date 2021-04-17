@@ -5,11 +5,11 @@ using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Device
 {
-    internal sealed class DeviceRegistersProvider
+    internal sealed class DeviceRegistersSynchronizer
     {
         private readonly NandakaDevice _device;
 
-        public DeviceRegistersProvider(NandakaDevice device)
+        public DeviceRegistersSynchronizer(NandakaDevice device)
         {
             _device = device;
         }

@@ -6,11 +6,6 @@ namespace Nandaka.Tests.Util
 {
     public static class RegisterExtensions
     {
-        public static void MarkAsUpdated(this IRegister register)
-        {
-            register.Update(register.CreateCopy());
-        }
-
         public static void ChangeLastUpdateTime(this IRegister register, DateTime updateTime)
         {
             Type type = register.GetType();

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
@@ -13,7 +12,7 @@ namespace Nandaka.Core.Session
     {
         private readonly IProtocol _protocol;
         private readonly ForeignDevice _device;
-        private readonly DeviceRegistersProvider _provider;
+        private readonly DeviceRegistersSynchronizer _synchronizer;
 
         private ILog Log { get; }
 
@@ -21,7 +20,7 @@ namespace Nandaka.Core.Session
         {
             _protocol = protocol;
             _device = device;
-            _provider = new DeviceRegistersProvider(device);
+            _synchronizer = new DeviceRegistersSynchronizer(device);
             Log = new PrefixLog(_device.Name);
         }
         
@@ -58,7 +57,7 @@ namespace Nandaka.Core.Session
         {
             Log.AppendMessage("Response received, updating registers");
             
-            IReadOnlyList<IRegister> updatedRegisters = _provider.UpdateAllRequested(sentResult.RequestedAddresses, response.Registers);
+            IReadOnlyList<IRegister> updatedRegisters = _synchronizer.UpdateAllRequested(sentResult.RequestedAddresses, response.Registers);
 
             Log.AppendMessage($"Registers {updatedRegisters.ToLogLine()} updated");
         }
@@ -70,7 +69,7 @@ namespace Nandaka.Core.Session
             
             Log.AppendMessage("Set updated state for registers in request");
             
-            _provider.MarkAsUpdatedAllRequested(sentResult.RequestedAddresses);
+            _synchronizer.MarkAsUpdatedAllRequested(sentResult.RequestedAddresses);
             
             Log.AppendMessage("Requested registers mark as updated");
         }

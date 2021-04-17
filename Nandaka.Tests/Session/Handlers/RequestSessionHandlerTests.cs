@@ -13,7 +13,7 @@ namespace Nandaka.Tests.Session
 
     public sealed class RequestSessionHandlerTests
     {
-        private static readonly IRegisterMessage DefaultResponse = new CommonMessage(TestDevice.Address, MessageType.Response, OperationType.None); 
+        private static readonly IRegisterMessage DefaultResponse = new CommonMessage(TestDevice.TestDeviceAddress, MessageType.Response, OperationType.None); 
 
         private readonly Mock<IProtocol> _protocolMock;
         private readonly Mock<IRequestSession<IMessage, DefaultSentResult>> _sessionMock;
@@ -29,7 +29,7 @@ namespace Nandaka.Tests.Session
             _protocolMock = new Mock<IProtocol>();
             _sessionMock = new Mock<IRequestSession<IMessage, DefaultSentResult>>();
             _errorMessageHandlerMock = new Mock<IErrorMessageHandler>();
-            var device = TestDevice.Create(Array.Empty<IRegister>());
+            var device = new TestDevice();
             _handler = new RequestSessionHandler<IMessage, DefaultSentResult>(_sessionMock.Object, _protocolMock.Object, device,
                                                                               TimeSpan.FromSeconds(1), _errorMessageHandlerMock.Object);
             SetupMocksAsDefault();
@@ -97,7 +97,7 @@ namespace Nandaka.Tests.Session
         public void HandleRegisterMessageWithErrorResponse()
         {
             // Arrange
-            var errorResponse = ErrorMessage.CreateCommon(TestDevice.Address, MessageType.Response, ErrorType.InvalidMetaData);
+            var errorResponse = ErrorMessage.CreateCommon(TestDevice.TestDeviceAddress, MessageType.Response, ErrorType.InvalidMetaData);
             
             SetupSessionMockForRaiseMessageReceivedEvent(new MessageReceivedEventArgs(errorResponse), isResponseRequired: true);
 

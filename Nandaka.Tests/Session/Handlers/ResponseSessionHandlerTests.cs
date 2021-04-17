@@ -12,7 +12,7 @@ namespace Nandaka.Tests.Session
 {
     public sealed class ResponseSessionHandlerTests
     {
-        private static readonly IRegisterMessage DefaultRequest = new CommonMessage(TestDevice.Address, MessageType.Request, OperationType.None); 
+        private static readonly IRegisterMessage DefaultRequest = new CommonMessage(TestDevice.TestDeviceAddress, MessageType.Request, OperationType.None); 
         
         private readonly Mock<IProtocol> _protocolMock;
         private readonly Mock<IResponseSession<IMessage>> _sessionMock;
@@ -24,7 +24,7 @@ namespace Nandaka.Tests.Session
         {
             _protocolMock = new Mock<IProtocol>();
             _sessionMock = new Mock<IResponseSession<IMessage>>();
-            var device = TestDevice.Create(Array.Empty<IRegister>());
+            var device = new TestDevice();
             _handler = new ResponseSessionHandler<IMessage>(_sessionMock.Object, _protocolMock.Object, device);
             
             SetupMocksAsDefault();
@@ -81,7 +81,7 @@ namespace Nandaka.Tests.Session
 
         private void SetupMocksAsDefault()
         {
-            _sessionMock.Setup(session => session.ProcessResponse(It.IsAny<IMessage>()))
+            _sessionMock.Setup(session => session.ProcessRequest(It.IsAny<IMessage>()))
                         .Callback<IMessage>(_ => _processedResponsesCount++);
         }
     }
