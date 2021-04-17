@@ -11,11 +11,7 @@ namespace Nandaka.Core.Util
             _dictionary = dictionary;
         }
 
-        public TOut this[TIn index]
-        {
-            get => _dictionary[index];
-            set => _dictionary[index] = value;
-        }
+        public TOut this[TIn index] => _dictionary[index];
 
         public bool Contains(TIn index)
         {

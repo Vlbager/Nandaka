@@ -109,7 +109,7 @@ namespace Nandaka.Core.Helpers
             return info.AddressSize + register.DataSize;
         }
 
-        //todo: check endian
+        //todo: NAN-34
         private static byte[] GetRegisterAddress(int address, IProtocolInfo info)
         {
             return LittleEndianConverter.GetBytes(address, info.AddressSize);
