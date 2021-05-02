@@ -7,19 +7,19 @@ namespace Nandaka.Core.Threading
 {
     internal sealed class MasterDeviceSessionMap : IDisposable
     {
-        private readonly MasterDeviceDispatcher _dispatcher;
+        private readonly DeviceUpdatePolicyWrapper _updatePolicyWrapper;
         private readonly Dictionary<int, DeviceSessionCollection> _sessionsByAddress;
 
-        public MasterDeviceSessionMap(IReadOnlyCollection<DeviceSessionCollection> sessions, MasterDeviceDispatcher dispatcher)
+        public MasterDeviceSessionMap(IReadOnlyCollection<DeviceSessionCollection> sessions, DeviceUpdatePolicyWrapper updatePolicyWrapper)
         {
-            _dispatcher = dispatcher;
+            _updatePolicyWrapper = updatePolicyWrapper;
             _sessionsByAddress = sessions.ToDictionary(sessionsByDevice => sessionsByDevice.Device.Address, 
                 sessionByDevice => sessionByDevice);
         }
 
         public DeviceSessionCollection GetNextDevice()
         {
-            ForeignDevice device = _dispatcher.GetNextDevice();
+            ForeignDevice device = _updatePolicyWrapper.GetNextDevice();
             return _sessionsByAddress[device.Address];
         }
 

@@ -15,17 +15,17 @@ namespace Nandaka.Core.Threading
     {
         private readonly MasterDeviceSessionMap _deviceSessionsMap;
         private readonly ISessionHandler _highPrioritySessionHandler;
-        private readonly MasterDeviceDispatcher _dispatcher;
+        private readonly DeviceUpdatePolicyWrapper _updatePolicyWrapper;
         private readonly Thread _thread;
         private readonly string _masterName;
         private readonly DisposableList _disposable;
         
         private bool _isStopped;
 
-        public MasterSingleThreadHolder(MasterDeviceDispatcher dispatcher, IProtocol protocol, MasterDeviceSessionMap sessionMap, string masterName)
+        public MasterSingleThreadHolder(DeviceUpdatePolicyWrapper updatePolicyWrapper, IProtocol protocol, MasterDeviceSessionMap sessionMap, string masterName)
         {
             _disposable = new DisposableList();
-            _dispatcher = dispatcher;
+            _updatePolicyWrapper = updatePolicyWrapper;
             _masterName = masterName;
             _deviceSessionsMap = _disposable.Add(sessionMap);
             _highPrioritySessionHandler = InitHighPrioritySession(protocol);
@@ -70,7 +70,7 @@ namespace Nandaka.Core.Threading
         {
             _disposable.Add(Log.InitializeLog($"{_masterName}.Master.log"));
             
-            string devicesInfo = String.Join(Environment.NewLine, _dispatcher.SlaveDevices.Select(device => device.ToLogLine()));
+            string devicesInfo = String.Join(Environment.NewLine, _updatePolicyWrapper.SlaveDevices.Select(device => device.ToLogLine()));
             
             Log.AppendMessage(LogLevel.Low, "Starting single Master thread, devices:" + Environment.NewLine + devicesInfo);
         }
@@ -90,17 +90,17 @@ namespace Nandaka.Core.Threading
                 foreach (ISessionHandler session in sessions)
                     session.ProcessNext();
                 
-                _dispatcher.OnMessageReceived(device);
+                _updatePolicyWrapper.OnMessageReceived(device);
             }
             catch (DeviceNotRespondException deviceNotRespondException)
             {
                 Log.AppendWarning(deviceNotRespondException.Message);
-                _dispatcher.OnErrorOccured(device, DeviceError.NotResponding);
+                _updatePolicyWrapper.OnErrorOccured(device, DeviceError.NotResponding);
             }
             catch (InvalidMessageReceivedException invalidMessageException)
             {
                 Log.AppendWarning(invalidMessageException.Message);
-                _dispatcher.OnErrorOccured(device, DeviceError.WrongPacketData);
+                _updatePolicyWrapper.OnErrorOccured(device, DeviceError.WrongPacketData);
             }
         }
 

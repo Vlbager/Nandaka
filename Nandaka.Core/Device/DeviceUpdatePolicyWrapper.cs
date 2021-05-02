@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace Nandaka.Core.Device
 {
-    internal sealed class MasterDeviceDispatcher
+    internal sealed class DeviceUpdatePolicyWrapper
     {
         private readonly IDeviceUpdatePolicy _updatePolicy;
 
@@ -12,7 +12,7 @@ namespace Nandaka.Core.Device
 
         public TimeSpan RequestTimeout => _updatePolicy.RequestTimeout;
         
-        public MasterDeviceDispatcher(IReadOnlyCollection<ForeignDevice> slaveDevices, IDeviceUpdatePolicy updatePolicy)
+        public DeviceUpdatePolicyWrapper(IReadOnlyCollection<ForeignDevice> slaveDevices, IDeviceUpdatePolicy updatePolicy)
         {
             SlaveDevices = slaveDevices;
             _updatePolicy = updatePolicy;

@@ -4,18 +4,18 @@ namespace Nandaka.Core.Session
 {
     internal sealed class DefaultErrorMessageHandler : IErrorMessageHandler
     {
-        private readonly MasterDeviceDispatcher _dispatcher;
+        private readonly DeviceUpdatePolicyWrapper _updatePolicyWrapper;
         private readonly ForeignDevice _device;
 
-        public DefaultErrorMessageHandler(MasterDeviceDispatcher dispatcher, ForeignDevice device)
+        public DefaultErrorMessageHandler(DeviceUpdatePolicyWrapper updatePolicyWrapper, ForeignDevice device)
         {
-            _dispatcher = dispatcher;
+            _updatePolicyWrapper = updatePolicyWrapper;
             _device = device;
         }
         
         public void OnErrorReceived(ErrorMessage errorMessage)
         {
-            _dispatcher.OnErrorOccured(_device, DeviceError.ErrorReceived);
+            _updatePolicyWrapper.OnErrorOccured(_device, DeviceError.ErrorReceived);
         }
     }
 }
