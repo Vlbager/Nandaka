@@ -13,16 +13,16 @@ namespace Nandaka.Core.Threading
 {
     internal sealed class MasterAsyncSessionsHolder : IMasterSessionsHolder
     {
-        private readonly DeviceUpdatePolicyWrapper _updatePolicyWrapper;
+        private readonly DeviceUpdatePolicy _updatePolicy;
         private readonly Thread[] _threads;
         private readonly string _masterName;
         private readonly DisposableList _disposable;
         
         private bool _isStopped;
 
-        public MasterAsyncSessionsHolder(DeviceUpdatePolicyWrapper updatePolicyWrapper, IReadOnlyCollection<DeviceSessionCollection> sessions, string masterName)
+        public MasterAsyncSessionsHolder(DeviceUpdatePolicy updatePolicy, IReadOnlyCollection<DeviceSessionCollection> sessions, string masterName)
         {
-            _updatePolicyWrapper = updatePolicyWrapper;
+            _updatePolicy = updatePolicy;
             _masterName = masterName;
             _disposable = new DisposableList();
             _disposable.AddRange(sessions);
@@ -72,17 +72,17 @@ namespace Nandaka.Core.Threading
                 foreach (ISessionHandler session in sessions)
                     session.ProcessNext();
                 
-                _updatePolicyWrapper.OnMessageReceived(device);
+                _updatePolicy.OnMessageReceived(device);
             }
             catch (DeviceNotRespondException deviceNotRespondException)
             {
                 Log.AppendWarning(deviceNotRespondException.Message);
-                _updatePolicyWrapper.OnErrorOccured(device, DeviceError.NotResponding);
+                _updatePolicy.OnErrorOccured(device, DeviceError.NotResponding);
             }
             catch (InvalidMessageReceivedException invalidMessageException)
             {
                 Log.AppendWarning(invalidMessageException.Message);
-                _updatePolicyWrapper.OnErrorOccured(device, DeviceError.WrongPacketData);
+                _updatePolicy.OnErrorOccured(device, DeviceError.WrongPacketData);
             }
         }
 

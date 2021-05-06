@@ -7,24 +7,24 @@ namespace Nandaka.Core.Device
 {
     public sealed class MasterDeviceDealer : IDisposable
     {
-        private const string DefaultMasterName = "Default";
+        private const string DefaultMasterName = "Master";
         
         private readonly IMasterSessionsHolder _sessionsHolder;
 
         public IReadOnlyCollection<ForeignDevice> SlaveDevices { get; }
 
-        private MasterDeviceDealer(IProtocol protocol, IDeviceUpdatePolicy updatePolicy, IReadOnlyCollection<ForeignDevice> slaveDevices, string masterName)
+        private MasterDeviceDealer(IProtocol protocol, DeviceUpdatePolicy updatePolicy, string masterName)
         {
-            SlaveDevices = slaveDevices;
-            var dispatcher = new DeviceUpdatePolicyWrapper(slaveDevices, updatePolicy);
-            _sessionsHolder = MasterSessionHolderFactory.Create(protocol, dispatcher, masterName);
+            SlaveDevices = updatePolicy.SlaveDevices;
+            _sessionsHolder = MasterSessionHolderFactory.Create(protocol, updatePolicy, masterName);
             _sessionsHolder.StartRoutine();
         }
 
-        public static MasterDeviceDealer Start(IProtocol protocol, IDeviceUpdatePolicy updatePolicy, IReadOnlyCollection<ForeignDevice> slaveDevices,
+        public static MasterDeviceDealer Start(IProtocol protocol, IDeviceUpdatePolicyFactory updatePolicyFactory, IReadOnlyCollection<ForeignDevice> slaveDevices,
                                                 string masterName = DefaultMasterName)
         {
-            return new MasterDeviceDealer(protocol, updatePolicy, slaveDevices, masterName);
+            DeviceUpdatePolicy updatePolicy = updatePolicyFactory.FactoryMethod(slaveDevices);
+            return new MasterDeviceDealer(protocol, updatePolicy, masterName);
         }
 
         public void Dispose()
