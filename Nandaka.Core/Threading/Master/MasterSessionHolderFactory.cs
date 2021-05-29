@@ -8,21 +8,27 @@ namespace Nandaka.Core.Threading
 {
     internal static class MasterSessionHolderFactory
     {
-        public static IMasterSessionsHolder Create(IProtocol protocol, DeviceUpdatePolicy updatePolicy, string masterName)
+        public static IMasterSessionsHolder Create(IProtocol protocol, IDeviceUpdatePolicy updatePolicy, 
+                                                   IReadOnlyCollection<ForeignDevice> devices, string masterName)
         {
-            IReadOnlyList<DeviceSessionCollection> deviceSessions = GetDeviceSessions(updatePolicy, protocol);
+            var candidatesHolder = new UpdateCandidatesHolder(devices, updatePolicy);
+            
+            IReadOnlyList<DeviceSessionCollection> deviceSessions = GetDeviceSessions(candidatesHolder, updatePolicy, protocol);
+            
             if (protocol.IsAsyncRequestsAllowed)
                 return new MasterAsyncSessionsHolder(updatePolicy, deviceSessions, masterName);
 
-            var sessionMap = new MasterDeviceSessionMap(deviceSessions, updatePolicy);
-            return new MasterSingleThreadHolder(updatePolicy, protocol, sessionMap, masterName);
+            var sessionMap = new MasterDeviceSessionMap(deviceSessions);
+            return new MasterSingleThreadHolder(updatePolicy, candidatesHolder, protocol, sessionMap, masterName);
         }
         
-        private static IReadOnlyList<DeviceSessionCollection> GetDeviceSessions(DeviceUpdatePolicy updatePolicy, IProtocol protocol)
+        private static IReadOnlyList<DeviceSessionCollection> GetDeviceSessions(UpdateCandidatesHolder updateCandidatesHolder, 
+                                                                                IDeviceUpdatePolicy updatePolicy, 
+                                                                                IProtocol protocol)
         {
             var sessions = new List<DeviceSessionCollection>();
 
-            foreach (ForeignDevice slaveDevice in updatePolicy.SlaveDevices)
+            foreach (ForeignDevice slaveDevice in updateCandidatesHolder.GetDevicesForProcessing())
             {
                 var handlerList = new List<ISessionHandler>();
                 

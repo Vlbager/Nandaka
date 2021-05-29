@@ -13,14 +13,14 @@ namespace Nandaka.Core.Threading
 {
     internal sealed class MasterAsyncSessionsHolder : IMasterSessionsHolder
     {
-        private readonly DeviceUpdatePolicy _updatePolicy;
+        private readonly IDeviceUpdatePolicy _updatePolicy;
         private readonly Thread[] _threads;
         private readonly string _masterName;
         private readonly DisposableList _disposable;
         
         private bool _isStopped;
 
-        public MasterAsyncSessionsHolder(DeviceUpdatePolicy updatePolicy, IReadOnlyCollection<DeviceSessionCollection> sessions, string masterName)
+        public MasterAsyncSessionsHolder(IDeviceUpdatePolicy updatePolicy, IReadOnlyCollection<DeviceSessionCollection> sessions, string masterName)
         {
             _updatePolicy = updatePolicy;
             _masterName = masterName;
@@ -42,13 +42,7 @@ namespace Nandaka.Core.Threading
                 
                 IReadOnlyCollection<ISessionHandler> sessions = deviceSessions.SessionHandlers;
                 
-                while (true)
-                {
-                    if (_isStopped)
-                        break;
-
-                    ProcessNext(device, sessions);
-                }
+                RoutineInternal(device, sessions);
             }
             catch (Exception exception)
             {
@@ -56,6 +50,20 @@ namespace Nandaka.Core.Threading
             }
             
             Log.AppendWarning("Master thread has been stopped");
+        }
+
+        private void RoutineInternal(ForeignDevice device, IReadOnlyCollection<ISessionHandler> sessions)
+        {
+            while (true)
+            {
+                if (_isStopped)
+                    break;
+
+                if (_updatePolicy.IsDeviceShouldBeProcessed(device))
+                    ProcessNext(device, sessions);
+
+                Thread.Sleep(_updatePolicy.UpdateTimeout);
+            }
         }
 
         private void InitializeLog(ForeignDevice device)

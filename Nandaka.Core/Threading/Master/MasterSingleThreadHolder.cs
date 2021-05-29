@@ -15,17 +15,20 @@ namespace Nandaka.Core.Threading
     {
         private readonly MasterDeviceSessionMap _deviceSessionsMap;
         private readonly ISessionHandler _highPrioritySessionHandler;
-        private readonly DeviceUpdatePolicy _updatePolicy;
+        private readonly IDeviceUpdatePolicy _updatePolicy;
+        private readonly UpdateCandidatesHolder _candidatesHolder;
         private readonly Thread _thread;
         private readonly string _masterName;
         private readonly DisposableList _disposable;
         
         private bool _isStopped;
 
-        public MasterSingleThreadHolder(DeviceUpdatePolicy updatePolicy, IProtocol protocol, MasterDeviceSessionMap sessionMap, string masterName)
+        public MasterSingleThreadHolder(IDeviceUpdatePolicy updatePolicy, UpdateCandidatesHolder candidatesHolder, IProtocol protocol,
+                                        MasterDeviceSessionMap sessionMap, string masterName)
         {
             _disposable = new DisposableList();
             _updatePolicy = updatePolicy;
+            _candidatesHolder = candidatesHolder;
             _masterName = masterName;
             _deviceSessionsMap = _disposable.Add(sessionMap);
             _highPrioritySessionHandler = InitHighPrioritySession(protocol);
@@ -48,15 +51,7 @@ namespace Nandaka.Core.Threading
             {
                 InitializeLog();
                 
-                while (true)
-                {
-                    if (_isStopped)
-                        break;
-                    
-                    _highPrioritySessionHandler.ProcessNext();
-
-                    ProcessNext();
-                }
+                RoutineInternal();
             }
             catch (Exception exception)
             {
@@ -66,20 +61,25 @@ namespace Nandaka.Core.Threading
             Log.AppendWarning("Master thread has been stopped");
         }
 
-        private void InitializeLog()
+        private void RoutineInternal()
         {
-            _disposable.Add(Log.InitializeLog($"{_masterName}.Master.log"));
-            
-            string devicesInfo = String.Join(Environment.NewLine, _updatePolicy.SlaveDevices.Select(device => device.ToLogLine()));
-            
-            Log.AppendMessage(LogLevel.Low, "Starting single Master thread, devices:" + Environment.NewLine + devicesInfo);
+            while (true)
+            {
+                foreach (ForeignDevice nextDevice in _candidatesHolder.GetDevicesForProcessing())
+                {
+                    if (_isStopped)
+                        return;
+
+                    _highPrioritySessionHandler.ProcessNext();
+
+                    ProcessDevice(nextDevice);   
+                }
+            }
         }
 
-        private void ProcessNext()
+        private void ProcessDevice(ForeignDevice device)
         {
-            DeviceSessionCollection sessionCollection = _deviceSessionsMap.GetNextDevice();
-
-            ForeignDevice device = sessionCollection.Device;
+            DeviceSessionCollection sessionCollection = _deviceSessionsMap.GetDeviceSessions(device);
 
             Log.AppendMessage($"Set current device: {device}");
             
@@ -102,6 +102,15 @@ namespace Nandaka.Core.Threading
                 Log.AppendWarning(invalidMessageException.Message);
                 _updatePolicy.OnErrorOccured(device, DeviceError.WrongPacketData);
             }
+        }
+        
+        private void InitializeLog()
+        {
+            _disposable.Add(Log.InitializeLog($"{_masterName}.Master.log"));
+            
+            string devicesInfo = String.Join(Environment.NewLine, _candidatesHolder.Candidates.Select(device => device.ToLogLine()));
+            
+            Log.AppendMessage(LogLevel.Low, "Starting single Master thread, devices:" + Environment.NewLine + devicesInfo);
         }
 
         public void Dispose()

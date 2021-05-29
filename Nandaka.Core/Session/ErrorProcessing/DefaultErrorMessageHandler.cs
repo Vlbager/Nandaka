@@ -4,10 +4,10 @@ namespace Nandaka.Core.Session
 {
     internal sealed class DefaultErrorMessageHandler : IErrorMessageHandler
     {
-        private readonly DeviceUpdatePolicy _updatePolicy;
+        private readonly IDeviceUpdatePolicy _updatePolicy;
         private readonly ForeignDevice _device;
 
-        public DefaultErrorMessageHandler(DeviceUpdatePolicy updatePolicy, ForeignDevice device)
+        public DefaultErrorMessageHandler(IDeviceUpdatePolicy updatePolicy, ForeignDevice device)
         {
             _updatePolicy = updatePolicy;
             _device = device;
