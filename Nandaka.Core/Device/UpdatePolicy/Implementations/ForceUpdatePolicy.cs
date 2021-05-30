@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using Nandaka.Core.Logging;
 
 namespace Nandaka.Core.Device
