@@ -18,12 +18,10 @@ namespace Nandaka.Core.Device
             init => ErrorMessageHandlerField = value;
         }
         public DeviceState State { get; set; }
-        public Dictionary<DeviceError, int> ErrorCounter { get; }
 
         protected ForeignDevice(int address, RegisterTable table, DeviceState state) 
             : base(address, table)
         {
-            ErrorCounter = new Dictionary<DeviceError, int>();
             State = state;
         }
     }

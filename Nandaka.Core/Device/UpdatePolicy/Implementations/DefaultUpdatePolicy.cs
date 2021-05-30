@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using Nandaka.Core.Logging;
 
 namespace Nandaka.Core.Device
@@ -9,6 +10,7 @@ namespace Nandaka.Core.Device
     public sealed class DefaultUpdatePolicy : IDeviceUpdatePolicy
     {
         private readonly int _maxErrorInRowCount;
+        private readonly ConcurrentDictionary<int, DeviceErrorCounter> _errorCounterByDeviceAddress;
 
         /// <summary>
         /// <inheritdoc cref="IDeviceUpdatePolicy.UpdateTimeout"/>
@@ -28,6 +30,7 @@ namespace Nandaka.Core.Device
             RequestTimeout = requestTimeout;
             UpdateTimeout = updateTimeout;
             _maxErrorInRowCount = maxErrorInRowCount;
+            _errorCounterByDeviceAddress = new ConcurrentDictionary<int, DeviceErrorCounter>();
         }
 
         public bool IsDeviceShouldBeProcessed(ForeignDevice device)
@@ -37,7 +40,7 @@ namespace Nandaka.Core.Device
 
         public void OnMessageReceived(ForeignDevice device)
         {
-            device.ErrorCounter.Clear();
+            GetDeviceErrorCounter(device).Clear();
         }
 
         public void OnErrorOccured(ForeignDevice device, DeviceError error)
@@ -68,13 +71,19 @@ namespace Nandaka.Core.Device
 
         private bool IsDeviceShouldBeStopped(ForeignDevice device, DeviceError newError)
         {
-            int errorCount = device.ErrorCounter.TryAdd(newError, 1) 
-                           ? 1 
-                           : device.ErrorCounter[newError];
+            DeviceErrorCounter errorCounter = GetDeviceErrorCounter(device);
             
-            device.ErrorCounter[newError] = errorCount + 1;
+            int errorCount = errorCounter.Increment(newError);
 
-            return errorCount > _maxErrorInRowCount;
+            return errorCount >= _maxErrorInRowCount;
+        }
+
+        private DeviceErrorCounter GetDeviceErrorCounter(ForeignDevice device)
+        {
+            if (!_errorCounterByDeviceAddress.ContainsKey(device.Address))
+                _errorCounterByDeviceAddress.TryAdd(device.Address, new DeviceErrorCounter());
+            
+            return _errorCounterByDeviceAddress[device.Address];
         }
     }
 }
