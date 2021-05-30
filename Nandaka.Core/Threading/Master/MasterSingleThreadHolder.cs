@@ -74,6 +74,8 @@ namespace Nandaka.Core.Threading
 
                     ProcessDevice(nextDevice);   
                 }
+                
+                Thread.Sleep(_updatePolicy.UpdateTimeout);
             }
         }
 
