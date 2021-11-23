@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Registers;
@@ -23,7 +24,7 @@ namespace Nandaka.Tests.Session
         {
             _protocolMock = new Mock<IProtocol>();
             _device = new TestDevice(new LocalDeviceRegisterFactory());
-            _session = new SlaveSyncSession(_protocolMock.Object, _device);
+            _session = new SlaveSyncSession(_protocolMock.Object, _device, NullLogger.Instance);
             _updatedRegisterAddresses = new List<int>();
             _device.OnRegisterChanged += (_, args) => _updatedRegisterAddresses.Add(args.RegisterAddress);
             SetupMocks();

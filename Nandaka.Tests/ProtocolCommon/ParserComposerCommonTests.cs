@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using FluentAssertions;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
@@ -89,8 +90,8 @@ namespace Nandaka.Tests.ProtocolCommon
 
             foreach (IRegisterMessage message in messages)
             {
-                _composer.Compose(message, out IReadOnlyList<int> composedRegisters);
-                Assert.True(composedRegisters.Count < message.Registers.Count);
+                _composer.Invoking(composer => composer.Compose(message))
+                      .Should().Throw<TooMuchDataRequestedException>();
             }
         }
 
@@ -107,15 +108,17 @@ namespace Nandaka.Tests.ProtocolCommon
 
             foreach (IRegisterMessage message in messages)
             {
-                _composer.Compose(message, out IReadOnlyList<int> composedRegisters);
-                Assert.True(composedRegisters.Count < message.Registers.Count);
+                _composer.Invoking(composer => composer.Compose(message))
+                         .Should().Throw<TooMuchDataRequestedException>();
             }
         }
         
         public void ZeroSizeMessage()
         {
             var message = new CommonMessage(1, MessageType.Request, OperationType.Read, Array.Empty<IRegister>());
-            Assert.ThrowsAny<NandakaBaseException>(() => _composer.Compose(message, out IReadOnlyList<int> _));
+            
+            _composer.Invoking(composer => composer.Compose(message))
+                     .Should().Throw<NandakaBaseException>();
         }
 
         public void ValidCommonErrorMessages(IEnumerable<ErrorType> validErrorTypes)
@@ -131,13 +134,16 @@ namespace Nandaka.Tests.ProtocolCommon
             IEnumerable<ErrorMessage> messages = MessageGenerator.GenerateCommonErrorMessages(invalidErrorTypes, 1.ToEnumerable(), true);
 
             foreach (ErrorMessage message in messages)
-                Assert.ThrowsAny<NandakaBaseException>(() => _composer.Compose(message, out _));
+            {
+                _composer.Invoking(composer => composer.Compose(message))
+                         .Should().Throw<NandakaBaseException>();
+            }
             
         }
 
         internal void AssertErrorMessage(ErrorMessage message)
         {
-            byte[] composed = _composer.Compose(message, out _);
+            byte[] composed = _composer.Compose(message);
             
             Assert.InRange(composed.Length, _protocolInfo.MinPacketLength, _protocolInfo.MaxPacketLength);
 
@@ -166,9 +172,7 @@ namespace Nandaka.Tests.ProtocolCommon
 
         internal void AssertRegisterMessage(IRegisterMessage message)
         {
-            byte[] composed = _composer.Compose(message, out IReadOnlyList<int> composedRegisters);
-                
-            Assert.Equal(message.Registers.Count, composedRegisters.Count);
+            byte[] composed = _composer.Compose(message);
 
             Assert.InRange(composed.Length, _protocolInfo.MinPacketLength, _protocolInfo.MaxPacketLength);
 

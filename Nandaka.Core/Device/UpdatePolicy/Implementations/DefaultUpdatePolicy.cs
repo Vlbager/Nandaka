@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using Nandaka.Core.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace Nandaka.Core.Device
 {
@@ -33,19 +33,19 @@ namespace Nandaka.Core.Device
             _errorCounterByDeviceAddress = new ConcurrentDictionary<int, DeviceErrorCounter>();
         }
 
-        public bool IsDeviceShouldBeProcessed(ForeignDevice device)
+        public bool IsDeviceShouldBeProcessed(ForeignDevice device, ILogger logger)
         {
             return device.State == DeviceState.Connected;
         }
 
-        public void OnMessageReceived(ForeignDevice device)
+        public void OnMessageReceived(ForeignDevice device, ILogger logger)
         {
             GetDeviceErrorCounter(device).Clear();
         }
 
-        public void OnErrorOccured(ForeignDevice device, DeviceError error)
+        public void OnErrorOccured(ForeignDevice device, DeviceError error, ILogger logger)
         {
-            Log.AppendWarning($"Error occured with {device}. Reason: {error}");
+            logger.LogError("Error occured with {0}. Reason: {1}", device, error);
             
             if (!IsDeviceShouldBeStopped(device, error))
                 return;
@@ -66,7 +66,7 @@ namespace Nandaka.Core.Device
                     break;
             }
             
-            Log.AppendWarning($"Device has reached the max number of errors. {device} will be disconnected");
+            logger.LogError("Device has reached the max number of errors. {0} will be disconnected", device);
         }
 
         private bool IsDeviceShouldBeStopped(ForeignDevice device, DeviceError newError)

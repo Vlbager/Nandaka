@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using Microsoft.Extensions.Logging;
 using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
-using Nandaka.Core.Helpers;
-using Nandaka.Core.Logging;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Registers;
 
@@ -14,14 +12,14 @@ namespace Nandaka.Core.Session
         private readonly IProtocol _protocol;
         private readonly NandakaDevice _device;
         private readonly DeviceRegistersSynchronizer _synchronizer;
-        private readonly ILog _log;
+        private readonly ILogger _logger;
         
-        public SlaveSyncSession(IProtocol protocol, NandakaDevice device)
+        public SlaveSyncSession(IProtocol protocol, NandakaDevice device, ILogger logger)
         {
             _protocol = protocol;
             _device = device;
             _synchronizer = new DeviceRegistersSynchronizer(device);
-            _log = new PrefixLog(device.Name);
+            _logger = logger;
         }
 
         public void ProcessRequest(IRegisterMessage request)
@@ -32,14 +30,14 @@ namespace Nandaka.Core.Session
             }
             catch (InvalidMessageReceivedException exception)
             {
-                _log.AppendException(exception, "Failed to process message");
+                _logger.LogError(exception, "Failed to process message");
                 SendErrorResponse(exception);
             }
         }
 
         private void ProcessRequestInternal(IRegisterMessage request)
         {
-            _log.AppendMessage($"Processing {request.OperationType.ToString()}-request with {request.Registers.ToLogLine()} registers");
+            _logger.LogInformation("Processing request {0}", request);
 
             switch (request.OperationType)
             {
@@ -60,7 +58,7 @@ namespace Nandaka.Core.Session
         private void ProcessReadRequest(IRegisterMessage request)
         {
             IReadOnlyList<IRegister> deviceRegisters = _synchronizer.GetDeviceRegisters(request.Registers);
-            _synchronizer.MarkAsUpdatedAllRequested(request.Registers.Select(register => register.Address).ToArray());
+            _synchronizer.MarkAsUpdatedAllRequested(request.Registers);
 
             SendResponse(request.OperationType, deviceRegisters);
         }
@@ -71,7 +69,7 @@ namespace Nandaka.Core.Session
             
             if (_protocol.IsResponseMayBeSkipped)
             {
-                _log.AppendMessage("Write message response will be skipped");
+                _logger.LogInformation("Write message response will be skipped");
                 return;
             }
 
@@ -83,7 +81,7 @@ namespace Nandaka.Core.Session
             var response = new CommonMessage(_device.Address, MessageType.Response, operationType, registers);
             _protocol.SendMessage(response);
 
-            _log.AppendMessage("Response has been successfully sent");
+            _logger.LogInformation("Response has been successfully sent");
         }
 
         private void SendErrorResponse(InvalidMessageReceivedException exception)

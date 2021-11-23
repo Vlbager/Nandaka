@@ -1,5 +1,5 @@
 ﻿using System;
-using Nandaka.Core.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace Nandaka.Core.Device
 {
@@ -26,18 +26,18 @@ namespace Nandaka.Core.Device
             UpdateTimeout = updateTimeout;
         }
 
-        public bool IsDeviceShouldBeProcessed(ForeignDevice device)
+        public bool IsDeviceShouldBeProcessed(ForeignDevice device, ILogger logger)
         {
             return true;
         }
 
-        public void OnMessageReceived(ForeignDevice device)
+        public void OnMessageReceived(ForeignDevice device, ILogger logger)
         {
         }
 
-        public void OnErrorOccured(ForeignDevice device, DeviceError error)
+        public void OnErrorOccured(ForeignDevice device, DeviceError error, ILogger logger)
         {
-            Log.AppendWarning($"Error occured with {device}. Reason: {error}");
+            logger.LogError("Error occured with {0}. Reason: {1}", device, error);
         }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Nandaka.Core.Device;
 using Nandaka.Tests.Util;
 using Xunit;
@@ -23,7 +25,7 @@ namespace Nandaka.Tests.DevicePolicies
             var device = new TestDevice { State = DeviceState.Connected };
 
             // Act
-            bool isDeviceShouldBeProcessed = _policy.IsDeviceShouldBeProcessed(device);
+            bool isDeviceShouldBeProcessed = _policy.IsDeviceShouldBeProcessed(device, NullLogger.Instance);
 
             // Assert
             isDeviceShouldBeProcessed.Should().BeTrue();
@@ -40,7 +42,7 @@ namespace Nandaka.Tests.DevicePolicies
             var device = new TestDevice { State = state };
 
             // Act
-            bool isDeviceShouldBeProcessed = _policy.IsDeviceShouldBeProcessed(device);
+            bool isDeviceShouldBeProcessed = _policy.IsDeviceShouldBeProcessed(device, NullLogger.Instance);
 
             // Assert
             isDeviceShouldBeProcessed.Should().BeFalse();
@@ -54,7 +56,7 @@ namespace Nandaka.Tests.DevicePolicies
             var device = new TestDevice();
 
             // Act & Assert
-            _policy.Invoking(policy => policy.OnMessageReceived(device))
+            _policy.Invoking(policy => policy.OnMessageReceived(device, NullLogger.Instance))
                    .Should().NotThrow();
         }
         
@@ -66,7 +68,7 @@ namespace Nandaka.Tests.DevicePolicies
             var device = new TestDevice();
 
             // Act
-            _policy.OnErrorOccured(device, DeviceError.ErrorReceived);
+            _policy.OnErrorOccured(device, DeviceError.ErrorReceived, NullLogger.Instance);
             
             // Assert
             device.State.Should().Be(DeviceState.Connected);
@@ -80,8 +82,8 @@ namespace Nandaka.Tests.DevicePolicies
             var device = new TestDevice();
 
             // Act
-            _policy.OnErrorOccured(device, DeviceError.ErrorReceived);
-            _policy.OnErrorOccured(device, DeviceError.ErrorReceived);
+            _policy.OnErrorOccured(device, DeviceError.ErrorReceived, NullLogger.Instance);
+            _policy.OnErrorOccured(device, DeviceError.ErrorReceived, NullLogger.Instance);
             
             // Assert
             device.State.Should().NotBe(DeviceState.Connected);
@@ -95,8 +97,8 @@ namespace Nandaka.Tests.DevicePolicies
             var device = new TestDevice();
 
             // Act
-            _policy.OnErrorOccured(device, DeviceError.ErrorReceived);
-            _policy.OnErrorOccured(device, DeviceError.WrongPacketData);
+            _policy.OnErrorOccured(device, DeviceError.ErrorReceived, NullLogger.Instance);
+            _policy.OnErrorOccured(device, DeviceError.WrongPacketData, NullLogger.Instance);
             
             // Assert
             device.State.Should().Be(DeviceState.Connected);
@@ -110,9 +112,9 @@ namespace Nandaka.Tests.DevicePolicies
             var device = new TestDevice();
 
             // Act
-            _policy.OnErrorOccured(device, DeviceError.ErrorReceived);
-            _policy.OnMessageReceived(device);
-            _policy.OnErrorOccured(device, DeviceError.ErrorReceived);
+            _policy.OnErrorOccured(device, DeviceError.ErrorReceived, NullLogger.Instance);
+            _policy.OnMessageReceived(device, NullLogger.Instance);
+            _policy.OnErrorOccured(device, DeviceError.ErrorReceived, NullLogger.Instance);
 
             // Assert
             device.State.Should().Be(DeviceState.Connected);

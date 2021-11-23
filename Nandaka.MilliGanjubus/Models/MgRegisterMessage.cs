@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using Nandaka.Core.Helpers;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
 
@@ -30,6 +32,12 @@ namespace Nandaka.MilliGanjubus.Models
         public CommonMessage ConvertToCommon(IReadOnlyList<IRegister> registers)
         {
             return new CommonMessage(SlaveDeviceAddress, MessageType, OperationType, registers);
+        }
+
+        public override string ToString()
+        {
+            return $"Milliganjubus {MessageType.ToString()}-{OperationType.ToString()} to {SlaveDeviceAddress.ToString()} device:" +
+                   $"{Environment.NewLine}{Registers.ToLogLine()}";
         }
     }
 }

@@ -1,28 +1,29 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Nandaka.Core.Device
 {
-    public sealed class UpdateCandidatesHolder
+    internal sealed class UpdateCandidatesHolder
     {
         private readonly IDeviceUpdatePolicy _policy;
-        
-        public IReadOnlyCollection<ForeignDevice> Candidates { get; }
+        private readonly IReadOnlyCollection<ForeignDevice> _candidates;
 
         public UpdateCandidatesHolder(IReadOnlyCollection<ForeignDevice> devices, IDeviceUpdatePolicy updatePolicy)
         {
-            Candidates = devices;
+            _candidates = devices;
             _policy = updatePolicy;
         }
         
-        public IEnumerable<ForeignDevice> GetDevicesForProcessing()
+        public IEnumerable<ForeignDevice> GetDevicesForProcessing(ILogger logger)
         {
-            return Candidates.Where(IsDeviceShouldBeProcessed);
+            return _candidates.Where(device => _policy.IsDeviceShouldBeProcessed(device, logger));
         }
 
-        private bool IsDeviceShouldBeProcessed(ForeignDevice device)
+        public override string ToString()
         {
-            return _policy.IsDeviceShouldBeProcessed(device);
+            return String.Join(Environment.NewLine, _candidates.Select(device => device.ToLogLine()));
         }
     }
 }

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using Nandaka.Core.Device;
-using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Network;
 using Nandaka.Core.Protocol;
@@ -18,7 +15,6 @@ namespace Nandaka.MilliGanjubus
     {
         private readonly IDataPortProvider<byte[]> _dataPortProvider;
         private readonly MgComposer _composer;
-        private readonly MgApplicationParser _parser;
         private readonly MgRegisterConverter _registerConverter;
         private readonly MgInfo _info;
 
@@ -33,10 +29,10 @@ namespace Nandaka.MilliGanjubus
             _dataPortProvider = dataPortProvider;
             _registerConverter = registerConverter;
             _composer = new MgComposer();
-            _parser = new MgApplicationParser();
+            var parser = new MgApplicationParser();
             _info = MgInfo.Instance;
-            _dataPortProvider.OnDataReceived += (_, data) => _parser.Parse(data);
-            _parser.MessageParsed += OnMessageParsed;
+            _dataPortProvider.OnDataReceived += (_, data) => parser.Parse(data);
+            parser.MessageParsed += OnMessageParsed;
         }
 
         public static MgProtocol Create(IDataPortProvider<byte[]> dataPortProvider, params ForeignDevice[] devices)
@@ -45,46 +41,35 @@ namespace Nandaka.MilliGanjubus
             return new MgProtocol(dataPortProvider, tableMap);
         }
 
-        public void SendAsPossible(IRegisterMessage message, out IReadOnlyList<int> sentRegisterAddresses)
-        {
-            IReadOnlyList<IRegister> registersToSend = GetPacketRegisters(message);
-            SendRegisterMessage(message, registersToSend, out sentRegisterAddresses);
-        }
-
-        public void SendMessage(IMessage message)
+        public SentMessageResult SendMessage(IMessage message)
         {
             if (message is IRegisterMessage registerMessage)
-            {
-                SendMessage(registerMessage, out IReadOnlyList<int> _);
-                return;
-            }
-            
-            byte[] packet = _composer.Compose(message, out IReadOnlyList<int> _);
+                return SendMessage(registerMessage);
+
+            byte[] packet = _composer.Compose(message);
             _dataPortProvider.Write(packet);
+            
+            return SentMessageResult.CreateSuccessResult();
         }
 
-        private void SendMessage(IRegisterMessage message, out IReadOnlyList<int> sentRegisterAddresses)
+        private SentMessageResult SendMessage(IRegisterMessage message)
         {
             IReadOnlyList<IRegister> registersToSend = GetPacketRegisters(message);
-            if (registersToSend.Count != message.Registers.Count)
-                throw new TooMuchDataRequestedException("Can't send all registers");
-            
-            SendRegisterMessage(message, registersToSend, out sentRegisterAddresses);
+
+            return SendRegisterMessage(message, registersToSend);
         }
         
-        private void SendRegisterMessage(IRegisterMessage message, IReadOnlyList<IRegister> registersToSend, out IReadOnlyList<int> sentRegisterAddresses)
+        private SentMessageResult SendRegisterMessage(IRegisterMessage message, IReadOnlyList<IRegister> registersToSend)
         {
             IRegister<byte>[] byteRegistersToSend = _registerConverter.ConvertToMgRegisters(message.SlaveDeviceAddress, registersToSend);
 
             MgRegisterMessage mgMessage = MgRegisterMessage.Convert(message, byteRegistersToSend);
 
-            byte[] packet = _composer.Compose(mgMessage, out IReadOnlyList<int> composedByteRegisterAddresses);
-
-            Debug.Assert(composedByteRegisterAddresses.Count != byteRegistersToSend.Length, "Fatal logic error");
+            byte[] packet = _composer.Compose(mgMessage);
 
             _dataPortProvider.Write(packet);
 
-            sentRegisterAddresses = registersToSend.Select(mgRegister => mgRegister.Address).ToArray();
+            return SentMessageResult.CreateSuccessResult(registersToSend);
         }
         
         private void OnMessageParsed(object? sender, MessageReceivedEventArgs eventArgs)

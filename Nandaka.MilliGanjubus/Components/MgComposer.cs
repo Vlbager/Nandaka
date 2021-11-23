@@ -25,15 +25,14 @@ namespace Nandaka.MilliGanjubus.Components
             _info = MgInfo.Instance;
         }
 
-        public byte[] Compose(IMessage message, out IReadOnlyList<int> composedRegisterAddresses)
+        public byte[] Compose(IMessage message)
         {
             switch (message)
             {
                 case IRegisterMessage registerMessage:
-                    return Compose(registerMessage, out composedRegisterAddresses);
+                    return Compose(registerMessage);
 
                 case ErrorMessage errorMessage:
-                    composedRegisterAddresses = Array.Empty<int>();
                     return Compose(errorMessage);
 
                 default:
@@ -70,12 +69,12 @@ namespace Nandaka.MilliGanjubus.Components
             throw new NandakaBaseException("Specified error message does not contains any compatible error type");
         }
 
-        private byte[] Compose(IRegisterMessage message, out IReadOnlyList<int> composedRegisterAddresses)
+        private byte[] Compose(IRegisterMessage message)
         {
             if (message.Registers.IsEmpty())
                 throw new NandakaBaseException("Specified message does not contains any registers");
             
-            byte[] data = GetDataBytes(message, out composedRegisterAddresses);
+            byte[] data = GetDataBytes(message);
 
             byte[] packet = PreparePacketWithHeader(_info.MinPacketLength + data.Length, message.SlaveDeviceAddress);
 
@@ -99,7 +98,7 @@ namespace Nandaka.MilliGanjubus.Components
             return packetBlank;
         }
 
-        private byte[] GetDataBytes(IRegisterMessage message, out IReadOnlyList<int> composedRegisterAddresses)
+        private byte[] GetDataBytes(IRegisterMessage message)
         {
             if (message.Registers is not IReadOnlyList<IRegister<byte>>)
                 throw new NandakaBaseException("MG composer supports only byte registers");
@@ -149,10 +148,20 @@ namespace Nandaka.MilliGanjubus.Components
 
             byte[] dataHeader = {gByte};
 
-            if (isRange)
-                return RegisterConverter.ComposeDataAsRange(message.Registers, _info, dataHeader, withValues, out composedRegisterAddresses);
+            return GetDataBytes(message, isRange, dataHeader, withValues);
+        }
 
-            return RegisterConverter.ComposeDataAsSeries(message.Registers, _info, dataHeader, withValues, out composedRegisterAddresses);
+        private byte[] GetDataBytes(IRegisterMessage message, bool isRange, byte[] dataHeader, bool withValues)
+        {
+            IReadOnlyList<int> composedRegisterAddresses;
+            byte[] composedBytes = isRange 
+                ? RegisterConverter.ComposeDataAsRange(message.Registers, _info, dataHeader, withValues, out composedRegisterAddresses) 
+                : RegisterConverter.ComposeDataAsSeries(message.Registers, _info, dataHeader, withValues, out composedRegisterAddresses);
+
+            if (composedRegisterAddresses.Count != message.Registers.Count)
+                throw new TooMuchDataRequestedException("Too much registers required to compose");
+
+            return composedBytes;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 
 namespace Nandaka.Core.Device
 {
@@ -14,8 +15,8 @@ namespace Nandaka.Core.Device
         /// </summary>
         public TimeSpan UpdateTimeout { get; }
 
-        public bool IsDeviceShouldBeProcessed(ForeignDevice device);
-        public void OnMessageReceived(ForeignDevice device);
-        public void OnErrorOccured(ForeignDevice device, DeviceError error);
+        public bool IsDeviceShouldBeProcessed(ForeignDevice device, ILogger logger);
+        public void OnMessageReceived(ForeignDevice device, ILogger logger);
+        public void OnErrorOccured(ForeignDevice device, DeviceError error, ILogger logger);
     }
 }

@@ -1,7 +1,9 @@
-﻿namespace Nandaka.Core.Session
+﻿using Microsoft.Extensions.Logging;
+
+namespace Nandaka.Core.Session
 {
     public interface IErrorMessageHandler
     {
-        void OnErrorReceived(ErrorMessage errorMessage);
+        void OnErrorReceived(ErrorMessage errorMessage, ILogger logger);
     }
 }

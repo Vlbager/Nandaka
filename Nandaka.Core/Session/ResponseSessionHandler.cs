@@ -1,6 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
 using Nandaka.Core.Device;
-using Nandaka.Core.Logging;
 using Nandaka.Core.Protocol;
 
 namespace Nandaka.Core.Session
@@ -10,11 +9,12 @@ namespace Nandaka.Core.Session
     {
         private readonly MessageSocket _socket;
         private readonly IResponseSession<TResponseMessage> _responseSession;
-        private readonly ILog _log;
+        private readonly ILogger _logger;
 
-        public ResponseSessionHandler(IResponseSession<TResponseMessage> responseSession, IProtocol protocol, NandakaDevice device)
+        public ResponseSessionHandler(IResponseSession<TResponseMessage> responseSession, IProtocol protocol, NandakaDevice device, ILogger logger)
         {
             _responseSession = responseSession;
+            _logger = logger;
             var listener = new MessageListener(protocol);
             
             var filterRules = new MessageFilterRules
@@ -25,20 +25,19 @@ namespace Nandaka.Core.Session
             };
             
             _socket = listener.OpenSocket(filterRules);
-            _log = new PrefixLog(device.Name);
         }
         
         public void ProcessNext()
         {
-            _log.AppendMessage(LogLevel.Low, "Waiting for request");
+            _logger.LogDebug("Waiting for request");
 
             IMessage message = _socket.WaitMessage();
             
-            _log.AppendMessage($"Request message to device-{message.SlaveDeviceAddress} received");
+            _logger.LogDebug("Message received: {0}", message);
             
             _responseSession.ProcessRequest((TResponseMessage)message);
                 
-            _log.AppendMessage("Message processed");
+            _logger.LogDebug("Message processed");
         }
 
         public void Dispose()

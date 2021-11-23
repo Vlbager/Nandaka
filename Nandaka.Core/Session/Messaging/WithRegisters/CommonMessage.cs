@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using Nandaka.Core.Helpers;
 using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Session
@@ -23,5 +23,11 @@ namespace Nandaka.Core.Session
 
         public CommonMessage(int slaveDeviceAddress, MessageType type, OperationType operationType)
         : this(slaveDeviceAddress, type, operationType, Array.Empty<IRegister>()) { }
+
+        public override string ToString()
+        {
+            return $"{MessageType.ToString()}-{OperationType.ToString()} to {SlaveDeviceAddress.ToString()} device:" +
+                   $"{Environment.NewLine}{Registers.ToLogLine()}";
+        }
     }
 }

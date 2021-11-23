@@ -8,7 +8,12 @@ namespace Nandaka.Core.Helpers
     {
         public static string ToLogLine(this IEnumerable<IRegister> registers)
         {
-            return registers.Select(register => register.Address.ToString()).JoinString(", ");
+            return registers.Select(register => register.ToLogLine()).JoinString("; ");
+        }
+
+        public static string ToLogLine(this IRegister register)
+        {
+            return $"address: {register.Address.ToString()}, bytes: {{{register.ToBytes().JoinString(", ")}}}";
         }
     }
 }

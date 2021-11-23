@@ -34,7 +34,12 @@ namespace Nandaka.Core.Session
             return new ErrorMessage(slaveDeviceAddress, messageType, ErrorType.InternalProtocolError, protocolSpecifiedErrorMessage);
         }
 
-        public string ToLogLine()
+        public override string ToString()
+        {
+            return ToLogLine();
+        }
+
+        private string ToLogLine()
         {
             string protocolSpecifiedInfo = ProtocolSpecifiedErrorMessage != null
                                            ? $"{Environment.NewLine}{ProtocolSpecifiedErrorMessage.ToLogLine()}"

@@ -7,7 +7,7 @@ using Nandaka.Core.Helpers;
 
 namespace Nandaka.Core.Registers
 {
-    public sealed class Register<T> : IRegister<T>, IDisposable
+    public sealed class Register<T> : IRegister<T>, IDisposable, IEquatable<Register<T>>
         where T : struct
     {
         private static readonly int GenericParameterSize = Marshal.SizeOf<T>();
@@ -114,7 +114,12 @@ namespace Nandaka.Core.Registers
 
         public bool Equals(Register<T>? register)
         {
-            return Address == register?.Address;
+            if (register == null)
+                return false;
+            
+            return Address == register.Address &&
+                   Value.Equals(register.Value) &&
+                   RegisterType == register.RegisterType;
         }
 
         private void SetRegisterValue(T value, bool isUpdated)

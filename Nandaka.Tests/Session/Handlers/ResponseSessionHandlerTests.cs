@@ -1,6 +1,7 @@
 ﻿using System;
 using FluentAssertions;
 using FluentAssertions.Extensions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Registers;
@@ -25,7 +26,7 @@ namespace Nandaka.Tests.Session
             _protocolMock = new Mock<IProtocol>();
             _sessionMock = new Mock<IResponseSession<IMessage>>();
             var device = new TestDevice();
-            _handler = new ResponseSessionHandler<IMessage>(_sessionMock.Object, _protocolMock.Object, device);
+            _handler = new ResponseSessionHandler<IMessage>(_sessionMock.Object, _protocolMock.Object, device, NullLogger.Instance);
             
             SetupMocksAsDefault();
         }

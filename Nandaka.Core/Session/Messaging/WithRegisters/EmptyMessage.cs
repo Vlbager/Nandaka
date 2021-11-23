@@ -18,5 +18,10 @@ namespace Nandaka.Core.Session
         public MessageType MessageType => MessageType.None;
         public IReadOnlyList<IRegister> Registers => Array.Empty<IRegister>();
         public OperationType OperationType => OperationType.None;
+
+        public override string ToString()
+        {
+            return "empty message";
+        }
     }
 }

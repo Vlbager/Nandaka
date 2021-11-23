@@ -1,5 +1,6 @@
 ﻿using System;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Nandaka.Core.Device;
 using Nandaka.Tests.Util;
 using Xunit;
@@ -25,7 +26,7 @@ namespace Nandaka.Tests.DevicePolicies
             var device = new TestDevice { State = state };
 
             // Act
-            bool isDeviceShouldBeProcessed = _policy.IsDeviceShouldBeProcessed(device);
+            bool isDeviceShouldBeProcessed = _policy.IsDeviceShouldBeProcessed(device, NullLogger.Instance);
 
             // Assert
             isDeviceShouldBeProcessed.Should().BeTrue();
@@ -39,7 +40,7 @@ namespace Nandaka.Tests.DevicePolicies
             var device = new TestDevice();
 
             // Act & Assert
-            _policy.Invoking(policy => policy.OnMessageReceived(device))
+            _policy.Invoking(policy => policy.OnMessageReceived(device, NullLogger.Instance))
                    .Should().NotThrow();
         }
         
@@ -51,7 +52,7 @@ namespace Nandaka.Tests.DevicePolicies
             var device = new TestDevice();
 
             // Act & Assert
-            _policy.Invoking(policy => policy.OnErrorOccured(device, DeviceError.ErrorReceived))
+            _policy.Invoking(policy => policy.OnErrorOccured(device, DeviceError.ErrorReceived, NullLogger.Instance))
                    .Should().NotThrow();
         }
     }

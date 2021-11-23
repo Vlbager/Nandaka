@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
 
@@ -60,9 +61,14 @@ namespace Nandaka.Core.Device
 
             return builder.ToString();
         }
-        
-        internal void OnSpecificMessageReceived(ISpecificMessage message)
-            => _specificMessageHandler.OnSpecificMessageReceived(message);
+
+        public override string ToString()
+        {
+            return ToLogLine();
+        }
+
+        internal void OnSpecificMessageReceived(ISpecificMessage message, ILogger logger)
+            => _specificMessageHandler.OnSpecificMessageReceived(message, logger);
 
         internal bool TryGetSpecific(out ISpecificMessage? message)
             => _specificMessages.TryDequeue(out message);

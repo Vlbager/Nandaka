@@ -1,16 +1,17 @@
 ﻿using System.Collections.Generic;
+using Nandaka.Core.Registers;
 
 namespace Nandaka.Core.Session
 {
     public sealed class RegisterRequestSentResult : ISentResult
     {
         public bool IsResponseRequired { get; }
-        public IReadOnlyList<int> RequestedAddresses { get; }
+        public IReadOnlyList<IRegister> RequestedRegisters { get; }
 
-        public RegisterRequestSentResult(bool isResponseRequired, IReadOnlyList<int> requestedAddresses)
+        public RegisterRequestSentResult(bool isResponseRequired, IReadOnlyList<IRegister> requestedRegisters)
         {
             IsResponseRequired = isResponseRequired;
-            RequestedAddresses = requestedAddresses;
+            RequestedRegisters = requestedRegisters;
         }
     }
 }

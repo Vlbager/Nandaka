@@ -14,9 +14,9 @@ namespace Nandaka.Core.Device
             _device = device;
         }
 
-        public IReadOnlyList<IRegister> UpdateAllRequested(IReadOnlyCollection<int> requestedAddresses, IEnumerable<IRegister> receivedRegisters)
+        public IReadOnlyList<IRegister> UpdateAllRequested(IReadOnlyCollection<IRegister> requestedRegisters, IEnumerable<IRegister> receivedRegisters)
         {
-            IReadOnlyDictionary<IRegister, IRegister> updatePatch = GetAllRequestedUpdatePatch(requestedAddresses, receivedRegisters);
+            IReadOnlyDictionary<IRegister, IRegister> updatePatch = GetAllRequestedUpdatePatch(requestedRegisters, receivedRegisters);
 
             UpdateRegisters(updatePatch);
 
@@ -34,33 +34,33 @@ namespace Nandaka.Core.Device
         
         public IReadOnlyList<IRegister> GetDeviceRegisters(IReadOnlyCollection<IRegister> requestedRegisters)
         {
-            return requestedRegisters.Select(register => GetDeviceRegister(register.Address))
+            return requestedRegisters.Select(GetDeviceRegister)
                                      .ToArray();
         }
 
-        public void MarkAsUpdatedAllRequested(IReadOnlyCollection<int> requestedAddresses)
+        public void MarkAsUpdatedAllRequested(IReadOnlyCollection<IRegister> requestedRegisters)
         {
-            IReadOnlyList<IRegister> requestedRegisters = GetAllRequestedRegisters(requestedAddresses);
+            IReadOnlyList<IRegister> deviceRegisters = GetAllDeviceRegisters(requestedRegisters);
             
-            MarkRegistersAsUpdated(requestedRegisters);
+            MarkRegistersAsUpdated(deviceRegisters);
         }
         
 
-        private IReadOnlyDictionary<IRegister, IRegister> GetAllRequestedUpdatePatch(IReadOnlyCollection<int> requestedAddresses,
+        private IReadOnlyDictionary<IRegister, IRegister> GetAllRequestedUpdatePatch(IReadOnlyCollection<IRegister> requestedRegisters,
                                                                                      IEnumerable<IRegister> receivedRegisters)
         {
-            Dictionary<IRegister, IRegister> updatePatch = requestedAddresses
+            Dictionary<IRegister, IRegister> updatePatch = requestedRegisters
                                                            .Join(receivedRegisters,
-                                                                 requestedAddress => requestedAddress,
+                                                                 requesterRegister => requesterRegister.Address,
                                                                  receivedRegister => receivedRegister.Address,
-                                                                 (requestedAddress, receivedRegister) =>
-                                                                     (requestedRegister: _device.Table[requestedAddress], receivedRegister))
+                                                                 (requesterRegister, receivedRegister) =>
+                                                                     (requestedRegister: _device.Table[requesterRegister.Address], receivedRegister))
                                                            .ToDictionary(pair => pair.requestedRegister,
                                                                          pair => pair.receivedRegister);
 
-            if (updatePatch.Count != requestedAddresses.Count)
+            if (updatePatch.Count != requestedRegisters.Count)
                 throw new InvalidRegistersReceivedException("Wrong received registers count. " +
-                                                            $"Expected: {requestedAddresses.Count.ToString()}; actual: {updatePatch.Count.ToString()}");
+                                                            $"Expected: {requestedRegisters.Count.ToString()}; actual: {updatePatch.Count.ToString()}");
             return updatePatch;
         }
         
@@ -70,7 +70,7 @@ namespace Nandaka.Core.Device
 
             foreach (IRegister receivedRegister in receivedRegisters)
             {
-                IRegister deviceRegister = GetDeviceRegister(receivedRegister.Address);
+                IRegister deviceRegister = GetDeviceRegister(receivedRegister);
                 
                 updatePatch.Add(deviceRegister!, receivedRegister);
             }
@@ -78,16 +78,16 @@ namespace Nandaka.Core.Device
             return updatePatch;
         }
 
-        private IReadOnlyList<IRegister> GetAllRequestedRegisters(IReadOnlyCollection<int> requestedAddresses)
+        private IReadOnlyList<IRegister> GetAllDeviceRegisters(IReadOnlyCollection<IRegister> requestedRegisters)
         {                                                         
-            return requestedAddresses.Select(GetDeviceRegister)
+            return requestedRegisters.Select(GetDeviceRegister)
                                      .ToArray();
         }
         
-        private IRegister GetDeviceRegister(int address)
+        private IRegister GetDeviceRegister(IRegister requestedRegister)
         {
-            if (!_device.Table.TryGetRegister(address, out IRegister? deviceRegister))
-                throw new InvalidRegistersReceivedException($"Register {address.ToString()} not found on {_device.Name} device");
+            if (!_device.Table.TryGetRegister(requestedRegister.Address, out IRegister? deviceRegister))
+                throw new InvalidRegistersReceivedException($"Register {requestedRegister.ToString()} not found on {_device.Name} device");
             
             return deviceRegister!;
         }

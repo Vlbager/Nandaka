@@ -1,9 +1,10 @@
 ﻿using System;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Protocol;
-using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
 using Nandaka.Tests.Util;
 using Xunit;
@@ -31,7 +32,8 @@ namespace Nandaka.Tests.Session
             _errorMessageHandlerMock = new Mock<IErrorMessageHandler>();
             var device = new TestDevice();
             _handler = new RequestSessionHandler<IMessage, DefaultSentResult>(_sessionMock.Object, _protocolMock.Object, device,
-                                                                              TimeSpan.FromSeconds(1), _errorMessageHandlerMock.Object);
+                                                                              TimeSpan.FromSeconds(1), _errorMessageHandlerMock.Object, 
+                                                                              NullLogger.Instance);
             SetupMocksAsDefault();
         }
         
@@ -158,8 +160,8 @@ namespace Nandaka.Tests.Session
             _sessionMock.Setup(session => session.ProcessResponse(It.IsAny<IMessage>(), It.IsAny<DefaultSentResult>()))
                         .Callback<IMessage, DefaultSentResult>((_, _) => _processedResponsesCount++);
 
-            _errorMessageHandlerMock.Setup(handler => handler.OnErrorReceived(It.IsAny<ErrorMessage>()))
-                                    .Callback<ErrorMessage>(_ => _errorResponsesCount++);
+            _errorMessageHandlerMock.Setup(handler => handler.OnErrorReceived(It.IsAny<ErrorMessage>(), It.IsAny<ILogger>()))
+                                    .Callback<ErrorMessage, ILogger>((_, _) => _errorResponsesCount++);
         }
     }
 }

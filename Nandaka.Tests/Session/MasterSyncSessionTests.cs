@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using Moq;
@@ -8,6 +9,8 @@ using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
 using Nandaka.Tests.Util;
 using Xunit;
+using Xunit.Abstractions;
+using Xunit.Extensions.Logging;
 
 namespace Nandaka.Tests.Session
 {
@@ -18,16 +21,16 @@ namespace Nandaka.Tests.Session
         private readonly Mock<IRegistersUpdatePolicy> _updatePolicyMock;
         private readonly TestDevice _device;
 
-        private readonly List<int> _updatedRegisterAddresses;
+        private readonly List<IRegister> _updatedRegisters;
 
-        public MasterSyncSessionTests()
+        public MasterSyncSessionTests(ITestOutputHelper outputHelper)
         {
             _protocolMock = new Mock<IProtocol>();
             _updatePolicyMock = new Mock<IRegistersUpdatePolicy>();
             _device = new TestDevice { UpdatePolicy = _updatePolicyMock.Object };
-            _session = new MasterSyncSession(_protocolMock.Object, _device);
-            _updatedRegisterAddresses = new List<int>();
-            _device.OnRegisterChanged += (_, args) => _updatedRegisterAddresses.Add(args.RegisterAddress);
+            _session = new MasterSyncSession(_protocolMock.Object, _device, new XunitLogger(outputHelper, "xunit", (_, _) => true));
+            _updatedRegisters = new List<IRegister>();
+            _device.OnRegisterChanged += (_, args) => _updatedRegisters.Add(_device.Table[args.RegisterAddress]);
         }
 
         [Fact]
@@ -59,7 +62,7 @@ namespace Nandaka.Tests.Session
             // Arrange
             SetupIsResponseMayBeSkippedByProtocol(isResponseMayBeSkippedByProtocol);
             IRegister register = _device.RoInt;
-            SetupSentRegistersAddresses(new[] { register.Address });
+            SetupSentRegistersAddresses(new[] { register });
             IRegisterMessage message = CreateRequestMessage(OperationType.Read, register);
 
             // Act
@@ -67,7 +70,7 @@ namespace Nandaka.Tests.Session
 
             // Assert
             result.IsResponseRequired.Should().Be(true, "read request always require response");
-            result.RequestedAddresses.Should().Equal(register.Address);
+            result.RequestedRegisters.Should().Equal(register);
             register.IsUpdated.Should().BeFalse("read request always require response for update");
         }
         
@@ -80,7 +83,7 @@ namespace Nandaka.Tests.Session
             // Arrange
             SetupIsResponseMayBeSkippedByProtocol(isResponseMayBeSkippedByProtocol);
             IRegister register = _device.RwInt;
-            SetupSentRegistersAddresses(new[] { register.Address });
+            SetupSentRegistersAddresses(new[] { register });
             IRegisterMessage message = CreateRequestMessage(OperationType.Write, register);
 
             // Act
@@ -88,7 +91,7 @@ namespace Nandaka.Tests.Session
 
             // Assert
             result.IsResponseRequired.Should().Be(!isResponseMayBeSkippedByProtocol);
-            result.RequestedAddresses.Should().Equal(register.Address);
+            result.RequestedRegisters.Should().Equal(register);
             register.IsUpdated.Should().Be(isResponseMayBeSkippedByProtocol, "we should mark register as updated from master side");
         }
         
@@ -100,14 +103,14 @@ namespace Nandaka.Tests.Session
             IRegister[] registersInMessage = { _device.RoInt, _device.RoByte, _device.RoInt2, _device.RoLong }; 
             IRegisterMessage message = CreateRequestMessage(OperationType.Read, registersInMessage);
 
-            int[] sentRegistersAddresses = { _device.RoInt.Address, _device.RoByte.Address, _device.RoInt2.Address };
-            SetupSentRegistersAddresses(sentRegistersAddresses);
+            IRegister[] sentRegisters = { _device.RoInt, _device.RoByte, _device.RoInt2 };
+            SetupSentRegistersAddresses(sentRegisters);
 
             // Act
             RegisterRequestSentResult result = _session.SendRequest(message);
 
             // Assert
-            result.RequestedAddresses.Should().Equal(sentRegistersAddresses);
+            result.RequestedRegisters.Should().Equal(sentRegisters);
         }
         
         [Fact]
@@ -119,15 +122,15 @@ namespace Nandaka.Tests.Session
             IRegister[] registersInMessage = { _device.RwInt, _device.RwByte, _device.RwInt2, _device.RwLong }; 
             IRegisterMessage message = CreateRequestMessage(OperationType.Write, registersInMessage);
 
-            int[] sentRegistersAddresses = { _device.RwInt.Address, _device.RwByte.Address, _device.RwInt2.Address };
-            SetupSentRegistersAddresses(sentRegistersAddresses);
+            IRegister[] sentRegisters = { _device.RwInt, _device.RwByte, _device.RwInt2 };
+            SetupSentRegistersAddresses(sentRegisters);
 
             // Act
             RegisterRequestSentResult result = _session.SendRequest(message);
 
             // Assert
-            result.RequestedAddresses.Should().Equal(sentRegistersAddresses);
-            _updatedRegisterAddresses.Should().Equal(sentRegistersAddresses);
+            result.RequestedRegisters.Should().Equal(sentRegisters);
+            _updatedRegisters.Should().Equal(sentRegisters);
         }
         
         [Fact]
@@ -137,15 +140,15 @@ namespace Nandaka.Tests.Session
             // Arrange
             IRegisterMessage message = CreateResponseMessageFromDeviceRegisters(OperationType.Read, _device.RoInt);
             
-            int[] requestedRegistersAddresses = message.Registers.Select(register => register.Address).ToArray();
+            IReadOnlyList<IRegister> requestedRegisters = message.Registers;
             
-            var sentResult = new RegisterRequestSentResult(isResponseRequired: true, requestedRegistersAddresses);
+            var sentResult = new RegisterRequestSentResult(isResponseRequired: true, requestedRegisters);
 
             // Act
             _session.ProcessResponse(message, sentResult);
 
             // Assert
-            _updatedRegisterAddresses.Should().Equal(requestedRegistersAddresses);
+            _updatedRegisters.Should().Equal(requestedRegisters, GetByAddressEqualityComparison());
         }
         
         [Fact]
@@ -155,15 +158,15 @@ namespace Nandaka.Tests.Session
             // Arrange
             IRegisterMessage message = CreateResponseMessageFromDeviceRegisters(OperationType.Write, _device.RwInt);
             
-            int[] requestedRegistersAddresses = message.Registers.Select(register => register.Address).ToArray();
+            IReadOnlyList<IRegister> requestedRegisters = message.Registers;
             
-            var sentResult = new RegisterRequestSentResult(isResponseRequired: true, requestedRegistersAddresses);
+            var sentResult = new RegisterRequestSentResult(isResponseRequired: true, requestedRegisters);
 
             // Act
             _session.ProcessResponse(message, sentResult);
 
             // Assert
-            _updatedRegisterAddresses.Should().Equal(requestedRegistersAddresses);
+            _updatedRegisters.Should().Equal(requestedRegisters, GetByAddressEqualityComparison());
         }
         
         [Fact]
@@ -173,15 +176,15 @@ namespace Nandaka.Tests.Session
             // Arrange
             IRegisterMessage message = CreateResponseMessageFromDeviceRegisters(OperationType.Read, _device.RoInt, _device.RoShort, _device.RoLong);
             
-            int[] requestedRegistersAddresses = message.Registers.Select(register => register.Address).ToArray();
+            IReadOnlyList<IRegister> requestedRegisters = message.Registers;
             
-            var sentResult = new RegisterRequestSentResult(isResponseRequired: true, requestedRegistersAddresses);
+            var sentResult = new RegisterRequestSentResult(isResponseRequired: true, requestedRegisters);
 
             // Act
             _session.ProcessResponse(message, sentResult);
 
             // Assert
-            _updatedRegisterAddresses.Should().Equal(requestedRegistersAddresses);
+            _updatedRegisters.Should().Equal(requestedRegisters, GetByAddressEqualityComparison());
         }
         
         [Fact]
@@ -191,15 +194,15 @@ namespace Nandaka.Tests.Session
             // Arrange
             IRegisterMessage message = CreateResponseMessageFromDeviceRegisters(OperationType.Write, _device.RwInt, _device.RwShort, _device.RwLong);
             
-            int[] requestedRegistersAddresses = message.Registers.Select(register => register.Address).ToArray();
+            IReadOnlyList<IRegister> requestedRegisters = message.Registers;
             
-            var sentResult = new RegisterRequestSentResult(isResponseRequired: true, requestedRegistersAddresses);
+            var sentResult = new RegisterRequestSentResult(isResponseRequired: true, requestedRegisters);
 
             // Act
             _session.ProcessResponse(message, sentResult);
 
             // Assert
-            _updatedRegisterAddresses.Should().Equal(requestedRegistersAddresses);
+            _updatedRegisters.Should().Equal(requestedRegisters, GetByAddressEqualityComparison());
         }
 
         private IRegisterMessage CreateRequestMessage(OperationType operationType, params IRegister[] registers)
@@ -219,9 +222,17 @@ namespace Nandaka.Tests.Session
                          .Returns(isResponseMayBeSkipped);
         }
         
-        private void SetupSentRegistersAddresses(IReadOnlyList<int> sentRegisters)
+        private void SetupSentRegistersAddresses(IReadOnlyList<IRegister> sentRegisters)
         {
-            _protocolMock.Setup(proto => proto.SendAsPossible(It.IsAny<IRegisterMessage>(), out sentRegisters));
+            var sentResult = SentMessageResult.CreateSuccessResult(sentRegisters);
+
+            _protocolMock.Setup(proto => proto.SendMessage(It.IsAny<IRegisterMessage>()))
+                         .Returns(sentResult);
+        }
+
+        private Func<IRegister, IRegister, bool> GetByAddressEqualityComparison()
+        {
+            return (reg1, reg2) => reg1.Address.Equals(reg2.Address);
         }
     }
 }

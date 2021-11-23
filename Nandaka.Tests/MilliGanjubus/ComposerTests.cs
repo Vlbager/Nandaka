@@ -57,7 +57,7 @@ namespace Nandaka.Tests.MilliGanjubus
             IRegisterMessage message = _messageFactory.CreateSeries(firstRegisterAddress, registerCount, operationType, messageType);
             
             // Act
-            byte[] actual = _composer.Compose(message, out _);
+            byte[] actual = _composer.Compose(message);
             
             // Assert
             Assert.Equal(expected, actual);
@@ -88,7 +88,7 @@ namespace Nandaka.Tests.MilliGanjubus
             IRegisterMessage message = _messageFactory.CreateRange(firstRegisterAddress, registerCount, operationType, messageType);
             
             // Act
-            byte[] actual = _composer.Compose(message, out _);
+            byte[] actual = _composer.Compose(message);
             
             // Assert
             Assert.Equal(expected, actual);

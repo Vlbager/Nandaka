@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
-using Nandaka.Core.Logging;
 using Nandaka.Core.Session;
 using Nandaka.Core.Util;
 
@@ -15,15 +15,15 @@ namespace Nandaka.Core.Threading
     {
         private readonly IDeviceUpdatePolicy _updatePolicy;
         private readonly Thread[] _threads;
-        private readonly string _masterName;
         private readonly DisposableList _disposable;
+        private readonly ILogger _logger;
         
         private bool _isStopped;
 
-        public MasterAsyncSessionsHolder(IDeviceUpdatePolicy updatePolicy, IReadOnlyCollection<DeviceSessionCollection> sessions, string masterName)
+        public MasterAsyncSessionsHolder(IDeviceUpdatePolicy updatePolicy, IReadOnlyCollection<DeviceSessionCollection> sessions, ILogger logger)
         {
             _updatePolicy = updatePolicy;
-            _masterName = masterName;
+            _logger = logger;
             _disposable = new DisposableList();
             _disposable.AddRange(sessions);
             _threads = sessions.Select(deviceSessions => new Thread(() => Routine(deviceSessions)))
@@ -38,18 +38,16 @@ namespace Nandaka.Core.Threading
             {
                 ForeignDevice device = deviceSessions.Device;
 
-                InitializeLog(device);
-                
                 IReadOnlyCollection<ISessionHandler> sessions = deviceSessions.SessionHandlers;
                 
                 RoutineInternal(device, sessions);
             }
             catch (Exception exception)
             {
-                Log.AppendException(exception, "Unexpected error occured");
+                _logger.LogError(exception, "Unexpected error occured");
             }
             
-            Log.AppendWarning("Master thread has been stopped");
+            _logger.LogCritical($"Master thread '{Thread.CurrentThread.ManagedThreadId.ToString()}' has been stopped");
         }
 
         private void RoutineInternal(ForeignDevice device, IReadOnlyCollection<ISessionHandler> sessions)
@@ -59,18 +57,11 @@ namespace Nandaka.Core.Threading
                 if (_isStopped)
                     break;
 
-                if (_updatePolicy.IsDeviceShouldBeProcessed(device))
+                if (_updatePolicy.IsDeviceShouldBeProcessed(device, _logger))
                     ProcessNext(device, sessions);
 
                 Thread.Sleep(_updatePolicy.UpdateTimeout);
             }
-        }
-
-        private void InitializeLog(ForeignDevice device)
-        {
-            _disposable.Add(Log.InitializeLog($"{_masterName}.Master.log"));
-
-            Log.AppendMessage("Starting Master thread, device:" + Environment.NewLine + device.ToLogLine());
         }
 
         private void ProcessNext(ForeignDevice device, IReadOnlyCollection<ISessionHandler> sessions)
@@ -80,17 +71,17 @@ namespace Nandaka.Core.Threading
                 foreach (ISessionHandler session in sessions)
                     session.ProcessNext();
                 
-                _updatePolicy.OnMessageReceived(device);
+                _updatePolicy.OnMessageReceived(device, _logger);
             }
             catch (DeviceNotRespondException deviceNotRespondException)
             {
-                Log.AppendWarning(deviceNotRespondException.Message);
-                _updatePolicy.OnErrorOccured(device, DeviceError.NotResponding);
+                _logger.LogWarning(deviceNotRespondException.Message);
+                _updatePolicy.OnErrorOccured(device, DeviceError.NotResponding, _logger);
             }
             catch (InvalidMessageReceivedException invalidMessageException)
             {
-                Log.AppendWarning(invalidMessageException.Message);
-                _updatePolicy.OnErrorOccured(device, DeviceError.WrongPacketData);
+                _logger.LogCritical(invalidMessageException.Message);
+                _updatePolicy.OnErrorOccured(device, DeviceError.WrongPacketData, _logger);
             }
         }
 

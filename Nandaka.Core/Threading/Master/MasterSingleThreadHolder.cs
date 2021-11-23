@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
-using Nandaka.Core.Logging;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Session;
 using Nandaka.Core.Util;
@@ -18,18 +17,18 @@ namespace Nandaka.Core.Threading
         private readonly IDeviceUpdatePolicy _updatePolicy;
         private readonly UpdateCandidatesHolder _candidatesHolder;
         private readonly Thread _thread;
-        private readonly string _masterName;
         private readonly DisposableList _disposable;
+        private readonly ILogger _logger;
         
         private bool _isStopped;
 
         public MasterSingleThreadHolder(IDeviceUpdatePolicy updatePolicy, UpdateCandidatesHolder candidatesHolder, IProtocol protocol,
-                                        MasterDeviceSessionMap sessionMap, string masterName)
+                                        MasterDeviceSessionMap sessionMap, ILogger logger)
         {
             _disposable = new DisposableList();
             _updatePolicy = updatePolicy;
             _candidatesHolder = candidatesHolder;
-            _masterName = masterName;
+            _logger = logger;
             _deviceSessionsMap = _disposable.Add(sessionMap);
             _highPrioritySessionHandler = InitHighPrioritySession(protocol);
             _thread = new Thread(Routine) { IsBackground = true };
@@ -47,25 +46,24 @@ namespace Nandaka.Core.Threading
 
         private void Routine()
         {
+            _logger.LogInformation("Starting single Master thread, devices: {0}", _candidatesHolder);
             try
             {
-                InitializeLog();
-                
                 RoutineInternal();
             }
             catch (Exception exception)
             {
-                Log.AppendException(exception, "Unexpected error occured");
+                _logger.LogCritical(exception, "Unexpected error occured");
             }
             
-            Log.AppendWarning("Master thread has been stopped");
+            _logger.LogWarning("Master thread has been stopped");
         }
 
         private void RoutineInternal()
         {
             while (true)
             {
-                foreach (ForeignDevice nextDevice in _candidatesHolder.GetDevicesForProcessing())
+                foreach (ForeignDevice nextDevice in _candidatesHolder.GetDevicesForProcessing(_logger))
                 {
                     if (_isStopped)
                         return;
@@ -83,7 +81,7 @@ namespace Nandaka.Core.Threading
         {
             DeviceSessionCollection sessionCollection = _deviceSessionsMap.GetDeviceSessions(device);
 
-            Log.AppendMessage($"Set current device: {device}");
+            _logger.LogDebug("Set current device: {0}", device.Name);
             
             IReadOnlyCollection<ISessionHandler> sessions = sessionCollection.SessionHandlers;
 
@@ -92,27 +90,18 @@ namespace Nandaka.Core.Threading
                 foreach (ISessionHandler session in sessions)
                     session.ProcessNext();
                 
-                _updatePolicy.OnMessageReceived(device);
+                _updatePolicy.OnMessageReceived(device, _logger);
             }
             catch (DeviceNotRespondException deviceNotRespondException)
             {
-                Log.AppendWarning(deviceNotRespondException.Message);
-                _updatePolicy.OnErrorOccured(device, DeviceError.NotResponding);
+                _logger.LogError(deviceNotRespondException.Message);
+                _updatePolicy.OnErrorOccured(device, DeviceError.NotResponding, _logger);
             }
             catch (InvalidMessageReceivedException invalidMessageException)
             {
-                Log.AppendWarning(invalidMessageException.Message);
-                _updatePolicy.OnErrorOccured(device, DeviceError.WrongPacketData);
+                _logger.LogError(invalidMessageException.Message);
+                _updatePolicy.OnErrorOccured(device, DeviceError.WrongPacketData, _logger);
             }
-        }
-        
-        private void InitializeLog()
-        {
-            _disposable.Add(Log.InitializeLog($"{_masterName}.Master.log"));
-            
-            string devicesInfo = String.Join(Environment.NewLine, _candidatesHolder.Candidates.Select(device => device.ToLogLine()));
-            
-            Log.AppendMessage(LogLevel.Low, "Starting single Master thread, devices:" + Environment.NewLine + devicesInfo);
         }
 
         public void Dispose()

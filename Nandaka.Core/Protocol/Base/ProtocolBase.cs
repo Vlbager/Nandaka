@@ -29,20 +29,16 @@ namespace Nandaka.Core.Protocol
             _parser = parser;
             _dataPortProvider.OnDataReceived += (_, data) => _parser.Parse(data);
         }
-
-        public void SendAsPossible(IRegisterMessage message, out IReadOnlyList<int> sentRegisterAddresses)
+        
+        public SentMessageResult SendMessage(IMessage message)
         {
-            T packet = _composer.Compose(message, out sentRegisterAddresses);
+            T packet = _composer.Compose(message);
             _dataPortProvider.Write(packet);
-        }
-
-        public void SendMessage(IMessage message)
-        {
-            T packet = _composer.Compose(message, out IReadOnlyList<int> sentRegisterAddresses);
-            if (message is IRegisterMessage registerMessage && registerMessage.Registers.Count != sentRegisterAddresses.Count)
-                throw new TooMuchDataRequestedException("Can't send all registers");
             
-            _dataPortProvider.Write(packet);
+            if (message is IRegisterMessage registerMessage)
+                return SentMessageResult.CreateSuccessResult(registerMessage.Registers);
+            
+            return SentMessageResult.CreateSuccessResult();
         }
     }
 }

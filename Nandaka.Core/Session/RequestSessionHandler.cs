@@ -1,7 +1,7 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
-using Nandaka.Core.Logging;
 using Nandaka.Core.Protocol;
 
 namespace Nandaka.Core.Session
@@ -10,7 +10,7 @@ namespace Nandaka.Core.Session
         where TRequestMessage: IMessage
         where TSentResult: ISentResult
     {
-        private readonly ILog _log;
+        private readonly ILogger _logger;
         private readonly MessageListener _listener;
         private readonly MessageFilterRules _filterRules;
         private readonly TimeSpan _requestTimeout;
@@ -19,14 +19,14 @@ namespace Nandaka.Core.Session
         private readonly IRequestSession<TRequestMessage, TSentResult> _requestSession;
 
         public RequestSessionHandler(IRequestSession<TRequestMessage, TSentResult> requestSession, IProtocol protocol, NandakaDevice device, 
-                                     TimeSpan requestTimeout, IErrorMessageHandler errorMessageHandler)
+                                     TimeSpan requestTimeout, IErrorMessageHandler errorMessageHandler, ILogger logger)
         {
             _requestTimeout = requestTimeout;
             _errorMessageHandler = errorMessageHandler;
             _requestSession = requestSession;
             _listener = new MessageListener(protocol);
             _device = device;
-            _log = new PrefixLog(device.Name);
+            _logger = logger;
             _filterRules = new MessageFilterRules
             {
                 message => message.MessageType == MessageType.Response &&
@@ -41,7 +41,7 @@ namespace Nandaka.Core.Session
 
             if (message is EmptyMessage)
             {
-                _log.AppendMessage($"Nothing to process. Skip {_device.Name}");
+                _logger.LogInformation($"Nothing to process. Skip {_device}");
                 return;
             }
             
@@ -63,8 +63,8 @@ namespace Nandaka.Core.Session
 
         private void ProcessErrorResponse(ErrorMessage errorMessage)
         {
-            _log.AppendWarning(LogLevel.Low, $"ErrorMessage received: {errorMessage.ToLogLine()}");
-            _errorMessageHandler.OnErrorReceived(errorMessage);
+            _logger.LogWarning($"ErrorMessage received: {errorMessage}");
+            _errorMessageHandler.OnErrorReceived(errorMessage, _logger);
         }
 
         public void Dispose()

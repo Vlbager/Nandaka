@@ -1,4 +1,5 @@
-﻿using Nandaka.Core.Device;
+﻿using Microsoft.Extensions.Logging;
+using Nandaka.Core.Device;
 
 namespace Nandaka.Core.Session
 {
@@ -13,9 +14,9 @@ namespace Nandaka.Core.Session
             _device = device;
         }
         
-        public void OnErrorReceived(ErrorMessage errorMessage)
+        public void OnErrorReceived(ErrorMessage errorMessage, ILogger logger)
         {
-            _updatePolicy.OnErrorOccured(_device, DeviceError.ErrorReceived);
+            _updatePolicy.OnErrorOccured(_device, DeviceError.ErrorReceived, logger);
         }
     }
 }
