@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.Core.Registers
 {

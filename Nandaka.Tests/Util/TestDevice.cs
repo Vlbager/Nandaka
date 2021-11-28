@@ -1,5 +1,6 @@
 ﻿using Nandaka.Core.Device;
 using Nandaka.Core.Registers;
+using Nandaka.Model.Device;
 
 namespace Nandaka.Tests.Util
 {

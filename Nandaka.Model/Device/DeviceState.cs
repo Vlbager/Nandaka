@@ -1,4 +1,4 @@
-﻿namespace Nandaka.Core.Device
+﻿namespace Nandaka.Model.Device
 {
     public enum DeviceState
     {

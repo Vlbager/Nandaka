@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
+using Nandaka.Model.Device;
 
 namespace Nandaka.Core.Device
 {

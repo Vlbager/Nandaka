@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Nandaka.Core.Device;
+using Nandaka.Model.Device;
 using Nandaka.Tests.Util;
 using Xunit;
 

@@ -4,10 +4,12 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
+using Nandaka.Model.Device;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.Core.Device
 {
-    public abstract class NandakaDevice
+    public abstract class NandakaDevice : INandakaDevice
     {
         private readonly ISpecificMessageHandler _specificMessageHandler = new NullSpecificMessageHandler();
         private readonly ConcurrentQueue<ISpecificMessage> _specificMessages;

@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
-using Nandaka.Core.Registers;
+﻿using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
+using Nandaka.Model.Device;
 
 namespace Nandaka.Core.Device
 {
-    public abstract class ForeignDevice : NandakaDevice
+    public abstract class ForeignDevice : NandakaDevice, IForeignDevice
     {
         internal readonly IErrorMessageHandler? ErrorMessageHandlerField;
         internal readonly IRegistersUpdatePolicy UpdatePolicyField = new WriteFirstUpdatePolicy();

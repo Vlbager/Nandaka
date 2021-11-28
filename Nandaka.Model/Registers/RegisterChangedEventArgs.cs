@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Nandaka.Core.Registers
+namespace Nandaka.Model.Registers
 {
     public sealed class RegisterChangedEventArgs : EventArgs
     {
