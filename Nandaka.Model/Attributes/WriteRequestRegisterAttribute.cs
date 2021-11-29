@@ -2,7 +2,7 @@
 
 namespace Nandaka.Model.Attributes
 {
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Field)]
     public sealed class WriteRequestRegisterAttribute : Attribute
     {
         public int Address { get; }
