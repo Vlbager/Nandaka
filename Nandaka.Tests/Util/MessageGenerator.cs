@@ -3,6 +3,7 @@ using System.Linq;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.Tests.Util
 {

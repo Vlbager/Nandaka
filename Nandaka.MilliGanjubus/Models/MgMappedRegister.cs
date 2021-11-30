@@ -1,4 +1,5 @@
 ﻿using Nandaka.Core.Registers;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.MilliGanjubus.Models
 {

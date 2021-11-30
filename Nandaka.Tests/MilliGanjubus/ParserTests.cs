@@ -6,6 +6,7 @@ using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
 using Nandaka.Core.Util;
 using Nandaka.MilliGanjubus.Components;
+using Nandaka.Model.Registers;
 using Xunit;
 using Xunit.Sdk;
 using ErrorMessage = Nandaka.Core.Session.ErrorMessage;

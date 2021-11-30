@@ -2,6 +2,7 @@
 
 namespace Nandaka.Core.Registers
 {
+    
     public sealed class LocalDeviceRegisterFactory : IRegisterFactory
     {
         public IReadOnlyRegister<T> CreateReadOnly<T>(int address, T defaultValue = default) 

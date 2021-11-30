@@ -9,6 +9,7 @@ using Nandaka.Core.Session;
 using Nandaka.Core.Util;
 using Nandaka.MilliGanjubus.Models;
 using Nandaka.MilliGanjubus.Utils;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.MilliGanjubus.Components
 {

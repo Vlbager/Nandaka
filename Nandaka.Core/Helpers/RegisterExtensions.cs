@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Nandaka.Core.Registers;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.Core.Helpers
 {

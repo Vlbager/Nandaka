@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Nandaka.Model.Registers;
 
-namespace Nandaka.Core.Registers
+namespace Nandaka.Model.Registers
 {
     public interface IRegister
     {
@@ -25,13 +24,13 @@ namespace Nandaka.Core.Registers
     }
 
     public interface IReadOnlyRegister<out T> : IRegister
-        where T: struct
+    where T: struct
     {
         T Value { get; }
     }
 
     public interface IRegister<T> : IReadOnlyRegister<T>
-        where T: struct
+    where T: struct
     {
         new T Value { get; set; }
     }

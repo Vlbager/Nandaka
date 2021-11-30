@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.MilliGanjubus.Models
 {

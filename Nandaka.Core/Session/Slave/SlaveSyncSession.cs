@@ -4,6 +4,7 @@ using Nandaka.Core.Device;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Registers;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.Core.Session
 {

@@ -1,5 +1,6 @@
 ﻿using System;
 using Nandaka.Core.Registers;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.Core.Attributes
 {

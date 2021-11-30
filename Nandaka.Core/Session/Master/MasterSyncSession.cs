@@ -6,6 +6,7 @@ using Nandaka.Core.Helpers;
 using Nandaka.Core.Protocol;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Util;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.Core.Session
 {

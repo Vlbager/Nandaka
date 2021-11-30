@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using Nandaka.Core.Registers;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.Tests.Util
 {

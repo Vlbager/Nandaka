@@ -6,6 +6,7 @@ using Nandaka.Core.Protocol;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
 using Nandaka.MilliGanjubus.Models;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.MilliGanjubus.Components
 {
