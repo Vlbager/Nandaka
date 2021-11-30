@@ -6,6 +6,7 @@ using Nandaka.Core.Helpers;
 using Nandaka.Core.Registers;
 using Nandaka.Core.Session;
 using Nandaka.Model.Device;
+using Nandaka.Model.Registers;
 using Nandaka.Tests.Util;
 using Xunit;
 

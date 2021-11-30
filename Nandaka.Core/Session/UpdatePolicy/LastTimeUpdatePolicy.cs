@@ -2,6 +2,7 @@
 using Nandaka.Core.Device;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Registers;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.Core.Session
 {

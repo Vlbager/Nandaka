@@ -2,6 +2,7 @@
 using System.Linq;
 using Nandaka.Core.Exceptions;
 using Nandaka.Core.Registers;
+using Nandaka.Model.Registers;
 using Nandaka.Tests.Util;
 using Xunit;
 

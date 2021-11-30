@@ -5,6 +5,7 @@ using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Registers;
 using Nandaka.MilliGanjubus.Components;
+using Nandaka.Model.Registers;
 using Nandaka.Tests.Util;
 using Xunit;
 

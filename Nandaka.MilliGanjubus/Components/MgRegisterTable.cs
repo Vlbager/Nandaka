@@ -5,6 +5,7 @@ using Nandaka.Core.Exceptions;
 using Nandaka.Core.Helpers;
 using Nandaka.Core.Registers;
 using Nandaka.MilliGanjubus.Models;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.MilliGanjubus.Components
 {

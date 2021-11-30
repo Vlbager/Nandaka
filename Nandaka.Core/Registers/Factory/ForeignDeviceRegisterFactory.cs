@@ -1,4 +1,6 @@
-﻿namespace Nandaka.Core.Registers
+﻿using Nandaka.Model.Registers;
+
+namespace Nandaka.Core.Registers
 {
     public class ForeignDeviceRegisterFactory : IRegisterFactory
     {

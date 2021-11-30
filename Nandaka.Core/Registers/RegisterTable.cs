@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Nandaka.Core.Exceptions;
+using Nandaka.Model.Registers;
 
 namespace Nandaka.Core.Registers
 {

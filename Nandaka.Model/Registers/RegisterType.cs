@@ -1,4 +1,4 @@
-﻿namespace Nandaka.Core.Registers
+﻿namespace Nandaka.Model.Registers
 {
     public enum RegisterType
     {
