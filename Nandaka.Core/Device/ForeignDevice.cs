@@ -19,8 +19,8 @@ namespace Nandaka.Core.Device
         }
         public DeviceState State { get; set; }
 
-        protected ForeignDevice(int address, RegisterTable table, DeviceState state) 
-            : base(address, table)
+        protected ForeignDevice(RegisterTable table, int address, DeviceState state) 
+            : base(table, address)
         {
             State = state;
         }

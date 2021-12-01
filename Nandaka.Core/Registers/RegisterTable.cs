@@ -5,6 +5,7 @@ using Nandaka.Model.Registers;
 
 namespace Nandaka.Core.Registers
 {
+    // Do not change class name (source generator)
     public sealed class RegisterTable : IReadOnlyCollection<IRegister>
     {
         private readonly Dictionary<int, IRegister> _dictionary;
@@ -14,6 +15,7 @@ namespace Nandaka.Core.Registers
             _dictionary = dictionary;
         }
 
+        // Do not change method name (source generator)
         public static RegisterTable CreateWithValidation(IEnumerable<IRegister> registers)
         {
             var dictionary = new Dictionary<int, IRegister>();

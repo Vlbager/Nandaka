@@ -25,7 +25,7 @@ namespace Nandaka.Core.Device
 
         public event EventHandler<RegisterChangedEventArgs>? OnRegisterChanged; 
 
-        protected NandakaDevice(int address, RegisterTable table)
+        protected NandakaDevice(RegisterTable table, int address)
         {
             Address = address;
             _specificMessages = new ConcurrentQueue<ISpecificMessage>();

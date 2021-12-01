@@ -20,7 +20,7 @@ namespace Nandaka.Tests.RegisterPolicies
             public override string Name => nameof(TestDevice);
             
             private TestDevice(RegisterTable table, DeviceState state) 
-                : base(Address, table, state) { }
+                : base(table, Address, state) { }
 
             public static TestDevice Create(IEnumerable<IRegister> registers)
             {

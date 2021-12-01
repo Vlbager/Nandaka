@@ -2,7 +2,7 @@
 
 namespace Nandaka.Core.Registers
 {
-    
+    // do not change name for this class (source generator)
     public sealed class LocalDeviceRegisterFactory : IRegisterFactory
     {
         public IReadOnlyRegister<T> CreateReadOnly<T>(int address, T defaultValue = default) 
