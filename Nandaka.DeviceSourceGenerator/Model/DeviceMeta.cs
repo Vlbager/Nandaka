@@ -6,41 +6,41 @@ namespace Nandaka.DeviceSourceGenerator.Model
 {
     internal sealed class DeviceMeta : IEquatable<DeviceMeta>
     {
-        private readonly ITypeSymbol _deviceSemanticModel;
-        
         public Location DeviceClassLocation { get; }
         public TableMeta Table { get; }
+        
+        public ITypeSymbol DeviceSemanticModel { get; }
 
         public DeviceMeta(ITypeSymbol deviceSemanticModel, Location deviceClassLocation, TableMeta table)
         {
-            _deviceSemanticModel = deviceSemanticModel;
+            DeviceSemanticModel = deviceSemanticModel;
             DeviceClassLocation = deviceClassLocation;
             Table = table;
         }
         
-        public string ClassName => _deviceSemanticModel.Name;
+        public string ClassName => DeviceSemanticModel.Name;
 
-        public string Namespace => _deviceSemanticModel.ContainingNamespace.Name;
+        public string Namespace => DeviceSemanticModel.ContainingNamespace.ToString();
 
-        public string Accessibility => _deviceSemanticModel.DeclaredAccessibility.ToString();
+        public string Accessibility => DeviceSemanticModel.DeclaredAccessibility.ToString().ToLower();
 
-        public string TypeKind => _deviceSemanticModel.TypeKind.ToString();
-        
+        public string TypeKind => DeviceSemanticModel.TypeKind.ToString().ToLower();
+
 
         public bool InheritedFromInterface(ITypeSymbol interfaceSymbol)
         {
-            return _deviceSemanticModel.AllInterfaces
+            return DeviceSemanticModel.AllInterfaces
                                        .Any(symbol => SymbolEqualityComparer.Default.Equals(interfaceSymbol, symbol));
         }
 
         public override int GetHashCode()
         {
-            return SymbolEqualityComparer.Default.GetHashCode(_deviceSemanticModel);
+            return SymbolEqualityComparer.Default.GetHashCode(DeviceSemanticModel);
         }
 
         public bool Equals(DeviceMeta other)
         {
-            return SymbolEqualityComparer.Default.Equals(_deviceSemanticModel, other._deviceSemanticModel);
+            return SymbolEqualityComparer.Default.Equals(DeviceSemanticModel, other.DeviceSemanticModel);
         }
     }
 }

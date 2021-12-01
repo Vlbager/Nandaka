@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Nandaka.Core.Exceptions;
 using Nandaka.Model.Registers;
@@ -9,10 +10,14 @@ namespace Nandaka.Core.Registers
     public sealed class RegisterTable : IReadOnlyCollection<IRegister>
     {
         private readonly Dictionary<int, IRegister> _dictionary;
+        
+        public event EventHandler<RegisterChangedEventArgs>? OnRegisterChanged;
 
         private RegisterTable(Dictionary<int, IRegister> dictionary)
         {
             _dictionary = dictionary;
+            foreach (IRegister register in dictionary.Values)
+                register.OnRegisterChanged += (sender, args) => OnRegisterChanged?.Invoke(sender, args);
         }
 
         // Do not change method name (source generator)

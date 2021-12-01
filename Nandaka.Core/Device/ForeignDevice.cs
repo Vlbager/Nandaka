@@ -13,16 +13,12 @@ namespace Nandaka.Core.Device
         {
             init => UpdatePolicyField = value;
         }
+        
         public IErrorMessageHandler ErrorMessageHandler
         {
             init => ErrorMessageHandlerField = value;
         }
+        
         public DeviceState State { get; set; }
-
-        protected ForeignDevice(RegisterTable table, int address, DeviceState state) 
-            : base(table, address)
-        {
-            State = state;
-        }
     }
 }

@@ -16,16 +16,19 @@ namespace Nandaka.Tests.RegisterPolicies
     {
         private sealed class TestDevice : ForeignDevice
         {
-            private new const int Address = 1;
+            public override RegisterTable Table { get; }
             public override string Name => nameof(TestDevice);
-            
-            private TestDevice(RegisterTable table, DeviceState state) 
-                : base(table, Address, state) { }
+            public override int Address => 1;
+
+            private TestDevice(RegisterTable table)
+            {
+                Table = table;
+            }
 
             public static TestDevice Create(IEnumerable<IRegister> registers)
             {
                 var table = RegisterTable.CreateWithValidation(registers);
-                return new TestDevice(table, DeviceState.Connected);
+                return new TestDevice(table);
             }
         }
         

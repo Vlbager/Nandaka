@@ -17,8 +17,6 @@ namespace Nandaka.DeviceSourceGenerator
 
         public void Execute(GeneratorExecutionContext context)
         {
-            Debugger.Launch();
-
             if (context.SyntaxReceiver is not SyntaxReceiver syntaxReceiver)
                 return;
 
@@ -39,14 +37,14 @@ namespace Nandaka.DeviceSourceGenerator
 
             foreach (DeviceMeta generateCandidate in generateCandidates)
             {
-                if (generateCandidate.InheritedFromInterface(typeProvider.IForeignDeviceSemanticModel))
+                if (generateCandidate.InheritedFromInterface(typeProvider.ForeignDeviceSemanticModel))
                 {
                     string source = SourceCodeBuilder.BuildSourceForForeignDevice(generateCandidate, typeProvider);
                     context.AddSource($"{generateCandidate.ClassName}.Generated.cs", source);
                     continue;
                 }
 
-                if (generateCandidate.InheritedFromInterface(typeProvider.INandakaDeviceSemanticModel))
+                if (generateCandidate.InheritedFromInterface(typeProvider.NandakaDeviceSemanticModel))
                 {
                     string source = SourceCodeBuilder.BuildSourceForLocalDevice(generateCandidate, typeProvider);
                     context.AddSource($"{generateCandidate.ClassName}.Generated.cs", source);

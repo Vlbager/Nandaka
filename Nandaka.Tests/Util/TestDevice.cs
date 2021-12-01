@@ -22,11 +22,12 @@ namespace Nandaka.Tests.Util
         public IRegister<short> RwShort => _registers.RwShort;
         public IRegister<int> RwInt2 => _registers.RwInt2;
         public IRegister<long> RwLong => _registers.RwLong;
-        
+
+        public override RegisterTable Table => _registers.Table;
         public override string Name => nameof(TestDevice);
+        public override int Address => TestDeviceAddress;
 
         private TestDevice(TestRegisters registers)
-            : base(TestDeviceAddress, registers.Table, DeviceState.Connected)
         {
             _registers = registers;
         }

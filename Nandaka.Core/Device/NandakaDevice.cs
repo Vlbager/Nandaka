@@ -19,19 +19,19 @@ namespace Nandaka.Core.Device
             init => _specificMessageHandler = value;
         }
 
-        public RegisterTable Table { get; private set; }
+        public abstract RegisterTable Table { get; }
         public abstract string Name { get; }
-        public int Address { get; }
+        public abstract int Address { get; }
 
-        public event EventHandler<RegisterChangedEventArgs>? OnRegisterChanged; 
-
-        protected NandakaDevice(RegisterTable table, int address)
+        public event EventHandler<RegisterChangedEventArgs>? OnRegisterChanged
         {
-            Address = address;
+            add => Table.OnRegisterChanged += value;
+            remove => Table.OnRegisterChanged -= value;
+        }
+
+        protected NandakaDevice()
+        {
             _specificMessages = new ConcurrentQueue<ISpecificMessage>();
-            Table = table;
-            foreach (IRegister register in table)
-                register.OnRegisterChanged += (sender, args) => OnRegisterChanged?.Invoke(sender, args);
         }
 
         public void SendSpecific(ISpecificMessage message, bool isAsync)
