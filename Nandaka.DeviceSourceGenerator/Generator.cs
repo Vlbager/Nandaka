@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Nandaka.DeviceSourceGenerator.Model;
 
 namespace Nandaka.DeviceSourceGenerator
@@ -30,23 +27,21 @@ namespace Nandaka.DeviceSourceGenerator
                 return;
             }
 
-            IReadOnlyCollection<DeviceMeta> generateCandidates = GetGenerateCandidates(context,
-                syntaxReceiver,
-                compilation,
-                typeProvider.GenerateDeviceAttributeSemanticModel);
+            var extractor = new GeneratorCandidatesExtractor(context, syntaxReceiver, typeProvider);
+            IReadOnlyCollection<DeviceMeta> generateCandidates = extractor.GetGenerateCandidates();
 
             foreach (DeviceMeta generateCandidate in generateCandidates)
             {
-                if (generateCandidate.InheritedFromInterface(typeProvider.ForeignDeviceSemanticModel))
+                if (generateCandidate.IsInheritedFromInterface(typeProvider.ForeignDeviceSemanticModel))
                 {
-                    string source = SourceCodeBuilder.BuildSourceForForeignDevice(generateCandidate, typeProvider);
+                    string source = SourceCodeBuilder.BuildSourceForForeignDevice(generateCandidate);
                     context.AddSource($"{generateCandidate.ClassName}.Generated.cs", source);
                     continue;
                 }
 
-                if (generateCandidate.InheritedFromInterface(typeProvider.NandakaDeviceSemanticModel))
+                if (generateCandidate.IsInheritedFromInterface(typeProvider.NandakaDeviceSemanticModel))
                 {
-                    string source = SourceCodeBuilder.BuildSourceForLocalDevice(generateCandidate, typeProvider);
+                    string source = SourceCodeBuilder.BuildSourceForLocalDevice(generateCandidate);
                     context.AddSource($"{generateCandidate.ClassName}.Generated.cs", source);
                     continue;
                 }
@@ -54,59 +49,6 @@ namespace Nandaka.DeviceSourceGenerator
                 context.ReportWrongTypeWasMarkedWithGenerateAttributeCriteria(generateCandidate.ClassName, 
                                                                               generateCandidate.DeviceClassLocation);
             }
-        }
-        
-        private static IReadOnlyCollection<DeviceMeta> GetGenerateCandidates(GeneratorExecutionContext context, 
-                                                                                             SyntaxReceiver syntaxReceiver, 
-                                                                                             Compilation compilation, 
-                                                                                             ISymbol generateDeviceAttr)
-        {
-            var deviceDiscoveredMetas = new HashSet<DeviceMeta>();
-
-            foreach (TypeDeclarationSyntax typeSyntaxNode in syntaxReceiver.TypeSyntaxNodesWithAttribute)
-            {
-                context.CancellationToken.ThrowIfCancellationRequested();
-
-                SemanticModel semanticModel = compilation.GetSemanticModel(typeSyntaxNode.SyntaxTree);
-
-                if (semanticModel.GetDeclaredSymbol(typeSyntaxNode) is not ITypeSymbol typeSemanticModel)
-                    continue;
-
-                TableMeta? tableMeta = TryGetDeviceTableMeta(context, generateDeviceAttr, typeSemanticModel);
-                if (tableMeta == null)
-                    continue;
-
-                var discoveredMeta = new DeviceMeta(typeSemanticModel, typeSyntaxNode.GetLocation(), tableMeta);
-
-                deviceDiscoveredMetas.Add(discoveredMeta);
-            }
-
-            return deviceDiscoveredMetas;
-        }
-
-        private static TableMeta? TryGetDeviceTableMeta(GeneratorExecutionContext context, ISymbol generateDeviceAttr,
-                                                        ITypeSymbol typeSemanticModel)
-        {
-            AttributeData? deviceAttr = typeSemanticModel.GetAttributes()
-                                                         .FindOfType(generateDeviceAttr);
-
-            if (deviceAttr == null)
-                return null;
-
-            return TryGetDeviceTableMetaFromAttributeValue(context, deviceAttr);
-        }
-
-        private static TableMeta? TryGetDeviceTableMetaFromAttributeValue(GeneratorExecutionContext context, AttributeData deviceAttr)
-        {
-            var tableSemanticModel = deviceAttr.ConstructorArguments
-                                               .FirstOrDefault(arg => arg.Kind == TypedConstantKind.Type)
-                                               .Value as ITypeSymbol;
-
-            if (tableSemanticModel != null) 
-                return new TableMeta(tableSemanticModel);
-            
-            context.ReportInvalidDeviceTableType();
-            return null;
         }
     }
 }

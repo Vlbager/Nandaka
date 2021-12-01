@@ -8,20 +8,27 @@ namespace Nandaka.DeviceSourceGenerator.Model
 {
     internal sealed class TableMeta
     {
-        private readonly ITypeSymbol _tableSemanticModel;
+        public IReadOnlyList<RegisterProperty> RegisterProperties { get; } 
 
-        public TableMeta(ITypeSymbol tableSemanticModel)
+        public TableMeta(IReadOnlyList<RegisterProperty> registerProperties)
         {
-            _tableSemanticModel = tableSemanticModel;
+            RegisterProperties = registerProperties;
         }
 
-        public IReadOnlyList<RegisterProperty> GetAllRegisterProperties(DefinedTypesProvider typesProvider)
+        public static TableMeta Create(ITypeSymbol tableSemanticModel, DefinedTypesProvider typesProvider)
         {
-            return _tableSemanticModel.GetMembers()
-                                      .OfType<IFieldSymbol>()
-                                      .Select(memberSymbol => TryGetRegisterProperty(memberSymbol, typesProvider))
-                                      .OfType<RegisterProperty>()
-                                      .ToArray();
+            IReadOnlyList<RegisterProperty> registerProperties = GetAllRegisterProperties(tableSemanticModel, typesProvider);
+            return new TableMeta(registerProperties);
+        }
+
+        private static IReadOnlyList<RegisterProperty> GetAllRegisterProperties(ITypeSymbol tableSemanticModel, 
+                                                                                DefinedTypesProvider typesProvider)
+        {
+            return tableSemanticModel.GetMembers()
+                                     .OfType<IFieldSymbol>()
+                                     .Select(memberSymbol => TryGetRegisterProperty(memberSymbol, typesProvider))
+                                     .OfType<RegisterProperty>()
+                                     .ToArray();
         }
 
         private static RegisterProperty? TryGetRegisterProperty(IFieldSymbol memberSymbol, DefinedTypesProvider typesProvider)

@@ -10,42 +10,38 @@ namespace Nandaka.DeviceSourceGenerator
     internal sealed class SourceCodeBuilder
     {
         private readonly ISourceBuildStrategy _strategy;
-        private readonly DefinedTypesProvider _typesProvider;
 
-        private SourceCodeBuilder(ISourceBuildStrategy strategy, DefinedTypesProvider typesProvider)
+        private SourceCodeBuilder(ISourceBuildStrategy strategy)
         {
             _strategy = strategy;
-            _typesProvider = typesProvider;
         }
         
-        public static string BuildSourceForForeignDevice(DeviceMeta meta, DefinedTypesProvider typesProvider)
+        public static string BuildSourceForForeignDevice(DeviceMeta meta)
         {
             var buildStrategy = new ForeignDeviceSourceCodeBuildStrategy();
-            return new SourceCodeBuilder(buildStrategy, typesProvider).Build(meta);
+            return new SourceCodeBuilder(buildStrategy).Build(meta);
         }
 
-        public static string BuildSourceForLocalDevice(DeviceMeta meta, DefinedTypesProvider typesProvider)
+        public static string BuildSourceForLocalDevice(DeviceMeta meta)
         {
             var buildStrategy = new LocalDeviceSourceCodeBuildStrategy();
-            return new SourceCodeBuilder(buildStrategy, typesProvider).Build(meta);
+            return new SourceCodeBuilder(buildStrategy).Build(meta);
         }
 
         private string Build(DeviceMeta meta)
         {
-            IReadOnlyList<RegisterProperty> registerProperties = meta.Table.GetAllRegisterProperties(_typesProvider);
+            string propertyDeclarations = BuildPropertyDeclarations(meta);
 
-            string propertyDeclarations = BuildPropertyDeclarations(registerProperties);
-
-            string constructor = BuildConstructor(meta, registerProperties);
+            string constructor = BuildConstructor(meta);
 
             return BuildResult(meta, propertyDeclarations, constructor);
         }
 
-        private string BuildPropertyDeclarations(IReadOnlyCollection<RegisterProperty> properties)
+        private string BuildPropertyDeclarations(DeviceMeta meta)
         {
             var stringBuilder = new StringBuilder();
 
-            foreach (RegisterProperty registerProperty in properties)
+            foreach (RegisterProperty registerProperty in meta.Table.RegisterProperties)
             {
                 string propertyType = _strategy.GetRegisterInterfaceType(registerProperty.RegisterType);
                 string valueTypeName = registerProperty.ValueTypeName;
@@ -56,20 +52,28 @@ namespace Nandaka.DeviceSourceGenerator
 
             stringBuilder.AppendLine();
             
+            stringBuilder.AppendLine(
+       @"        public override RegisterTable Table { get; }");
+            
+            stringBuilder.AppendLine(
+       @"        public override int Address { get; }");
+            
             stringBuilder.Append(
-      $@"        public override RegisterTable Table {{ get; }}");
+      $@"        public override string Name => nameof({meta.ClassName});");
 
             return stringBuilder.ToString();
         }
 
-        private string BuildConstructor(DeviceMeta meta, IReadOnlyList<RegisterProperty> registerProperties)
+        private string BuildConstructor(DeviceMeta meta)
         {
-            string registersInitialization = BuildRegistersInitialization(registerProperties);
-            string tableInitialization = BuildTableInitialization(registerProperties);
+            string registersInitialization = BuildRegistersInitialization(meta.Table.RegisterProperties);
+            string tableInitialization = BuildTableInitialization(meta.Table.RegisterProperties);
 
             return $@"
-        public {meta.ClassName}()
+        public {meta.ClassName}(int address)
         {{
+            Address = address;            
+
             {registersInitialization}
             {tableInitialization}
         }}";
