@@ -15,7 +15,18 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Nandaka.Model\Nandaka.Model.csproj" />
+      <ProjectReference Include="..\Nandaka.Model\Nandaka.Model.csproj" GeneratePathProperty="true" PrivateAssets="all"/>
     </ItemGroup>
+
+    <PropertyGroup>
+        <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
+    </PropertyGroup>
+
+    <Target Name="GetDependencyTargetPaths">
+        <ItemGroup>
+            <TargetPathWithTargetPlatformMoniker Include="..\Nandaka.Model\bin\$(Configuration)\netstandard2.0\Nandaka.Model.dll" 
+                                                 IncludeRuntimeDependency="false" />
+        </ItemGroup>
+    </Target>
 
 </Project>
